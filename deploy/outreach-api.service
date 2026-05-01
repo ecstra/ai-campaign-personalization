@@ -1,0 +1,14 @@
+[Unit]
+Description=AI Mail Personalization API
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/app/backend
+EnvironmentFile=/home/ubuntu/app/backend/.env
+ExecStart=/home/ubuntu/app/backend/venv/bin/uvicorn app:app --host 127.0.0.1 --port 8000
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

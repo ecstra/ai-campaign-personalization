@@ -1,0 +1,13 @@
+lvoutreach.duckdns.org {
+    # Backend API: reverse proxy to FastAPI
+    handle /api/* {
+        reverse_proxy localhost:8000
+    }
+
+    # Frontend: serve React static files
+    handle {
+        root * /home/ubuntu/app/frontend/dist
+        file_server
+        try_files {path} /index.html
+    }
+}

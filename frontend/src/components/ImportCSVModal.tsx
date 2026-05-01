@@ -6,6 +6,7 @@ For now, we are using client-side CSV parsing.
 */
 
 import { useState, useCallback } from "react"
+import Papa from "papaparse"
 import { post } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import {
@@ -24,7 +25,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { Upload, AlertCircle, CheckCircle2 } from "lucide-react"
+import { Upload, AlertCircle, CheckCircle2, Download } from "lucide-react"
 
 type Props = {
     open: boolean
@@ -45,31 +46,48 @@ type ParsedLead = {
 }
 
 const REQUIRED_HEADERS = ["email", "first_name", "last_name"]
+const OPTIONAL_HEADERS = ["company", "title", "notes"]
 
+// Two sample rows so users see exactly what a valid row looks like, including
+// a "notes" field that shows how free-form text should be quoted.
+const TEMPLATE_ROWS: string[][] = [
+    ["jane.doe@acmecorp.com", "Jane", "Doe", "Acme Corp", "VP Marketing", "Met at SaaStr, interested in AI outreach"],
+    ["john.smith@example.com", "John", "Smith", "Example Inc", "CTO", ""],
+]
+
+function downloadTemplateCSV(): void {
+    const headers = [...REQUIRED_HEADERS, ...OPTIONAL_HEADERS]
+    // Use Papa.unparse so any commas or quotes in sample values get escaped
+    // per RFC 4180 — matches exactly what our parser expects on import.
+    const csv = Papa.unparse({
+        fields: headers,
+        data: TEMPLATE_ROWS,
+    })
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = "leads_template.csv"
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+}
+
+// Uses papaparse to correctly handle RFC 4180 quoted fields, including
+// fields that contain commas, quotes, or newlines (common in LinkedIn / Apollo
+// exports where the "notes" column has multi-line content).
 function parseCSV(text: string): { headers: string[]; rows: string[][] } {
-    const lines = text.trim().split(/\r?\n/)
-    if (lines.length === 0) return { headers: [], rows: [] }
-
-    const headers = lines[0].split(",").map(h => h.trim().toLowerCase())
-    const rows = lines.slice(1).map(line => {
-        const values: string[] = []
-        let current = ""
-        let inQuotes = false
-
-        for (const char of line) {
-            if (char === '"') {
-                inQuotes = !inQuotes
-            } else if (char === "," && !inQuotes) {
-                values.push(current.trim())
-                current = ""
-            } else {
-                current += char
-            }
-        }
-        values.push(current.trim())
-        return values
+    const result = Papa.parse<string[]>(text, {
+        skipEmptyLines: "greedy",
     })
 
+    if (!result.data || result.data.length === 0) {
+        return { headers: [], rows: [] }
+    }
+
+    const headers = result.data[0].map(h => h.trim().toLowerCase())
+    const rows = result.data.slice(1).map(row => row.map(cell => cell.trim()))
     return { headers, rows }
 }
 
@@ -229,21 +247,35 @@ export default function ImportCSVModal({ open, onClose, onSuccess, campaignId }:
                 <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
                     {/* Requirements hint */}
                     <div className="text-sm bg-muted p-3 rounded-lg space-y-2 shrink-0">
-                        <div>
-                            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Required</p>
-                            <div className="flex flex-wrap gap-1">
-                                {["email", "first_name", "last_name"].map(col => (
-                                    <span key={col} className="px-2 py-0.5 text-xs bg-background border rounded-sm">{col}</span>
-                                ))}
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="space-y-2 min-w-0">
+                                <div>
+                                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Required</p>
+                                    <div className="flex flex-wrap gap-1">
+                                        {REQUIRED_HEADERS.map(col => (
+                                            <span key={col} className="px-2 py-0.5 text-xs bg-background border rounded-sm">{col}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Optional</p>
+                                    <div className="flex flex-wrap gap-1">
+                                        {OPTIONAL_HEADERS.map(col => (
+                                            <span key={col} className="px-2 py-0.5 text-xs bg-background border rounded-sm">{col}</span>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        <div>
-                            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Optional</p>
-                            <div className="flex flex-wrap gap-1">
-                                {["company", "title", "notes"].map(col => (
-                                    <span key={col} className="px-2 py-0.5 text-xs bg-background border rounded-sm">{col}</span>
-                                ))}
-                            </div>
+                            <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                onClick={downloadTemplateCSV}
+                                className="shrink-0 gap-1.5 h-8 text-xs"
+                            >
+                                <Download size={12} />
+                                Template
+                            </Button>
                         </div>
                     </div>
 
@@ -299,7 +331,12 @@ export default function ImportCSVModal({ open, onClose, onSuccess, campaignId }:
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {parsedLeads.slice(0, 10).map((lead, i) => (
+                                        {/* Show invalid rows first so the user can act on them;
+                                            fall back to valid rows to fill the 10-row preview. */}
+                                        {[...parsedLeads]
+                                            .sort((a, b) => Number(a.valid) - Number(b.valid))
+                                            .slice(0, 10)
+                                            .map((lead, i) => (
                                             <TableRow key={i} className={!lead.valid ? "bg-destructive/5" : ""}>
                                                 <TableCell>
                                                     {lead.valid ? (
@@ -326,7 +363,7 @@ export default function ImportCSVModal({ open, onClose, onSuccess, campaignId }:
                             </div>
                             {parsedLeads.length > 10 && (
                                 <p className="text-xs text-muted-foreground p-2 text-center border-t bg-muted/30 shrink-0">
-                                    Showing first 10 of {parsedLeads.length} leads
+                                    Showing 10 of {parsedLeads.length} leads (errors first)
                                 </p>
                             )}
                         </div>

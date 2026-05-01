@@ -1,143 +1,143 @@
-import os, re, time, resend
+"""Email sending client. Wraps Gmail SMTP for the scheduler and API."""
 
-from typing import List, Optional
+import os
+import time
+from typing import Optional
+
 from dotenv import load_dotenv
 
 from .base import Mail
+from .gmail import send_gmail
+from ..db.engine import get_cursor
 from ..logger import logger
 
 load_dotenv()
 
-# Set the API key for Resend
-resend.api_key = os.getenv("RESEND_API_KEY")
+# Delay between sequential sends to respect Gmail rate limits
+INTER_SEND_DELAY_MS = int(os.getenv("GMAIL_INTER_SEND_DELAY_MS", "200"))
 
-# Setup domain
-EMAIL_DOMAIN = os.getenv("EMAIL_DOMAIN", None)
+# Daily send limit (consumer Gmail ~500, Workspace ~2000)
+GMAIL_DAILY_SEND_LIMIT = int(os.getenv("GMAIL_DAILY_SEND_LIMIT", "450"))
 
-if not EMAIL_DOMAIN:
-    raise ValueError("Email Domain not found. Please add it in the .env file.")
 
-# Retry configuration
-MAX_RETRIES = 3
+def get_daily_send_count(user_id: str) -> int:
+    """Count emails sent by this user in the last 24 hours."""
+    with get_cursor() as cur:
+        cur.execute(
+            """
+            SELECT COUNT(*) as count
+            FROM emails e
+            JOIN leads l ON e.lead_id = l.id
+            JOIN campaigns c ON l.campaign_id = c.id
+            WHERE c.user_id = %s
+              AND e.status = 'sent'
+              AND e.sent_at >= NOW() - INTERVAL '24 hours'
+            """,
+            (user_id,),
+        )
+        row = cur.fetchone()
+    return row["count"] if row else 0
 
-# Ensure that this is length of MAX_RETRIES and values are in seconds
-RETRY_DELAYS = [1, 2, 4]  # Exponential backoff: 1s, 2s, 4s
 
-# Check if the length of RETRY_DELAYS is equal to MAX_RETRIES
-if len(RETRY_DELAYS) != MAX_RETRIES:
-    raise ValueError("RETRY_DELAYS must be of length MAX_RETRIES")
+def check_already_sent(lead_id: str, sequence_number: int) -> bool:
+    """Check if an email has already been sent for this lead + sequence. Idempotency guard."""
+    with get_cursor() as cur:
+        cur.execute(
+            """
+            SELECT id FROM emails
+            WHERE lead_id = %s AND sequence_number = %s AND status = 'sent'
+            """,
+            (lead_id, sequence_number),
+        )
+        return cur.fetchone() is not None
 
-def sanitize(name: str) -> str:
-    # Keep only a-z, 0-9, and hyphens. Remove everything else.
-    return re.sub(r'[^a-z0-9-]', '', name.lower().replace(" ", "-"))
 
-def _build_reply_to(mail: Mail) -> List[str]:
+def send_mail(
+    mail: Mail,
+    user_id: str,
+    lead_id: str,
+    sequence_number: int,
+    in_reply_to: Optional[str] = None,
+) -> Optional[str]:
     """
-    Build reply_to list with sender email + tracking email (if configured).
-    Tracking format: {lead_id}@{EMAIL_DOMAIN}
-    """
-    reply_to = [mail.sender.email]
-    
-    # Only add tracking email if lead_id is given
-    if mail.lead_id:
-        # Only use lead_id to stay under the 64-char RFC 5321 limit.
-        # The database can look up the campaign_id from the lead_id later.
-        tracking_email = f"{mail.lead_id}@{EMAIL_DOMAIN}"
-        reply_to.append(tracking_email)
-    
-    return reply_to
-
-def send_mail(mail: Mail):
-    """
-    Send a single email to the user with retry logic.
-
-    Args:
-        mail (Mail): The email to send.
+    Send a single email via Gmail SMTP. Records the result in the emails table.
 
     Returns:
-        resend.Emails.SendResponse: The response from the email.
-    
+        The Message-ID on success, None if skipped (already sent / rate limited).
+
     Raises:
-        Exception: If all retry attempts fail.
+        Exception on send failure after retries.
     """
-    params: resend.Emails.SendParams = {
-        "from": f"{mail.sender.name} <{sanitize(mail.sender.name)}@{EMAIL_DOMAIN}>",
-        "to": [mail.to],
-        "subject": mail.subject,
-        "html": mail.body,
-        "reply_to": _build_reply_to(mail)
-    }
+    # Idempotency check
+    if check_already_sent(lead_id, sequence_number):
+        logger.info(f"Email already sent for lead {lead_id} seq {sequence_number}, skipping")
+        return None
 
-    last_exception = None
-    
-    for attempt in range(MAX_RETRIES):
-        try:
-            return resend.Emails.send(params)
-        except Exception as e:
-            last_exception = e
-            logger.warning(
-                f"Email send to {mail.to} failed (attempt {attempt + 1}/{MAX_RETRIES}): {str(e)}"
-            )
-            
-            # Don't sleep after the last attempt
-            if attempt < MAX_RETRIES - 1:
-                time.sleep(RETRY_DELAYS[attempt])
-    
-    logger.error(f"Email send failed after {MAX_RETRIES} attempts to {mail.to}: {str(last_exception)}")
+    message_id = send_gmail(
+        user_id=user_id,
+        from_email=mail.sender.email,
+        from_name=mail.sender.name,
+        to_email=mail.to,
+        subject=mail.subject,
+        html_body=mail.body,
+        in_reply_to=in_reply_to,
+    )
 
-    raise last_exception  # type: ignore
+    return message_id
 
-def send_mail_batch(
-    mails: List[Mail], 
-    idempotency_key: Optional[str] = None
-):
+
+def send_mails_sequential(
+    mails: list[dict],
+    user_id: str,
+) -> list[dict]:
     """
-    Send a batch of emails to the users with retry logic.
+    Send a list of emails sequentially with a delay between sends.
 
-    Args:
-        mails (List[Mail]): The list of emails to send.
-        idempotency_key (str | None): Optional idempotency key to prevent duplicate sends.
-            For batch sends, use a single key that represents the whole batch (e.g., "job-run/123456789").
+    Each item in mails should contain:
+        - mail: Mail object
+        - lead_id: str
+        - sequence_number: int
+        - in_reply_to: Optional[str]
 
     Returns:
-        resend.Emails.SendResponse: The response from the email.
-    
-    Raises:
-        Exception: If all retry attempts fail.
+        List of result dicts: {lead_id, sequence_number, message_id, status, error}
     """
-    params: List[resend.Emails.SendParams] = []
+    results: list[dict] = []
 
-    for mail in mails:
-        param: resend.Emails.SendParams = {
-            "from": f"{mail.sender.name} <{sanitize(mail.sender.name)}@{EMAIL_DOMAIN}>",
-            "to": [mail.to],
-            "subject": mail.subject,
-            "html": mail.body,
-            "reply_to": _build_reply_to(mail)
-        }
-        params.append(param)
-    
-    # Prepare options with idempotency key if provided
-    options: resend.Batch.SendOptions | None = None
-    if idempotency_key:
-        options = {"idempotency_key": idempotency_key}
-    
-    last_exception = None
-    recipients = [m.to for m in mails]
+    for i, item in enumerate(mails):
+        mail: Mail = item["mail"]
+        lead_id: str = item["lead_id"]
+        sequence_number: int = item["sequence_number"]
+        in_reply_to: Optional[str] = item.get("in_reply_to")
 
-    for attempt in range(MAX_RETRIES):
         try:
-            return resend.Batch.send(params, options) if options else resend.Batch.send(params)
-        except Exception as e:
-            last_exception = e
-            logger.warning(
-                f"Batch email send failed (attempt {attempt + 1}/{MAX_RETRIES}): {str(e)}"
+            message_id = send_mail(
+                mail=mail,
+                user_id=user_id,
+                lead_id=lead_id,
+                sequence_number=sequence_number,
+                in_reply_to=in_reply_to,
             )
-            
-            # Don't sleep after the last attempt
-            if attempt < MAX_RETRIES - 1:
-                time.sleep(RETRY_DELAYS[attempt])
-    
-    logger.error(f"Batch email send failed after {MAX_RETRIES} attempts to {recipients}: {str(last_exception)}")
 
-    raise last_exception  # type: ignore
+            results.append({
+                "lead_id": lead_id,
+                "sequence_number": sequence_number,
+                "message_id": message_id,
+                "status": "sent" if message_id else "skipped",
+            })
+
+        except Exception as e:
+            logger.error(f"Failed to send email to lead {lead_id} seq {sequence_number}: {e}")
+            results.append({
+                "lead_id": lead_id,
+                "sequence_number": sequence_number,
+                "message_id": None,
+                "status": "failed",
+                "error": str(e),
+            })
+
+        # Delay between sends (skip after last email)
+        if i < len(mails) - 1:
+            time.sleep(INTER_SEND_DELAY_MS / 1000)
+
+    return results

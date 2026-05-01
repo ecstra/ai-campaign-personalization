@@ -13,6 +13,15 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 
+const EMPTY_FORM = {
+    email: "",
+    first_name: "",
+    last_name: "",
+    company: "",
+    title: "",
+    notes: "",
+}
+
 export default function AddLeadModal({
     open,
     onClose,
@@ -30,14 +39,13 @@ export default function AddLeadModal({
         first_name?: string
         last_name?: string
     }>({})
-    const [form, setForm] = useState({
-        email: "",
-        first_name: "",
-        last_name: "",
-        company: "",
-        title: "",
-        notes: "",
-    })
+    const [form, setForm] = useState(EMPTY_FORM)
+
+    const resetAndClose = () => {
+        setForm(EMPTY_FORM)
+        setFieldErrors({})
+        onClose()
+    }
 
     const validateField = (name: string, value: string) => {
         let error: string | undefined
@@ -86,7 +94,7 @@ export default function AddLeadModal({
 
         try {
             await post(`/campaigns/${campaignId}/leads`, form)
-            setForm({ email: "", first_name: "", last_name: "", company: "", title: "", notes: "" })
+            setForm(EMPTY_FORM)
             setFieldErrors({})
             onSuccess()
             toast.success("Lead added successfully")
@@ -102,7 +110,7 @@ export default function AddLeadModal({
     const hasEmptyFields = !form.first_name.trim() || !form.last_name.trim() || !form.email.trim()
 
     return (
-        <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+        <Dialog open={open} onOpenChange={(isOpen) => !isOpen && resetAndClose()}>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Add Lead</DialogTitle>
@@ -120,10 +128,12 @@ export default function AddLeadModal({
                                 value={form.first_name}
                                 onChange={handleInputChange}
                                 placeholder="John"
+                                aria-invalid={!!fieldErrors.first_name}
+                                aria-describedby={fieldErrors.first_name ? "first_name-error" : undefined}
                                 className={fieldErrors.first_name ? "border-destructive" : ""}
                             />
                             {fieldErrors.first_name && (
-                                <p className="text-xs text-destructive">{fieldErrors.first_name}</p>
+                                <p id="first_name-error" className="text-xs text-destructive">{fieldErrors.first_name}</p>
                             )}
                         </div>
                         <div className="space-y-2">
@@ -133,10 +143,12 @@ export default function AddLeadModal({
                                 value={form.last_name}
                                 onChange={handleInputChange}
                                 placeholder="Doe"
+                                aria-invalid={!!fieldErrors.last_name}
+                                aria-describedby={fieldErrors.last_name ? "last_name-error" : undefined}
                                 className={fieldErrors.last_name ? "border-destructive" : ""}
                             />
                             {fieldErrors.last_name && (
-                                <p className="text-xs text-destructive">{fieldErrors.last_name}</p>
+                                <p id="last_name-error" className="text-xs text-destructive">{fieldErrors.last_name}</p>
                             )}
                         </div>
                     </div>
@@ -149,10 +161,12 @@ export default function AddLeadModal({
                             value={form.email}
                             onChange={handleInputChange}
                             placeholder="john@company.com"
+                            aria-invalid={!!fieldErrors.email}
+                            aria-describedby={fieldErrors.email ? "email-error" : undefined}
                             className={fieldErrors.email ? "border-destructive" : ""}
                         />
                         {fieldErrors.email && (
-                            <p className="text-xs text-destructive">{fieldErrors.email}</p>
+                            <p id="email-error" className="text-xs text-destructive">{fieldErrors.email}</p>
                         )}
                     </div>
 
@@ -189,7 +203,7 @@ export default function AddLeadModal({
                     </div>
 
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={onClose}>
+                        <Button type="button" variant="outline" onClick={resetAndClose}>
                             Cancel
                         </Button>
                         <Button type="submit" disabled={loading || hasFieldErrors || hasEmptyFields}>

@@ -1,5 +1,4 @@
-// const API_URL = "http://localhost:8000"
-const API_URL = "https://api.gautam-everis-demo.com"
+export const API_URL = import.meta.env.VITE_API_URL || "/api"
 
 type RequestOptions = {
     method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH"
@@ -17,10 +16,13 @@ export class ApiError extends Error {
 }
 
 export async function api<T>(endpoint: string, options?: RequestOptions): Promise<T> {
+    const token = localStorage.getItem("auth_token")
+
     const config: RequestInit = {
         method: options?.method || "GET",
         headers: {
             "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
             ...options?.headers,
         },
     }
@@ -30,6 +32,14 @@ export async function api<T>(endpoint: string, options?: RequestOptions): Promis
     }
 
     const res = await fetch(`${API_URL}${endpoint}`, config)
+
+    if (res.status === 401) {
+        // Token expired or invalid, clear auth state and redirect to login
+        localStorage.removeItem("auth_token")
+        localStorage.removeItem("auth_user")
+        window.location.href = "/login"
+        throw new ApiError("Session expired", 401)
+    }
 
     if (!res.ok) {
         const errorText = await res.text().catch(() => "Unknown error")
