@@ -373,8 +373,3 @@ See `deploy/setup.sh` for the one-time server provisioning script.
   the frontend uses `toast.promise()` on a fire-and-forget fetch so users
   can navigate away during the ~30-60s LlamaParse + summarisation round
   trip
-
-## License
-
-Private / internal project for Lakshmi Vacuum Technologies. Not currently
-licensed for public use.
