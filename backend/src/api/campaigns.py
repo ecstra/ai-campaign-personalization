@@ -3,107 +3,104 @@ from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from ..auth import get_current_user
-from ..db import get_cursor
-from ..scheduler.job import CAMPAIGN_EMAIL_RATE_LIMIT, RATE_LIMIT_WINDOW_MINUTES
+from ..auth import AuthUtility
+from ..db import DatabaseEngine
+from ..scheduler.config import CAMPAIGN_EMAIL_RATE_LIMIT, RATE_LIMIT_WINDOW_MINUTES
 from .models import CampaignCreate, CampaignUpdate, CampaignResponse, EmailPreviewResponse
 
 router = APIRouter(prefix="/campaigns", tags=["campaigns"])
 
-# Column list used in SELECT/RETURNING clauses
 _CAMPAIGN_COLS = """
     id, user_id, name, sender_name, sender_email, goal,
     follow_up_delay_minutes, max_follow_ups, status,
     scheduled_start_at, created_at, updated_at
 """
 
+class CampaignUtility:
 
-def _fetch_documents_for_campaigns(cur: Any, campaign_ids: list[str]) -> dict[str, list[dict]]:
-    """
-    Return a mapping of campaign_id -> [document summary dicts] ordered by
-    attachment time. Small second query keeps the campaign SELECT simple
-    and avoids JSON aggregation edge cases.
-    """
-    if not campaign_ids:
-        return {}
-    cur.execute(
-        """
-        SELECT cd.campaign_id,
-               d.id, d.name, d.size_bytes, d.extension,
-               d.created_at, d.updated_at
-        FROM campaign_documents cd
-        JOIN documents d ON cd.document_id = d.id
-        WHERE cd.campaign_id = ANY(%s::uuid[])
-        ORDER BY cd.campaign_id, cd.created_at ASC
-        """,
-        (campaign_ids,),
-    )
-    out: dict[str, list[dict]] = {}
-    for row in cur.fetchall():
-        cid = str(row["campaign_id"])
-        out.setdefault(cid, []).append({
-            "id": str(row["id"]),
-            "name": row["name"],
-            "size_bytes": row["size_bytes"],
-            "extension": row["extension"],
-            "created_at": row["created_at"],
-            "updated_at": row["updated_at"],
-        })
-    return out
+    @staticmethod
+    def _fetch_documents_for_campaigns(
+        cur: Any,
+        campaign_ids: list[str],
+    ) -> dict[str, list[dict]]:
+        if not campaign_ids:
+            return {}
+        cur.execute(
+            """
+            SELECT cd.campaign_id,
+                   d.id, d.name, d.size_bytes, d.extension,
+                   d.created_at, d.updated_at
+            FROM campaign_documents cd
+            JOIN documents d ON cd.document_id = d.id
+            WHERE cd.campaign_id = ANY(%s::uuid[])
+            ORDER BY cd.campaign_id, cd.created_at ASC
+            """,
+            (campaign_ids,),
+        )
+        out: dict[str, list[dict]] = {}
+        for row in cur.fetchall():
+            cid = str(row["campaign_id"])
+            out.setdefault(cid, []).append({
+                "id": str(row["id"]),
+                "name": row["name"],
+                "size_bytes": row["size_bytes"],
+                "extension": row["extension"],
+                "created_at": row["created_at"],
+                "updated_at": row["updated_at"],
+            })
+        return out
 
+    @staticmethod
+    def _attach_documents(
+        cur: Any,
+        campaigns: list[dict],
+    ) -> list[dict]:
+        ids = [str(c["id"]) for c in campaigns]
+        by_id = CampaignUtility._fetch_documents_for_campaigns(cur, ids)
+        for c in campaigns:
+            c["documents"] = by_id.get(str(c["id"]), [])
+        return campaigns
 
-def _attach_documents(cur: Any, campaigns: list[dict]) -> list[dict]:
-    """Annotate each campaign dict with its `documents` array in place."""
-    ids = [str(c["id"]) for c in campaigns]
-    by_id = _fetch_documents_for_campaigns(cur, ids)
-    for c in campaigns:
-        c["documents"] = by_id.get(str(c["id"]), [])
-    return campaigns
-
-
-def _build_product_context(docs: list[dict]) -> Optional[str]:
-    """
-    Concatenate attached document briefs into a single product-context block
-    the LLM will consume during email generation. Returns None when no docs
-    are attached, so the prompt can render a clean fallback instead of an
-    empty section.
-    """
-    if not docs:
-        return None
-    parts: list[str] = []
-    for d in docs:
-        name = d.get("name") or "Untitled"
-        brief = d.get("brief") or ""
-        if not brief.strip():
-            continue
-        parts.append(f"## Document: {name}\n\n{brief.strip()}")
-    if not parts:
-        return None
-    return "\n\n".join(parts)
+    @staticmethod
+    def _build_product_context(
+        docs: list[dict],
+    ) -> Optional[str]:
+        if not docs:
+            return None
+        parts: list[str] = []
+        for d in docs:
+            name = d.get("name") or "Untitled"
+            brief = d.get("brief") or ""
+            if not brief.strip():
+                continue
+            parts.append(f"## Document: {name}\n\n{brief.strip()}")
+        if not parts:
+            return None
+        return "\n\n".join(parts)
 
 
 @router.get("", response_model=List[CampaignResponse])
-async def list_campaigns(user: dict[str, Any] = Depends(get_current_user)):
-    with get_cursor() as cur:
+async def list_campaigns(
+    user: dict[str, Any] = Depends(AuthUtility.get_current_user),
+):
+    with DatabaseEngine.get_cursor() as cur:
         cur.execute(
             f"SELECT {_CAMPAIGN_COLS} FROM campaigns WHERE user_id = %s ORDER BY created_at DESC",
             (user["id"],),
         )
         campaigns = [dict(row) for row in cur.fetchall()]
-        _attach_documents(cur, campaigns)
+        CampaignUtility._attach_documents(cur, campaigns)
     return campaigns
 
 
 @router.post("", response_model=CampaignResponse)
 async def create_campaign(
     campaign: CampaignCreate,
-    user: dict[str, Any] = Depends(get_current_user),
+    user: dict[str, Any] = Depends(AuthUtility.get_current_user),
 ):
-    # Frontend sends empty string when the date picker is untouched; Postgres
-    # cannot coerce "" to TIMESTAMPTZ, so normalise to NULL here.
     scheduled_start_at = campaign.scheduled_start_at if campaign.scheduled_start_at else None
 
-    with get_cursor(commit=True) as cur:
+    with DatabaseEngine.get_cursor(commit=True) as cur:
         cur.execute(
             f"""
             INSERT INTO campaigns (user_id, name, sender_name, sender_email, goal,
@@ -129,9 +126,9 @@ async def create_campaign(
 @router.get("/{campaign_id}", response_model=CampaignResponse)
 async def get_campaign(
     campaign_id: str,
-    user: dict[str, Any] = Depends(get_current_user),
+    user: dict[str, Any] = Depends(AuthUtility.get_current_user),
 ):
-    with get_cursor() as cur:
+    with DatabaseEngine.get_cursor() as cur:
         cur.execute(
             f"SELECT {_CAMPAIGN_COLS} FROM campaigns WHERE id = %s AND user_id = %s",
             (campaign_id, user["id"]),
@@ -140,16 +137,16 @@ async def get_campaign(
         if not row:
             raise HTTPException(status_code=404, detail="Campaign not found")
         campaign = dict(row)
-        _attach_documents(cur, [campaign])
+        CampaignUtility._attach_documents(cur, [campaign])
     return campaign
 
 
 @router.delete("/{campaign_id}")
 async def delete_campaign(
     campaign_id: str,
-    user: dict[str, Any] = Depends(get_current_user),
+    user: dict[str, Any] = Depends(AuthUtility.get_current_user),
 ):
-    with get_cursor(commit=True) as cur:
+    with DatabaseEngine.get_cursor(commit=True) as cur:
         cur.execute(
             "DELETE FROM campaigns WHERE id = %s AND user_id = %s RETURNING id",
             (campaign_id, user["id"]),
@@ -166,10 +163,9 @@ async def delete_campaign(
 async def update_campaign(
     campaign_id: str,
     update: CampaignUpdate,
-    user: dict[str, Any] = Depends(get_current_user),
+    user: dict[str, Any] = Depends(AuthUtility.get_current_user),
 ):
-    """Update campaign fields. Only allowed when campaign is in draft or paused status."""
-    with get_cursor(commit=True) as cur:
+    with DatabaseEngine.get_cursor(commit=True) as cur:
         cur.execute(
             "SELECT status FROM campaigns WHERE id = %s AND user_id = %s",
             (campaign_id, user["id"]),
@@ -205,7 +201,6 @@ async def update_campaign(
             params.append(update.max_follow_ups)
         if update.scheduled_start_at is not None:
             updates.append("scheduled_start_at = %s")
-            # Allow clearing by passing empty string
             params.append(update.scheduled_start_at if update.scheduled_start_at else None)
 
         if not updates:
@@ -232,10 +227,9 @@ async def update_campaign(
 async def preview_email(
     campaign_id: str,
     lead_id: str = Query(...),
-    user: dict[str, Any] = Depends(get_current_user),
+    user: dict[str, Any] = Depends(AuthUtility.get_current_user),
 ):
-    """Generate a preview email for a specific lead without sending it."""
-    with get_cursor() as cur:
+    with DatabaseEngine.get_cursor() as cur:
         cur.execute(
             f"SELECT {_CAMPAIGN_COLS} FROM campaigns WHERE id = %s AND user_id = %s",
             (campaign_id, user["id"]),
@@ -257,7 +251,6 @@ async def preview_email(
         if not lead:
             raise HTTPException(status_code=404, detail="Lead not found in this campaign")
 
-        # Fetch previous emails for context
         cur.execute(
             """
             SELECT sequence_number, subject, body, sent_at
@@ -268,7 +261,6 @@ async def preview_email(
         )
         previous_emails = cur.fetchall()
 
-        # Fetch attached document briefs (may be empty)
         cur.execute(
             """
             SELECT d.name, d.brief
@@ -281,7 +273,7 @@ async def preview_email(
         )
         attached_docs = cur.fetchall()
 
-    from ..mail.agent import generate_mail
+    from ..mail.agent import MailAgentUtility
 
     user_info = {
         "email": lead["email"],
@@ -295,7 +287,7 @@ async def preview_email(
     campaign_info = {
         "name": campaign["name"],
         "goal": campaign["goal"],
-        "product_context": _build_product_context(attached_docs),
+        "product_context": CampaignUtility._build_product_context(attached_docs),
         "sender_name": campaign["sender_name"],
         "sender_email": campaign["sender_email"],
         "current_sequence": lead["current_sequence"] + 1,
@@ -303,11 +295,13 @@ async def preview_email(
     }
 
     try:
-        result = await generate_mail(user_info, campaign_info, list(previous_emails))
+        result = await MailAgentUtility.generate_mail(
+            user_info=user_info,
+            campaign_info=campaign_info,
+            previous_emails=list(previous_emails)
+        )
         subject = result.subject
 
-        # Mirror scheduler threading: follow-ups go out as "Re: <first subject>".
-        # The preview should show exactly what will hit the inbox.
         if previous_emails:
             original_subject = previous_emails[0]["subject"]
             if original_subject and not original_subject.lower().startswith("re:"):
@@ -324,17 +318,12 @@ async def preview_email(
 async def update_campaign_status(
     campaign_id: str,
     action: str,
-    user: dict[str, Any] = Depends(get_current_user),
+    user: dict[str, Any] = Depends(AuthUtility.get_current_user),
 ):
-    """
-    Toggle campaign status:
-    - action='start': draft/paused -> active (also queues pending leads)
-    - action='stop': active -> paused
-    """
     if action not in ["start", "stop"]:
         raise HTTPException(status_code=400, detail="Action must be 'start' or 'stop'")
 
-    with get_cursor(commit=True) as cur:
+    with DatabaseEngine.get_cursor(commit=True) as cur:
         cur.execute(
             "SELECT status FROM campaigns WHERE id = %s AND user_id = %s",
             (campaign_id, user["id"]),
@@ -366,7 +355,6 @@ async def update_campaign_status(
 
             new_status = "active"
 
-            # Queue pending leads for immediate processing
             cur.execute(
                 """
                 UPDATE leads
@@ -378,7 +366,7 @@ async def update_campaign_status(
                 (campaign_id,),
             )
 
-        else:  # stop
+        else:
             if current_status != "active":
                 raise HTTPException(
                     status_code=400,
@@ -404,10 +392,9 @@ async def update_campaign_status(
 @router.post("/{campaign_id}/duplicate", response_model=CampaignResponse)
 async def duplicate_campaign(
     campaign_id: str,
-    user: dict[str, Any] = Depends(get_current_user),
+    user: dict[str, Any] = Depends(AuthUtility.get_current_user),
 ):
-    """Duplicate a campaign with all its leads into a new draft campaign."""
-    with get_cursor(commit=True) as cur:
+    with DatabaseEngine.get_cursor(commit=True) as cur:
         cur.execute(
             f"SELECT {_CAMPAIGN_COLS} FROM campaigns WHERE id = %s AND user_id = %s",
             (campaign_id, user["id"]),
@@ -417,7 +404,6 @@ async def duplicate_campaign(
         if not original:
             raise HTTPException(status_code=404, detail="Campaign not found")
 
-        # Create new campaign with same settings
         cur.execute(
             f"""
             INSERT INTO campaigns (user_id, name, sender_name, sender_email, goal,
@@ -438,7 +424,6 @@ async def duplicate_campaign(
         new_campaign = cur.fetchone()
         new_id = new_campaign["id"]
 
-        # Copy all leads from original campaign
         cur.execute(
             """
             INSERT INTO leads (campaign_id, email, first_name, last_name, company, title, notes)
@@ -454,15 +439,8 @@ async def duplicate_campaign(
 @router.get("/{campaign_id}/stats")
 async def get_campaign_stats(
     campaign_id: str,
-    user: dict[str, Any] = Depends(get_current_user),
+    user: dict[str, Any] = Depends(AuthUtility.get_current_user),
 ):
-    """
-    Get campaign statistics including email counts and rate limit status.
-
-    Uses a single query with CTEs to collapse what was 8 sequential DB
-    round-trips into one. On a cross-region DB (200ms RTT) this was the
-    difference between ~1.6s and ~200ms per stats load.
-    """
     stats_query = """
     WITH
     camp AS (
@@ -498,11 +476,11 @@ async def get_campaign_stats(
             COUNT(*) FILTER (WHERE e.status IN ('sent', 'failed')) AS emails_sent,
             COUNT(*) FILTER (
                 WHERE e.status = 'sent'
-                  AND e.sent_at >= NOW() - make_interval(mins => %(win)s)
+                   AND e.sent_at >= NOW() - make_interval(mins => %(win)s)
             ) AS emails_in_window,
             MIN(e.sent_at) FILTER (
                 WHERE e.status = 'sent'
-                  AND e.sent_at >= NOW() - make_interval(mins => %(win)s)
+                   AND e.sent_at >= NOW() - make_interval(mins => %(win)s)
             ) AS oldest_in_window
         FROM emails e
         JOIN leads l ON e.lead_id = l.id
@@ -524,7 +502,7 @@ async def get_campaign_stats(
     LEFT JOIN email_agg ea ON true
     """
 
-    with get_cursor() as cur:
+    with DatabaseEngine.get_cursor() as cur:
         cur.execute(
             stats_query,
             {
@@ -535,8 +513,6 @@ async def get_campaign_stats(
         )
         row = cur.fetchone()
 
-    # `camp` CTE returns zero rows if campaign doesn't exist or isn't owned
-    # by this user, which makes the whole SELECT return nothing.
     if not row:
         raise HTTPException(status_code=404, detail="Campaign not found")
 

@@ -10,10 +10,9 @@ from google.auth.transport import requests as google_requests
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
-from .encryption import encrypt_token
-from .dependencies import get_current_user, JWT_SECRET, JWT_ALGORITHM
-from ..db.engine import get_cursor
-from ..logger import logger
+from .encryption import EncryptionUtility
+from .dependencies import AuthUtility, JWT_SECRET, JWT_ALGORITHM
+from ..db import DatabaseEngine
 
 load_dotenv()
 
@@ -24,7 +23,6 @@ GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI", "")
 GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 
-# Scopes: identity + full Gmail access for XOAUTH2 IMAP/SMTP
 SCOPES = [
     "openid",
     "email",
@@ -81,12 +79,13 @@ async def google_login():
 
 
 @router.post("/google/callback", response_model=AuthResponse)
-async def google_callback(body: AuthCallbackRequest):
+async def google_callback(
+    body: AuthCallbackRequest,
+):
     """
     Exchange the Google authorization code for tokens, create/update the user,
     and return a JWT session token.
     """
-    # Exchange code for tokens
     token_response = httpx.post(
         GOOGLE_TOKEN_URL,
         data={
@@ -100,7 +99,6 @@ async def google_callback(body: AuthCallbackRequest):
     )
 
     if token_response.status_code != 200:
-        logger.error(f"Google token exchange failed: {token_response.text}")
         raise HTTPException(status_code=400, detail="Failed to exchange authorization code")
 
     token_data = token_response.json()
@@ -112,15 +110,13 @@ async def google_callback(body: AuthCallbackRequest):
     if not raw_id_token:
         raise HTTPException(status_code=400, detail="No id_token in Google response")
 
-    # Verify and decode the ID token
     try:
         id_info = google_id_token.verify_oauth2_token(
             raw_id_token,
             google_requests.Request(),
             GOOGLE_CLIENT_ID,
         )
-    except ValueError as e:
-        logger.error(f"Google ID token verification failed: {e}")
+    except ValueError:
         raise HTTPException(status_code=400, detail="Invalid Google ID token")
 
     google_id = id_info["sub"]
@@ -131,12 +127,10 @@ async def google_callback(body: AuthCallbackRequest):
 
     token_expiry = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
 
-    # Encrypt tokens for storage
-    encrypted_access = encrypt_token(access_token)
-    encrypted_refresh = encrypt_token(refresh_token) if refresh_token else None
+    encrypted_access = EncryptionUtility.encrypt_token(access_token)
+    encrypted_refresh = EncryptionUtility.encrypt_token(refresh_token) if refresh_token else None
 
-    # Upsert user
-    with get_cursor(commit=True) as cur:
+    with DatabaseEngine.get_cursor(commit=True) as cur:
         cur.execute(
             """
             INSERT INTO users (google_id, email, name, picture_url,
@@ -168,9 +162,6 @@ async def google_callback(body: AuthCallbackRequest):
         user_row = cur.fetchone()
         user_id = str(user_row["id"])
 
-    logger.info(f"User authenticated: {email} (id={user_id})")
-
-    # Create JWT session token
     jwt_payload = {
         "user_id": user_id,
         "email": email,
@@ -191,7 +182,9 @@ async def google_callback(body: AuthCallbackRequest):
 
 
 @router.get("/me", response_model=UserResponse)
-async def get_me(user: dict = Depends(get_current_user)):
+async def get_me(
+    user: dict = Depends(AuthUtility.get_current_user),
+):
     """Return the currently authenticated user's info."""
     return UserResponse(
         id=user["id"],

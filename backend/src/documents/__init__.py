@@ -1,11 +1,9 @@
-"""Document ingestion: parse uploaded product briefs into a text context."""
-
-from .parser import parse_document, DocumentParseError
-from .summarizer import summarize_to_brief, BriefSummarizationError
+from .parser import DocumentParserUtility, DocumentParseError
+from .summarizer import DocumentSummarizerUtility, BriefSummarizationError
 
 __all__ = [
-    "parse_document",
+    "DocumentParserUtility",
     "DocumentParseError",
-    "summarize_to_brief",
+    "DocumentSummarizerUtility",
     "BriefSummarizationError",
 ]

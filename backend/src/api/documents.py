@@ -1,41 +1,27 @@
-"""
-Account-wide documents library and campaign attachment endpoints.
-
-Flow:
-- POST /documents             upload + parse + summarize. File is discarded.
-- GET  /documents             list the caller's library.
-- GET  /documents/{id}        fetch one (with brief, for preview).
-- DELETE /documents/{id}      remove (cascades to attached campaigns).
-- PUT  /campaigns/{id}/documents  attach 0..MAX_DOCUMENTS_PER_CAMPAIGN documents.
-"""
-
-import os as _os
+import os
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from pydantic import BaseModel
 
-from ..auth import get_current_user
-from ..db import get_cursor
+from ..auth import AuthUtility
+from ..db import DatabaseEngine
 from ..documents import (
-    parse_document,
+    DocumentParserUtility,
     DocumentParseError,
-    summarize_to_brief,
+    DocumentSummarizerUtility,
     BriefSummarizationError,
 )
-from ..logger import logger
 
-# Hard cap to keep prompts tight and control LLM input cost.
 MAX_DOCUMENTS_PER_CAMPAIGN = 2
 
 ALLOWED_EXTENSIONS = {".pdf", ".docx", ".pptx", ".txt", ".md"}
-MAX_FILE_BYTES = 10 * 1024 * 1024  # 10 MB
+MAX_FILE_BYTES = 10 * 1024 * 1024
+
 
 library_router = APIRouter(prefix="/documents", tags=["documents"])
 attach_router = APIRouter(prefix="/campaigns/{campaign_id}/documents", tags=["documents"])
 
-
-# ── Response schemas ────────────────────────────────────────────────────
 
 class DocumentSummary(BaseModel):
     id: str
@@ -55,18 +41,15 @@ class CampaignDocumentsUpdate(BaseModel):
     document_ids: List[str]
 
 
-# ── Library CRUD ────────────────────────────────────────────────────────
-
 @library_router.post("", response_model=DocumentDetail)
 async def upload_document(
     file: UploadFile = File(...),
-    user: dict[str, Any] = Depends(get_current_user),
+    user: dict[str, Any] = Depends(AuthUtility.get_current_user),
 ):
-    """Upload, parse via LlamaParse, summarise, save to user's library."""
     if not file.filename:
         raise HTTPException(status_code=400, detail="Missing filename")
 
-    ext = _os.path.splitext(file.filename)[1].lower()
+    ext = os.path.splitext(file.filename)[1].lower()
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(
             status_code=400,
@@ -83,22 +66,20 @@ async def upload_document(
         )
 
     try:
-        markdown = await parse_document(body, file.filename)
+        markdown = await DocumentParserUtility.parse_document(body, file.filename)
     except DocumentParseError as e:
         raise HTTPException(status_code=422, detail=str(e))
-    except Exception as e:
-        logger.error(f"Unexpected parse error for {file.filename}: {e}")
+    except Exception:
         raise HTTPException(status_code=502, detail="Document parsing service is unavailable.")
 
     try:
-        brief = await summarize_to_brief(markdown)
+        brief = await DocumentSummarizerUtility.summarize_to_brief(markdown)
     except BriefSummarizationError as e:
         raise HTTPException(status_code=422, detail=str(e))
-    except Exception as e:
-        logger.error(f"Unexpected summarization error: {e}")
+    except Exception:
         raise HTTPException(status_code=502, detail="Summarization service is unavailable.")
 
-    with get_cursor(commit=True) as cur:
+    with DatabaseEngine.get_cursor(commit=True) as cur:
         cur.execute(
             """
             INSERT INTO documents (user_id, name, brief, size_bytes, extension)
@@ -122,8 +103,10 @@ async def upload_document(
 
 
 @library_router.get("", response_model=List[DocumentSummary])
-async def list_documents(user: dict[str, Any] = Depends(get_current_user)):
-    with get_cursor() as cur:
+async def list_documents(
+    user: dict[str, Any] = Depends(AuthUtility.get_current_user),
+):
+    with DatabaseEngine.get_cursor() as cur:
         cur.execute(
             """
             SELECT id, name, size_bytes, extension, created_at, updated_at
@@ -150,9 +133,9 @@ async def list_documents(user: dict[str, Any] = Depends(get_current_user)):
 @library_router.get("/{document_id}", response_model=DocumentDetail)
 async def get_document(
     document_id: str,
-    user: dict[str, Any] = Depends(get_current_user),
+    user: dict[str, Any] = Depends(AuthUtility.get_current_user),
 ):
-    with get_cursor() as cur:
+    with DatabaseEngine.get_cursor() as cur:
         cur.execute(
             """
             SELECT id, name, brief, size_bytes, extension, created_at, updated_at
@@ -179,10 +162,9 @@ async def get_document(
 @library_router.delete("/{document_id}")
 async def delete_document(
     document_id: str,
-    user: dict[str, Any] = Depends(get_current_user),
+    user: dict[str, Any] = Depends(AuthUtility.get_current_user),
 ):
-    """Remove a document from the library. Cascades to campaign_documents."""
-    with get_cursor(commit=True) as cur:
+    with DatabaseEngine.get_cursor(commit=True) as cur:
         cur.execute(
             "DELETE FROM documents WHERE id = %s AND user_id = %s RETURNING id",
             (document_id, user["id"]),
@@ -192,29 +174,21 @@ async def delete_document(
     return {"message": "Document deleted"}
 
 
-# ── Campaign attachment ─────────────────────────────────────────────────
-
 @attach_router.put("", response_model=List[DocumentSummary])
 async def set_campaign_documents(
     campaign_id: str,
     payload: CampaignDocumentsUpdate,
-    user: dict[str, Any] = Depends(get_current_user),
+    user: dict[str, Any] = Depends(AuthUtility.get_current_user),
 ):
-    """
-    Replace the set of documents attached to this campaign. Caps at
-    MAX_DOCUMENTS_PER_CAMPAIGN. All document_ids must belong to the caller.
-    """
     if len(payload.document_ids) > MAX_DOCUMENTS_PER_CAMPAIGN:
         raise HTTPException(
             status_code=400,
             detail=f"A campaign can have at most {MAX_DOCUMENTS_PER_CAMPAIGN} documents attached.",
         )
 
-    # De-duplicate client-supplied IDs
     doc_ids = list(dict.fromkeys(payload.document_ids))
 
-    with get_cursor(commit=True) as cur:
-        # Campaign ownership + mutability
+    with DatabaseEngine.get_cursor(commit=True) as cur:
         cur.execute(
             "SELECT status FROM campaigns WHERE id = %s AND user_id = %s",
             (campaign_id, user["id"]),
@@ -228,7 +202,6 @@ async def set_campaign_documents(
                 detail="Attached documents can only be changed on draft or paused campaigns.",
             )
 
-        # Verify all doc_ids belong to this user, in one query
         if doc_ids:
             cur.execute(
                 "SELECT id FROM documents WHERE id = ANY(%s::uuid[]) AND user_id = %s",
@@ -242,7 +215,6 @@ async def set_campaign_documents(
                     detail=f"Documents not found in your library: {', '.join(missing)}",
                 )
 
-        # Replace attachments atomically
         cur.execute(
             "DELETE FROM campaign_documents WHERE campaign_id = %s",
             (campaign_id,),
@@ -253,7 +225,6 @@ async def set_campaign_documents(
                 (campaign_id, doc_id),
             )
 
-        # Return the attached documents in insertion order
         cur.execute(
             """
             SELECT d.id, d.name, d.size_bytes, d.extension, d.created_at, d.updated_at

@@ -11,7 +11,6 @@ class CampaignCreate(BaseModel):
     max_follow_ups: int = 3
     scheduled_start_at: Optional[str] = None
 
-
 class AttachedDocument(BaseModel):
     id: str
     name: str
@@ -19,7 +18,6 @@ class AttachedDocument(BaseModel):
     extension: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-
 
 class CampaignResponse(BaseModel):
     id: str
@@ -104,4 +102,3 @@ class EmailActivityResponse(BaseModel):
     status: str
     sent_at: Optional[datetime]
     created_at: datetime
-

@@ -1,6 +1,5 @@
 from pydantic import BaseModel
 
-
 class PersonalizedMessage(BaseModel):
     subject: str
     body: str

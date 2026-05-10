@@ -5,7 +5,7 @@ from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
-from src.db import init_db, test_connection, init_pool, close_pool  # type: ignore
+from src.db import DatabaseEngine, DatabaseInitializer  # type: ignore
 from src.api import (  # type: ignore
     campaigns_router,
     leads_router,
@@ -14,20 +14,19 @@ from src.api import (  # type: ignore
     documents_attach_router,
 )
 from src.auth import auth_router  # type: ignore
-from src.scheduler import start_scheduler, stop_scheduler  # type: ignore
+from src.scheduler import SchedulerUtility  # type: ignore
 
 load_dotenv()
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    init_pool()
-    if test_connection():
-        init_db()
-        start_scheduler()
+    DatabaseEngine.init_pool()
+    if DatabaseEngine.test_connection():
+        DatabaseInitializer.init_db()
+        SchedulerUtility.start_scheduler()
     yield
-    stop_scheduler()
-    close_pool()
+    SchedulerUtility.stop_scheduler()
+    DatabaseEngine.close_pool()
 
 
 app = FastAPI(
@@ -37,9 +36,11 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS origins from environment, comma-separated
-_raw_origins = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:8000")
-CORS_ORIGINS = [origin.strip() for origin in _raw_origins.split(",") if origin.strip()]
+CORS_ORIGINS: list[str] = [
+    origin.strip()
+    for origin in os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:8000").split(",")
+    if origin.strip()
+]
 
 app.add_middleware(
     CORSMiddleware,
@@ -62,7 +63,7 @@ api_router.include_router(documents_attach_router)
 
 @api_router.get("/health")
 async def health_check():
-    db_connected = test_connection()
+    db_connected = DatabaseEngine.test_connection()
     return {
         "status": "healthy" if db_connected else "degraded",
         "database": "connected" if db_connected else "disconnected",

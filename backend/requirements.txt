@@ -3,12 +3,9 @@ python-dotenv==1.2.1
 fastapi[standard]==0.128.0
 psycopg2-binary==2.9.11
 pydantic==2.12.5
-axiom-py==0.9.1
 apscheduler==3.11.0
 cryptography>=43.0.0
 PyJWT>=2.9.0
 google-auth>=2.35.0
 httpx>=0.27.0
 llama-cloud>=0.1.0
-pytest>=8.0.0
-pytest-asyncio>=0.24.0

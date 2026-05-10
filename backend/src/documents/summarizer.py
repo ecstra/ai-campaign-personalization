@@ -1,17 +1,10 @@
-"""
-LLM summarization of parsed document markdown into a product brief
-used as context during email generation.
-"""
-
+import os
 from textwrap import dedent
-from typing import Optional
 
 from pydantic import BaseModel, Field
 from moonlight import Agent, Content
 
-from ..logger import logger
-from ..mail.agent import PROVIDER  # Reuse the configured LLM provider
-import os
+from ..mail.provider import LLM_PROVIDER, LLM_MODEL
 
 
 class BriefSummarizationError(Exception):
@@ -61,55 +54,54 @@ Return a single Markdown document with short sections. Use headings
 flowing paragraphs.
 """)
 
+class DocumentSummarizerUtility:
 
-async def summarize_to_brief(markdown: str) -> str:
-    """
-    Take parsed document markdown, return a 300-500 word product brief.
+    @staticmethod
+    async def summarize_to_brief(
+        markdown: str,
+    ) -> str:
+        """
+        Take parsed document markdown, return a 300-500 word product brief.
+        Raises BriefSummarizationError on LLM failure or empty output.
+        """
+        if not markdown or not markdown.strip():
+            raise BriefSummarizationError("Empty document markdown")
 
-    Raises:
-        BriefSummarizationError: on LLM failure or empty output.
-    """
-    if not markdown or not markdown.strip():
-        raise BriefSummarizationError("Empty document markdown")
+        max_chars = 32_000
+        source = markdown[:max_chars]
+        if len(markdown) > max_chars:
+            source += f"\n\n[... truncated, {len(markdown) - max_chars:,} more characters ...]"
 
-    # Truncate aggressively to stay inside the context window for cheaper
-    # models. 32k chars ≈ 8k tokens. Plenty to capture a product deck.
-    max_chars = 32_000
-    source = markdown[:max_chars]
-    if len(markdown) > max_chars:
-        source += f"\n\n[... truncated, {len(markdown) - max_chars:,} more characters ...]"
+        prompt = dedent(f"""
+        ## SOURCE DOCUMENT
 
-    prompt = dedent(f"""
-    ## SOURCE DOCUMENT
+        {source}
 
-    {source}
+        ---
 
-    ---
+        Produce the product brief now, following the quality bar and format
+        above. Return ONLY the JSON object with the `brief` field.
+        """)
 
-    Produce the product brief now, following the quality bar and format
-    above. Return ONLY the JSON object with the `brief` field.
-    """)
-
-    agent = Agent(
-        provider=PROVIDER,
-        model=os.getenv("LLM_MODEL"),  # type: ignore
-        output_schema=ProductBrief,
-        system_role=BRIEF_SYSTEM_PROMPT,
-        persistence=False,
-    )
-
-    try:
-        response: ProductBrief = await agent.run(Content(prompt))  # type: ignore
-    except Exception as e:
-        logger.error(f"Brief summarization failed: {e}")
-        raise BriefSummarizationError(
-            "The model failed to summarize the document. Please try again."
-        ) from e
-
-    brief = response.brief.strip()
-    if len(brief) < 200:
-        raise BriefSummarizationError(
-            "The generated brief was too short to be useful. "
-            "The source document may not have contained enough substance."
+        agent = Agent(
+            provider=LLM_PROVIDER,
+            model=LLM_MODEL,
+            output_schema=ProductBrief,
+            system_role=BRIEF_SYSTEM_PROMPT,
+            persistence=False,
         )
-    return brief
+
+        try:
+            response = await agent.run(Content(prompt))
+        except Exception as e:
+            raise BriefSummarizationError(
+                "The model failed to summarize the document. Please try again."
+            ) from e
+
+        brief = response.brief.strip() # type: ignore
+        if len(brief) < 200:
+            raise BriefSummarizationError(
+                "The generated brief was too short to be useful. "
+                "The source document may not have contained enough substance."
+            )
+        return brief

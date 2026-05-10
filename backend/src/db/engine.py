@@ -1,106 +1,93 @@
-import os, psycopg2
+import os
+from contextlib import contextmanager
+from typing import Any, Generator
 
+import psycopg2
 from psycopg2 import pool
 from psycopg2.extras import RealDictCursor
-from contextlib import contextmanager
 from dotenv import load_dotenv
-
-from ..logger import logger
 
 load_dotenv()
 
-DATABASE_URI = os.getenv("DATABASE_URI")
+class DatabaseEngine:
 
-if not DATABASE_URI:
-    raise ValueError("DATABASE_URI environment variable is not set")
+    _pg_pool: pool.ThreadedConnectionPool | None = None
 
-# Connection pool (initialized lazily via init_pool)
-pg_pool: pool.ThreadedConnectionPool | None = None
+    @classmethod
+    def init_pool(cls) -> None:
+        """
+        Initializes the thread-safe connection pool. Call once at app startup.
+        """
+        if cls._pg_pool is not None:
+            return
 
-def init_pool() -> None:
-    # Initialize the thread-safe connection pool. Call once at app startup.
-    global pg_pool
-    
-    if pg_pool is not None:
-        logger.warning("Connection pool already initialized, skipping")
-        return
-    
-    try:
-        # Min 2 connections, Max 20 connections
-        pg_pool = pool.ThreadedConnectionPool(2, 20, DATABASE_URI)
-        logger.info("Database connection pool created (min=2, max=20)")
-    except Exception as e:
-        logger.error(f"Error creating connection pool: {e}")
-        raise
+        db_uri = os.getenv("DATABASE_URI")
+        if not db_uri:
+            raise ValueError("DATABASE_URI environment variable is not set")
 
-def close_pool() -> None:
-    # Close all connections in the pool. Call at app shutdown.
-    global pg_pool
-    
-    if pg_pool is None:
-        logger.warning("Connection pool not initialized, nothing to close")
-        return
-    
-    pg_pool.closeall()
-    pg_pool = None
-    logger.info("Database connection pool closed")
+        cls._pg_pool = pool.ThreadedConnectionPool(2, 20, db_uri)
 
-@contextmanager
-def get_connection():
-    """
-    Context manager for database connections using the pool.
-    Connections are returned to the pool after use, not closed.
-    """
-    if pg_pool is None:
-        raise RuntimeError("Connection pool not initialized. Call init_pool() first.")
-    
-    conn = None
-    try:
-        conn = pg_pool.getconn()
-        yield conn
-    except psycopg2.Error as e:
-        logger.error(f"Database connection error: {e}")
-        raise
-    finally:
-        if conn:
-            pg_pool.putconn(conn)
+    @classmethod
+    def close_pool(cls) -> None:
+        """
+        Closes all connections in the pool. Call at app shutdown.
+        """
+        if cls._pg_pool is None:
+            return
 
-@contextmanager
-def get_cursor(commit: bool = False):
-    """
-    Context manager for database cursor with automatic commit/rollback.
-    Returns a RealDictCursor for dictionary-style row access.
-    
-    Args:
-        commit: If True, commits on success. If False, caller handles commit.
-    
-    Usage:
-        with get_cursor(commit=True) as cur:
-            cur.execute("INSERT INTO leads (email) VALUES (%s)", ("test@example.com",))
-        
-        with get_cursor() as cur:
-            cur.execute("SELECT * FROM leads WHERE id = %s", (lead_id,))
-            lead = cur.fetchone()  # Returns dict: {"id": "...", "email": "..."}
-    """
-    with get_connection() as conn:
-        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cls._pg_pool.closeall()
+        cls._pg_pool = None
+
+    @classmethod
+    @contextmanager
+    def get_connection(cls) -> Generator[Any, None, None]:
+        """
+        Context manager for database connections using the pool.
+        Connections are returned to the pool after use, not closed.
+        """
+        if cls._pg_pool is None:
+            raise RuntimeError("Connection pool not initialized. Call init_pool() first.")
+
+        conn = None
         try:
-            yield cur
-            if commit:
-                conn.commit()
-        except Exception as e:
-            conn.rollback()
-            logger.error(f"Database operation failed, rolled back: {e}")
+            conn = cls._pg_pool.getconn()
+            yield conn
+        except psycopg2.Error:
             raise
         finally:
-            cur.close()
+            if conn:
+                cls._pg_pool.putconn(conn)
 
-def test_connection() -> bool:
-    # Test if database connection works.
-    try:
-        with get_cursor() as cur:
-            cur.execute("SELECT 1")
-            return True
-    except Exception as e:
-        logger.error(f"Database connection test failed: {e}")
-        return False
+    @classmethod
+    @contextmanager
+    def get_cursor(
+        cls,
+        commit: bool = False,
+    ) -> Generator[Any, None, None]:
+        """
+        Context manager for database cursor with automatic commit/rollback.
+        Returns a RealDictCursor for dictionary-style row access.
+        """
+        with cls.get_connection() as conn:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            try:
+                yield cur
+                if commit:
+                    conn.commit()
+            except Exception:
+                conn.rollback()
+                raise
+            finally:
+                cur.close()
+
+    @classmethod
+    def test_connection(cls) -> bool:
+        """
+        Tests if the database connection works.
+        """
+        try:
+            with cls.get_cursor() as cur:
+                cur.execute("SELECT 1")
+                return True
+        except Exception:
+            return False

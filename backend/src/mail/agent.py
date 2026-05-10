@@ -1,37 +1,20 @@
-import os, asyncio
-
+import os
+import asyncio
 from textwrap import dedent
-from dotenv import load_dotenv
+from typing import Dict, Any, List
 
-from moonlight import Agent, Provider, Content
+from moonlight import Agent, Content
 
 from .base import PersonalizedMessage
-from ..logger import logger
+from .critic import CriticUtility
+from .provider import LLM_PROVIDER, LLM_MODEL
 
-load_dotenv()
-
-# AI Provider Configuration
-SOURCE = os.getenv("LLM_SOURCE")
-API = os.getenv("LLM_API_KEY")
-MODEL = os.getenv("LLM_MODEL")
-
-# Retry configuration
 MAX_RETRIES = 3
+RETRY_DELAYS = [1, 2, 4]
 
-# Ensure that this is length of MAX_RETRIES and values are in seconds
-RETRY_DELAYS = [1, 2, 4]  # Exponential backoff: 1s, 2s, 4s
-
-# Check if the length of RETRY_DELAYS is equal to MAX_RETRIES
 if len(RETRY_DELAYS) != MAX_RETRIES:
     raise ValueError("RETRY_DELAYS must be of length MAX_RETRIES")
 
-# Initialize Provider
-PROVIDER = Provider(
-    source=SOURCE, # type: ignore
-    api=API        # type: ignore
-)
-
-# Role & Prompt for the AI
 ROLE = dedent("""
 # Role
 
@@ -275,139 +258,128 @@ If this is a follow-up, also check:
 Generate the email now.
 """)
 
-async def _generate_draft(
-    user_info: dict,
-    campaign_info: dict,
-    previous_emails: list,
-    extra_instructions: str = "",
-) -> PersonalizedMessage:
-    """
-    Run one generation pass with the full ROLE + PROMPT. Raises on
-    unrecoverable errors after MAX_RETRIES transient retries.
 
-    `extra_instructions`, when non-empty, is appended to the prompt. The
-    critique loop uses this to inject "previous draft was rejected for
-    these violations" guidance into the regeneration call.
-    """
-    email_agent = Agent(
-        provider=PROVIDER,
-        model=MODEL,  # type: ignore
-        output_schema=PersonalizedMessage,
-        system_role=ROLE,
-        persistence=False,
-    )
+class MailAgentUtility:
 
-    product_context = campaign_info.get("product_context") if isinstance(campaign_info, dict) else None
-    campaign_info_clean = (
-        {k: v for k, v in campaign_info.items() if k != "product_context"}
-        if isinstance(campaign_info, dict)
-        else campaign_info
-    )
-
-    base_prompt = PROMPT.format(
-        user_info=user_info,
-        campaign_info=campaign_info_clean,
-        product_context=product_context or "(no document uploaded)",
-        previous_emails=previous_emails,
-    )
-    full_prompt = base_prompt + (f"\n\n{extra_instructions}" if extra_instructions else "")
-    email_agent_prompt = Content(full_prompt)
-
-    last_exception: Exception | None = None
-    for attempt in range(MAX_RETRIES):
-        try:
-            response: PersonalizedMessage = await email_agent.run(email_agent_prompt)  # type: ignore
-            return response
-        except Exception as e:
-            last_exception = e
-            logger.warning(
-                f"Email generation failed (attempt {attempt + 1}/{MAX_RETRIES}): {str(e)}"
-            )
-            if attempt < MAX_RETRIES - 1:
-                await asyncio.sleep(RETRY_DELAYS[attempt])
-
-    logger.error(f"Email generation failed after {MAX_RETRIES} attempts: {str(last_exception)}")
-    if last_exception:
-        raise last_exception
-    raise RuntimeError("Email generation failed without a captured exception")
-
-
-def _recipient_context_for_critic(user_info: dict) -> str:
-    """Compact recipient summary the critic can use for relevance checks."""
-    if not isinstance(user_info, dict):
-        return ""
-    parts = []
-    name = f"{user_info.get('first_name') or ''} {user_info.get('last_name') or ''}".strip()
-    if name:
-        parts.append(f"Name: {name}")
-    if user_info.get("company"):
-        parts.append(f"Company: {user_info['company']}")
-    if user_info.get("title"):
-        parts.append(f"Title: {user_info['title']}")
-    if user_info.get("notes"):
-        parts.append(f"Notes: {user_info['notes']}")
-    return "\n".join(parts) or "(no recipient context available)"
-
-
-async def generate_mail(
-    user_info: dict,
-    campaign_info: dict,
-    previous_emails: list,
-) -> PersonalizedMessage:
-    """
-    Generate a personalised email with an optional critique-and-regenerate
-    quality gate.
-
-    When CRITIQUE_ENABLED (env var) is truthy (default), after the first
-    generation we run the draft through a critic LLM. If the critic flags
-    violations, we regenerate once, passing the violation list back in as
-    extra guidance. After two attempts we return whatever the loop ended
-    on — the critic is a soft gate, not a hard blocker.
-
-    Cost: two LLM calls per email on passes, three on failures (1 gen +
-    1 critique + 1 regen). Latency: +3-5s per email.
-    """
-    critique_enabled = os.getenv("CRITIQUE_ENABLED", "true").lower() in ("1", "true", "yes", "on")
-
-    draft = await _generate_draft(user_info, campaign_info, previous_emails)
-
-    if not critique_enabled:
-        return draft
-
-    # Lazy import to avoid a circular import during module loading.
-    from .critic import critique_email
-
-    recipient_context = _recipient_context_for_critic(user_info)
-
-    critique = await critique_email(draft.subject, draft.body, recipient_context)
-    if critique.passed:
-        return draft
-
-    logger.info(
-        f"Critic rejected first draft; regenerating. Violations: {critique.violations}"
-    )
-
-    violation_block = (
-        "## CRITICAL — PREVIOUS DRAFT REJECTED\n\n"
-        "An earlier version of this email was rejected by the quality reviewer "
-        "for the following specific violations. Do NOT repeat any of them in "
-        "this draft:\n\n"
-        + "\n".join(f"- {v}" for v in critique.violations)
-        + "\n\nRewrite from scratch honouring the original instructions. "
-        "Pay particular attention to deleting filler adjectives and phrase patterns "
-        "(e.g. 'sized to your [adjective] [generic noun]') — cut the entire phrase "
-        "unless you have a concrete measurable spec to put in its place."
-    )
-
-    try:
-        draft_v2 = await _generate_draft(
-            user_info, campaign_info, previous_emails, extra_instructions=violation_block
+    @staticmethod
+    async def _generate_draft(
+        user_info: Dict[str, Any],
+        campaign_info: Dict[str, Any],
+        previous_emails: List[Dict[str, Any]],
+        extra_instructions: str = "",
+    ) -> PersonalizedMessage:
+        """
+        Run one generation pass with the full ROLE + PROMPT. Raises on
+        unrecoverable errors after MAX_RETRIES transient retries.
+        """
+        email_agent = Agent(
+            provider=LLM_PROVIDER,
+            model=LLM_MODEL,
+            output_schema=PersonalizedMessage,
+            system_role=ROLE,
+            persistence=False,
         )
-    except Exception as e:
-        # If the regen fails, return the first draft — the critic was
-        # advisory. Losing the email entirely would be worse than shipping
-        # a draft with filler.
-        logger.warning(f"Regeneration failed, returning first draft: {e}")
-        return draft
 
-    return draft_v2
+        product_context = campaign_info.get("product_context") if isinstance(campaign_info, dict) else None
+        campaign_info_clean = (
+            {k: v for k, v in campaign_info.items() if k != "product_context"}
+            if isinstance(campaign_info, dict)
+            else campaign_info
+        )
+
+        base_prompt = PROMPT.format(
+            user_info=user_info,
+            campaign_info=campaign_info_clean,
+            product_context=product_context or "(no document uploaded)",
+            previous_emails=previous_emails,
+        )
+        full_prompt = base_prompt + (f"\n\n{extra_instructions}" if extra_instructions else "")
+        email_agent_prompt = Content(full_prompt)
+
+        last_exception: Exception | None = None
+        for attempt in range(MAX_RETRIES):
+            try:
+                response = await email_agent.run(email_agent_prompt)
+                return response # type: ignore
+            except Exception as e:
+                last_exception = e
+                if attempt < MAX_RETRIES - 1:
+                    await asyncio.sleep(RETRY_DELAYS[attempt])
+
+        if last_exception:
+            raise last_exception
+        raise RuntimeError("Email generation failed without a captured exception")
+
+    @staticmethod
+    def _recipient_context_for_critic(
+        user_info: Dict[str, Any],
+    ) -> str:
+        """Compact recipient summary the critic can use for relevance checks."""
+        if not isinstance(user_info, dict):
+            return ""
+        parts = []
+        name = f"{user_info.get('first_name') or ''} {user_info.get('last_name') or ''}".strip()
+        if name:
+            parts.append(f"Name: {name}")
+        if user_info.get("company"):
+            parts.append(f"Company: {user_info['company']}")
+        if user_info.get("title"):
+            parts.append(f"Title: {user_info['title']}")
+        if user_info.get("notes"):
+            parts.append(f"Notes: {user_info['notes']}")
+        return "\n".join(parts) or "(no recipient context available)"
+
+    @staticmethod
+    async def generate_mail(
+        user_info: Dict[str, Any],
+        campaign_info: Dict[str, Any],
+        previous_emails: List[Dict[str, Any]],
+    ) -> PersonalizedMessage:
+        """
+        Generate a personalised email with an optional critique-and-regenerate
+        quality gate.
+        """
+        critique_enabled = os.getenv("CRITIQUE_ENABLED", "true").lower() in ("1", "true", "yes", "on")
+
+        draft = await MailAgentUtility._generate_draft(
+            user_info=user_info,
+            campaign_info=campaign_info,
+            previous_emails=previous_emails,
+        )
+
+        if not critique_enabled:
+            return draft
+
+        recipient_context = MailAgentUtility._recipient_context_for_critic(user_info)
+
+        critique = await CriticUtility.critique_email(
+            subject=draft.subject,
+            body=draft.body,
+            recipient_context=recipient_context,
+        )
+        if critique.passed:
+            return draft
+
+        violation_block = (
+            "## CRITICAL — PREVIOUS DRAFT REJECTED\n\n"
+            "An earlier version of this email was rejected by the quality reviewer "
+            "for the following specific violations. Do NOT repeat any of them in "
+            "this draft:\n\n"
+            + "\n".join(f"- {v}" for v in critique.violations)
+            + "\n\nRewrite from scratch honouring the original instructions. "
+            "Pay particular attention to deleting filler adjectives and phrase patterns "
+            "(e.g. 'sized to your [adjective] [generic noun]') — cut the entire phrase "
+            "unless you have a concrete measurable spec to put in its place."
+        )
+
+        try:
+            draft_v2 = await MailAgentUtility._generate_draft(
+                user_info=user_info,
+                campaign_info=campaign_info,
+                previous_emails=previous_emails,
+                extra_instructions=violation_block,
+            )
+        except Exception:
+            return draft
+
+        return draft_v2

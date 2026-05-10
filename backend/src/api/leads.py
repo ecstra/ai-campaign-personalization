@@ -3,8 +3,8 @@ from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException
 from psycopg2.extras import execute_values
 
-from ..auth import get_current_user
-from ..db import get_cursor
+from ..auth import AuthUtility
+from ..db import DatabaseEngine
 from .models import (
     LeadCreate,
     LeadBulkCreate,
@@ -15,10 +15,7 @@ from .models import (
     EmailActivityResponse,
 )
 
-# Router for lead operations scoped to a campaign
 router = APIRouter(prefix="/campaigns/{campaign_id}/leads", tags=["leads"])
-
-# Router for lead detail operations (not scoped to campaign in URL)
 detail_router = APIRouter(prefix="/leads", tags=["leads"])
 
 
@@ -41,9 +38,9 @@ def _verify_campaign_ownership(
 @router.get("", response_model=List[LeadResponse])
 async def list_leads(
     campaign_id: str,
-    user: dict[str, Any] = Depends(get_current_user),
+    user: dict[str, Any] = Depends(AuthUtility.get_current_user),
 ):
-    with get_cursor() as cur:
+    with DatabaseEngine.get_cursor() as cur:
         _verify_campaign_ownership(cur, campaign_id, user["id"])
         cur.execute(
             """
@@ -63,9 +60,9 @@ async def list_leads(
 async def create_lead(
     campaign_id: str,
     lead: LeadCreate,
-    user: dict[str, Any] = Depends(get_current_user),
+    user: dict[str, Any] = Depends(AuthUtility.get_current_user),
 ):
-    with get_cursor(commit=True) as cur:
+    with DatabaseEngine.get_cursor(commit=True) as cur:
         campaign = _verify_campaign_ownership(cur, campaign_id, user["id"])
         if campaign["status"] == "completed":
             raise HTTPException(status_code=400, detail="Cannot add leads to a completed campaign")
@@ -105,12 +102,12 @@ async def create_lead(
 async def bulk_create_leads(
     campaign_id: str,
     data: LeadBulkCreate,
-    user: dict[str, Any] = Depends(get_current_user),
+    user: dict[str, Any] = Depends(AuthUtility.get_current_user),
 ):
     if not data.leads:
         raise HTTPException(status_code=400, detail="No leads provided")
 
-    with get_cursor(commit=True) as cur:
+    with DatabaseEngine.get_cursor(commit=True) as cur:
         campaign = _verify_campaign_ownership(cur, campaign_id, user["id"])
         if campaign["status"] == "completed":
             raise HTTPException(status_code=400, detail="Cannot add leads to a completed campaign")
@@ -140,7 +137,6 @@ async def bulk_create_leads(
         if not rows_to_insert:
             return []
 
-        # Single round-trip multi-row INSERT, returns all created rows
         created_leads = execute_values(
             cur,
             """
@@ -160,9 +156,9 @@ async def bulk_create_leads(
 async def delete_lead(
     campaign_id: str,
     lead_id: str,
-    user: dict[str, Any] = Depends(get_current_user),
+    user: dict[str, Any] = Depends(AuthUtility.get_current_user),
 ):
-    with get_cursor(commit=True) as cur:
+    with DatabaseEngine.get_cursor(commit=True) as cur:
         _verify_campaign_ownership(cur, campaign_id, user["id"])
         cur.execute(
             "DELETE FROM leads WHERE id = %s AND campaign_id = %s RETURNING id",
@@ -180,13 +176,12 @@ async def delete_lead(
 async def bulk_delete_leads(
     campaign_id: str,
     data: LeadBulkDelete,
-    user: dict[str, Any] = Depends(get_current_user),
+    user: dict[str, Any] = Depends(AuthUtility.get_current_user),
 ):
-    """Delete multiple leads from a campaign at once."""
     if not data.lead_ids:
         raise HTTPException(status_code=400, detail="No lead IDs provided")
 
-    with get_cursor(commit=True) as cur:
+    with DatabaseEngine.get_cursor(commit=True) as cur:
         _verify_campaign_ownership(cur, campaign_id, user["id"])
         cur.execute(
             "DELETE FROM leads WHERE id = ANY(%s::uuid[]) AND campaign_id = %s",
@@ -200,10 +195,9 @@ async def bulk_delete_leads(
 @detail_router.get("/{lead_id}", response_model=LeadDetailResponse)
 async def get_lead_detail(
     lead_id: str,
-    user: dict[str, Any] = Depends(get_current_user),
+    user: dict[str, Any] = Depends(AuthUtility.get_current_user),
 ):
-    """Get detailed lead info including campaign context. Verifies user ownership via campaign."""
-    with get_cursor() as cur:
+    with DatabaseEngine.get_cursor() as cur:
         cur.execute(
             """
             SELECT
@@ -229,11 +223,9 @@ async def get_lead_detail(
 async def get_lead_activity(
     lead_id: str,
     campaign_id: str,
-    user: dict[str, Any] = Depends(get_current_user),
+    user: dict[str, Any] = Depends(AuthUtility.get_current_user),
 ):
-    """Get email activity for a specific lead. Verifies campaign ownership."""
-    with get_cursor() as cur:
-        # Verify ownership through campaign join
+    with DatabaseEngine.get_cursor() as cur:
         cur.execute(
             """
             SELECT l.id
@@ -264,9 +256,8 @@ async def get_lead_activity(
 async def update_lead(
     lead_id: str,
     update: LeadUpdate,
-    user: dict[str, Any] = Depends(get_current_user),
+    user: dict[str, Any] = Depends(AuthUtility.get_current_user),
 ):
-    """Update lead information. Verifies ownership via campaign join."""
     updates: list[str] = []
     params: list[Any] = []
 
@@ -296,7 +287,7 @@ async def update_lead(
 
     if update.has_replied is not None:
         updates.append("has_replied = %s")
-        params.append(str(update.has_replied))
+        params.append(update.has_replied)
 
     if update.status is not None:
         updates.append("status = %s")
@@ -308,7 +299,7 @@ async def update_lead(
     updates.append("updated_at = NOW()")
     params.extend([lead_id, user["id"]])
 
-    with get_cursor(commit=True) as cur:
+    with DatabaseEngine.get_cursor(commit=True) as cur:
         cur.execute(
             f"""
             UPDATE leads
