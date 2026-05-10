@@ -87,5 +87,9 @@ ENV/
 pyrefly.toml
 todo.md
 test.py
-# Claude Code local settings (may contain Bash approvals with secrets)
-.claude/settings.local.json
+
+# Claude Code local settings
+.claude
+
+# Other branches
+ai-campaign-personalization-*

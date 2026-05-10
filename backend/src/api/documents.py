@@ -12,8 +12,7 @@ from core.utilities.document import (
     DocumentSummarizerUtility,
     BriefSummarizationError,
 )
-
-MAX_DOCUMENTS_PER_CAMPAIGN = 2
+from .config import MAX_DOCUMENTS_PER_CAMPAIGN
 
 ALLOWED_EXTENSIONS = {".pdf", ".docx", ".pptx", ".txt", ".md"}
 MAX_FILE_BYTES = 10 * 1024 * 1024

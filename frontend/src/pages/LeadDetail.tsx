@@ -46,6 +46,7 @@ type Lead = {
     created_at: string
     updated_at: string
     campaign_name: string
+    max_follow_ups: number
 }
 
 type EmailActivity = {
@@ -305,7 +306,7 @@ export default function LeadDetail() {
                                 <Hash size={12} />
                                 <span className="text-[11px] font-medium uppercase tracking-wide">Sequence</span>
                             </div>
-                            <p className="text-[14px] font-medium">{lead.current_sequence} / {3}</p>
+                            <p className="text-[14px] font-medium">{lead.current_sequence} / {lead.max_follow_ups}</p>
                         </div>
                         <div className="bg-card border rounded-xl p-3.5">
                             <div className="flex items-center gap-1.5 text-muted-foreground mb-1.5">

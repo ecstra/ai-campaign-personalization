@@ -20,7 +20,8 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      "/api": "http://localhost:8000",
+      "/api": "https://api.automa-labs.com",
     },
+    allowedHosts: ["app.automa-labs.com"],
   },
 })

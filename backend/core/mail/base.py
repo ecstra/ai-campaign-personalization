@@ -13,3 +13,4 @@ class Mail(BaseModel):
     to: str
     subject: str
     body: str
+    lead_id: str | None = None

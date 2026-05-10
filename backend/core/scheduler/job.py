@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
-from .config import JOB_INTERVAL_SECONDS, REPLY_CHECK_INTERVAL_SECONDS, CAMPAIGN_CHECK_INTERVAL_SECONDS
+from .config import JOB_INTERVAL_SECONDS, CAMPAIGN_CHECK_INTERVAL_SECONDS
 from .processor import SchedulerProcessorUtility
 
 _STARTUP_STAGGER_SECONDS = 5
@@ -28,21 +28,12 @@ class SchedulerUtility:
         )
 
         SchedulerUtility._scheduler.add_job(
-            SchedulerProcessorUtility.check_replies_job,
-            trigger=IntervalTrigger(seconds=REPLY_CHECK_INTERVAL_SECONDS),
-            id="reply_checking_job",
-            name="Check for email replies via IMAP",
-            replace_existing=True,
-            next_run_time=now + timedelta(seconds=_STARTUP_STAGGER_SECONDS),
-        )
-
-        SchedulerUtility._scheduler.add_job(
             SchedulerProcessorUtility.check_scheduled_campaigns,
             trigger=IntervalTrigger(seconds=CAMPAIGN_CHECK_INTERVAL_SECONDS),
             id="scheduled_campaign_job",
             name="Auto-start scheduled campaigns",
             replace_existing=True,
-            next_run_time=now + timedelta(seconds=_STARTUP_STAGGER_SECONDS * 2),
+            next_run_time=now + timedelta(seconds=_STARTUP_STAGGER_SECONDS),
         )
 
         SchedulerUtility._scheduler.start()

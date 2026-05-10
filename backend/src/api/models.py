@@ -2,8 +2,6 @@ from typing import List, Literal, Optional
 from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
 
-MAX_DOCUMENTS_PER_CAMPAIGN = 2
-
 # Request/Response models for campaigns
 class CampaignCreate(BaseModel):
     name: str = Field(min_length=1)
@@ -103,6 +101,7 @@ class EmailPreviewResponse(BaseModel):
 
 class LeadDetailResponse(LeadResponse):
     campaign_name: str
+    max_follow_ups: int
     next_email_at: Optional[datetime]
     updated_at: datetime
 

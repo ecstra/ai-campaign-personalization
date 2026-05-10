@@ -5,7 +5,7 @@ from typing import cast
 from pydantic import BaseModel, Field
 from moonlight import Agent, Content
 
-from core.llm import LLM_PROVIDER, LLM_MODEL
+from .provider import LLM_PROVIDER, LLM_MODEL
 
 logger = logging.getLogger(__name__)
 

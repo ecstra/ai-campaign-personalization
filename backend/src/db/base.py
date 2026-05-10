@@ -91,7 +91,6 @@ class DatabaseInitializer:
         status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'sent', 'failed', 'received')),
         message_id TEXT,
         in_reply_to TEXT,
-        gmail_thread_id TEXT,
         attempts INTEGER DEFAULT 0,
         sent_at TIMESTAMPTZ,
         created_at TIMESTAMPTZ DEFAULT NOW()
@@ -131,8 +130,6 @@ class DatabaseInitializer:
     CREATE INDEX IF NOT EXISTS idx_leads_locked_at ON leads(locked_at);
     CREATE INDEX IF NOT EXISTS idx_emails_lead_id ON emails(lead_id);
     CREATE INDEX IF NOT EXISTS idx_emails_lead_seq ON emails(lead_id, sequence_number);
-    CREATE INDEX IF NOT EXISTS idx_emails_message_id ON emails(message_id);
-    CREATE INDEX IF NOT EXISTS idx_emails_gmail_thread_id ON emails(gmail_thread_id);
     CREATE INDEX IF NOT EXISTS idx_emails_status ON emails(status);
     CREATE INDEX IF NOT EXISTS idx_documents_user_id ON documents(user_id);
     CREATE INDEX IF NOT EXISTS idx_campaign_documents_document_id ON campaign_documents(document_id);

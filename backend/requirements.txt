@@ -9,3 +9,5 @@ PyJWT>=2.9.0
 google-auth>=2.35.0
 httpx>=0.27.0
 llama-cloud>=0.1.0
+resend>=2.5.0
+svix>=1.50.0

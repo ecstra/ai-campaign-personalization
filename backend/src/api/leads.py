@@ -200,7 +200,7 @@ async def get_lead_detail(
                 l.id, l.campaign_id, l.email, l.first_name, l.last_name,
                 l.company, l.title, l.notes, l.status, l.has_replied,
                 l.current_sequence, l.next_email_at, l.created_at, l.updated_at,
-                c.name as campaign_name
+                c.name as campaign_name, c.max_follow_ups
             FROM leads l
             JOIN campaigns c ON l.campaign_id = c.id
             WHERE l.id = %s AND c.user_id = %s

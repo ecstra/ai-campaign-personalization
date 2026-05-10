@@ -14,9 +14,12 @@ from src.api import (
     leads_detail_router,
     documents_library_router,
     documents_attach_router,
+    webhooks_router,
 )
 from src.auth import auth_router
 from core.scheduler import SchedulerUtility
+
+import os
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -28,12 +31,10 @@ async def lifespan(_: FastAPI):
     SchedulerUtility.stop_scheduler()
     DatabaseEngine.close_pool()
 
-VERSION = "0.1.0"
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 
-CORS_ORIGINS: list[str] = [
-    "http://localhost:5173",
-    "http://localhost:8000"
-]
+VERSION = "0.1.0"
 
 app = FastAPI(
     title="AI Mail Personalization",
@@ -44,7 +45,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=CORS_ORIGINS,
+    allow_origins=[FRONTEND_URL, BACKEND_URL],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -73,3 +74,4 @@ async def root():
     return {"message": "AI Mail Personalization API", "version": VERSION}
 
 app.include_router(api_router)
+app.include_router(webhooks_router)

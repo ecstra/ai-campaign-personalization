@@ -3,7 +3,7 @@ from textwrap import dedent
 from pydantic import BaseModel, Field
 from moonlight import Agent, Content
 
-from core.llm import LLM_PROVIDER, LLM_MODEL
+from core.mail.agent.provider import LLM_PROVIDER, LLM_MODEL
 
 class BriefSummarizationError(Exception): pass
 

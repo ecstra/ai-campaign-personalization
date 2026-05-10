@@ -8,7 +8,7 @@ from moonlight import Agent, Content
 
 from ..base import PersonalizedMessage
 from .critic import CriticUtility
-from core.llm import LLM_PROVIDER, LLM_MODEL
+from .provider import LLM_PROVIDER, LLM_MODEL
 
 logger = logging.getLogger(__name__)
 
