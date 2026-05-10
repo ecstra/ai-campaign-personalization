@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react"
-import { get, post } from "@/lib/api"
+import { get, post, setOnUnauthorized } from "@/lib/api"
 import {
     type User,
     getStoredToken,
@@ -78,6 +78,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setToken(null)
         setUser(null)
     }, [])
+
+    useEffect(() => {
+        setOnUnauthorized(logout)
+    }, [logout])
 
     return (
         <AuthContext.Provider

@@ -4,6 +4,7 @@ import { AuthProvider } from "@/contexts/AuthContext"
 import { BreadcrumbProvider } from "@/contexts/BreadcrumbContext"
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
+import ErrorBoundary from "@/components/ErrorBoundary"
 import ProtectedRoute from "@/components/ProtectedRoute"
 import AppLayout from "@/components/AppLayout"
 
@@ -47,14 +48,16 @@ const router = createBrowserRouter([
 export default function App() {
   return (
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-      <AuthProvider>
-        <BreadcrumbProvider>
-          <TooltipProvider>
-            <RouterProvider router={router} />
-            <Toaster />
-          </TooltipProvider>
-        </BreadcrumbProvider>
-      </AuthProvider>
+      <ErrorBoundary>
+        <AuthProvider>
+          <BreadcrumbProvider>
+            <TooltipProvider>
+              <RouterProvider router={router} />
+              <Toaster />
+            </TooltipProvider>
+          </BreadcrumbProvider>
+        </AuthProvider>
+      </ErrorBoundary>
     </ThemeProvider>
   )
 }

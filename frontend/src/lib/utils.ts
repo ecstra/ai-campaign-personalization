@@ -48,3 +48,17 @@ export function formatDelay(minutes: number): string {
     if (mins > 0 || parts.length === 0) parts.push(`${mins}m`)
     return parts.join(" ")
 }
+
+export function formatSize(bytes: number | null): string {
+    if (!bytes) return "\u2014"
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+export function formatDate(iso: string): string {
+    return new Date(iso).toLocaleString(undefined, {
+        month: "short", day: "numeric", year: "numeric",
+        hour: "numeric", minute: "2-digit",
+    })
+}

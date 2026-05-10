@@ -96,13 +96,15 @@ export default function LeadsTable({
                         <TableHeader className="sticky top-0 bg-card z-10">
                             <TableRow>
                                 <TableHead className="w-10">
-                                    <input 
-                                        type="checkbox" 
-                                        checked={allFilteredSelected} 
-                                        onChange={toggleSelectAll} 
-                                        aria-label={allFilteredSelected ? "Deselect all visible leads" : "Select all visible leads"} 
-                                        className="h-4 w-4 rounded border-input bg-background accent-primary cursor-pointer transition-colors" 
-                                    />
+                                    <label className="flex items-center justify-center cursor-pointer">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={allFilteredSelected} 
+                                            onChange={toggleSelectAll} 
+                                            aria-label={allFilteredSelected ? "Deselect all visible leads" : "Select all visible leads"} 
+                                            className="h-4 w-4 rounded border-input bg-background accent-primary cursor-pointer transition-colors" 
+                                        />
+                                    </label>
                                 </TableHead>
                                 <TableHead className="text-[12px]">Name</TableHead>
                                 <TableHead className="text-[12px]">Email</TableHead>
@@ -115,14 +117,16 @@ export default function LeadsTable({
                             {filteredLeads.map(lead => {
                                 const s = getLeadStatus(lead.status)
                                 return (
-                                    <TableRow key={lead.id} className="cursor-pointer group hover:bg-muted/40" onClick={() => navigate(`/campaigns/${campaignId}/leads/${lead.id}`)}>
+                                    <TableRow key={lead.id} tabIndex={0} role="button" className="cursor-pointer group hover:bg-muted/40" onClick={() => navigate(`/campaigns/${campaignId}/leads/${lead.id}`)} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigate(`/campaigns/${campaignId}/leads/${lead.id}`) } }}>
                                         <TableCell onClick={e => e.stopPropagation()}>
-                                            <input 
-                                                type="checkbox" 
-                                                checked={selectedLeads.has(lead.id)} 
-                                                onChange={() => toggleSelectLead(lead.id)} 
-                                                className="h-4 w-4 rounded border-input bg-background accent-primary cursor-pointer transition-colors" 
-                                            />
+                                            <label className="flex items-center justify-center cursor-pointer" onClick={e => e.stopPropagation()}>
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={selectedLeads.has(lead.id)} 
+                                                    onChange={() => toggleSelectLead(lead.id)} 
+                                                    className="h-4 w-4 rounded border-input bg-background accent-primary cursor-pointer transition-colors" 
+                                                />
+                                            </label>
                                         </TableCell>
                                         <TableCell>
                                             <span className="inline-flex items-center gap-1.5 font-medium text-[13px] group-hover:text-primary transition-colors">

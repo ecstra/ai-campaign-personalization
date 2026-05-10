@@ -46,4 +46,9 @@ export type Lead = {
     status: string
     has_replied: boolean
     current_sequence: number
+    max_follow_ups: number
+    next_email_at: string | null
+    created_at: string
+    updated_at: string
+    campaign_name: string
 }

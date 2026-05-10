@@ -47,7 +47,7 @@ export default function CampaignDetail() {
 
     // Edit state
     const [editing, setEditing] = useState(false)
-    const [editForm, setEditForm] = useState({ name: "", sender_name: "", goal: "", follow_up_delay_minutes: 0, max_follow_ups: 0 })
+    const [editForm, setEditForm] = useState({ name: "", sender_name: "", goal: "", follow_up_delay_minutes: 0, max_follow_ups: 0, scheduled_start_at: "" })
 
     // Leads table state
     const [searchQuery, setSearchQuery] = useState("")
@@ -92,7 +92,7 @@ export default function CampaignDetail() {
     const handleToggleStatus = () => {
         if (!id || !campaign || toggling) return
         const action = campaign.status === "active" ? "stop" : "start"
-        toggleStatus(action).catch(() => {})
+        toggleStatus(action)
     }
 
     const startEditing = () => {
@@ -100,6 +100,7 @@ export default function CampaignDetail() {
         setEditForm({
             name: campaign.name, sender_name: campaign.sender_name, goal: campaign.goal || "",
             follow_up_delay_minutes: campaign.follow_up_delay_minutes, max_follow_ups: campaign.max_follow_ups,
+            scheduled_start_at: "",
         })
         setEditing(true)
     }
@@ -130,10 +131,11 @@ export default function CampaignDetail() {
 
     const handleBulkDelete = () => {
         if (!id || selectedLeads.size === 0) return
-        executeBulkDelete().catch(() => {})
+        executeBulkDelete()
     }
 
     const canEdit = campaign?.status === "draft" || campaign?.status === "paused"
+    const campaignStatus = campaign ? getCampaignStatus(campaign.status) : null
 
     if (error) {
         const is404 = error.toLowerCase().includes("not found") || error.toLowerCase().includes("404")
@@ -159,7 +161,7 @@ export default function CampaignDetail() {
                             <>
                                 <div className="flex items-center gap-3 mb-0.5">
                                     <h1 className="text-2xl font-semibold tracking-tight truncate">{campaign?.name}</h1>
-                                    {campaign && (() => { const s = getCampaignStatus(campaign.status); return <Badge variant={s.variant} className={s.className}>{s.label}</Badge> })()}
+                                    {campaignStatus && <Badge variant={campaignStatus.variant} className={campaignStatus.className}>{campaignStatus.label}</Badge>}
                                 </div>
                                 <p className="text-[13px] text-muted-foreground">{campaign?.sender_name} &middot; {campaign?.sender_email}</p>
                             </>

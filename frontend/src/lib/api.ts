@@ -1,4 +1,12 @@
+import { TOKEN_KEY, clearStoredToken } from "@/lib/auth"
+
 export const API_URL = import.meta.env.VITE_API_URL || "/api"
+
+let _onUnauthorized: (() => void) | null = null
+
+export function setOnUnauthorized(fn: () => void) {
+    _onUnauthorized = fn
+}
 
 type RequestOptions = {
     method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH"
@@ -16,7 +24,7 @@ export class ApiError extends Error {
 }
 
 export async function api<T>(endpoint: string, options?: RequestOptions): Promise<T> {
-    const token = localStorage.getItem("auth_token")
+    const token = localStorage.getItem(TOKEN_KEY)
 
     const config: RequestInit = {
         method: options?.method || "GET",
@@ -34,10 +42,12 @@ export async function api<T>(endpoint: string, options?: RequestOptions): Promis
     const res = await fetch(`${API_URL}${endpoint}`, config)
 
     if (res.status === 401) {
-        // Token expired or invalid, clear auth state and redirect to login
-        localStorage.removeItem("auth_token")
-        localStorage.removeItem("auth_user")
-        window.location.href = "/login"
+        clearStoredToken()
+        if (_onUnauthorized) {
+            _onUnauthorized()
+        } else {
+            window.location.href = "/login"
+        }
         throw new ApiError("Session expired", 401)
     }
 

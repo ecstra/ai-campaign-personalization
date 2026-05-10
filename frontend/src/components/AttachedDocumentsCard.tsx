@@ -44,6 +44,7 @@ export default function AttachedDocumentsCard({
     const [loadingLibrary, setLoadingLibrary] = useState(false)
     const [selected, setSelected] = useState<Set<string>>(new Set())
     const [saving, setSaving] = useState(false)
+    const [detachingId, setDetachingId] = useState<string | null>(null)
 
     // Keep the picker's selection in sync with what's currently attached
     useEffect(() => {
@@ -95,6 +96,7 @@ export default function AttachedDocumentsCard({
     }
 
     const detachOne = async (docId: string) => {
+        setDetachingId(docId)
         try {
             await put(`/campaigns/${campaignId}/documents`, {
                 document_ids: attached.filter(d => d.id !== docId).map(d => d.id),
@@ -103,6 +105,8 @@ export default function AttachedDocumentsCard({
             onChange()
         } catch (err) {
             toast.error(parseApiError(err))
+        } finally {
+            setDetachingId(null)
         }
     }
 
@@ -150,6 +154,7 @@ export default function AttachedDocumentsCard({
                                     size="sm"
                                     variant="ghost"
                                     onClick={() => detachOne(doc.id)}
+                                    disabled={detachingId === doc.id}
                                     className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
                                     aria-label={`Detach ${doc.name}`}
                                 >

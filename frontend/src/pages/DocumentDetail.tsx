@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { get, del } from "@/lib/api"
 import { parseApiError } from "@/lib/errors"
+import { formatSize, formatDate } from "@/lib/utils"
 import { useBreadcrumbs } from "@/contexts/BreadcrumbContext"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -18,20 +19,6 @@ type DocumentDetail = {
     extension: string | null
     created_at: string
     updated_at: string
-}
-
-function formatSize(bytes: number | null): string {
-    if (!bytes) return "—"
-    if (bytes < 1024) return `${bytes} B`
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
-
-function formatDate(iso: string): string {
-    return new Date(iso).toLocaleString(undefined, {
-        month: "short", day: "numeric", year: "numeric",
-        hour: "numeric", minute: "2-digit",
-    })
 }
 
 export default function DocumentDetail() {

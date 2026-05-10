@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import { Link, useBlocker } from "react-router-dom"
 import { get, del, API_URL } from "@/lib/api"
+import { formatSize } from "@/lib/utils"
 import { parseApiError } from "@/lib/errors"
 import { useBreadcrumbs } from "@/contexts/BreadcrumbContext"
 import { toast } from "sonner"
@@ -42,13 +43,6 @@ type UploadTask = {
 const ACCEPT = ".pdf,.docx,.pptx,.txt,.md"
 const MAX_MB = 30
 
-function formatSize(bytes: number | null): string {
-    if (!bytes) return "—"
-    if (bytes < 1024) return `${bytes} B`
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
-
 function formatDate(iso: string): string {
     return new Date(iso).toLocaleString(undefined, {
         month: "short", day: "numeric", year: "numeric",
@@ -67,7 +61,7 @@ export default function Documents() {
     const [searchQuery, setSearchQuery] = useState("")
 
     const fileInputRef = useRef<HTMLInputElement>(null)
-    const pollingIntervals = useRef<{ [key: string]: NodeJS.Timeout }>({})
+    const pollingIntervals = useRef<Record<string, ReturnType<typeof setInterval>>>({})
 
     const fetchDocs = async () => {
         try {

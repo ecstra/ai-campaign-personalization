@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from "react"
 import { useParams } from "react-router-dom"
-import DOMPurify from "dompurify"
 import { get, patch } from "@/lib/api"
-import { formatTime } from "@/lib/utils"
-import { getLeadStatus, getEmailStatus } from "@/lib/status"
+import { getLeadStatus } from "@/lib/status"
 import { parseApiError } from "@/lib/errors"
 import { useBreadcrumbs } from "@/contexts/BreadcrumbContext"
 import { toast } from "sonner"
+import { type Lead } from "@/lib/types"
+import EmailActivityTimeline, { type EmailActivity } from "@/components/lead/EmailActivityTimeline"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -17,11 +17,8 @@ import {
     Building2,
     Briefcase,
     CheckCircle2,
-    Clock,
-    Send,
     AlertCircle,
     Trash2,
-    Reply,
     Hash,
     CalendarClock,
     Pencil,
@@ -30,41 +27,12 @@ import {
 } from "lucide-react"
 import DeleteLeadModal from "@/components/DeleteLeadModal"
 
-type Lead = {
-    id: string
-    campaign_id: string
-    email: string
-    first_name: string
-    last_name: string
-    company: string | null
-    title: string | null
-    notes: string | null
-    status: string
-    has_replied: boolean
-    current_sequence: number
-    next_email_at: string | null
-    created_at: string
-    updated_at: string
-    campaign_name: string
-    max_follow_ups: number
-}
-
-type EmailActivity = {
-    id: string
-    sequence_number: number
-    subject: string
-    body: string
-    status: string
-    sent_at: string | null
-    created_at: string
-}
-
 function formatDate(dateString: string | null) {
     if (!dateString) return "Not scheduled"
     const date = new Date(dateString)
-    const formatted = formatTime(dateString)
     const dateStr = date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
-    return formatted ? `${dateStr}, ${formatted.time} ${formatted.timezone}` : date.toLocaleString()
+    const timeStr = date.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })
+    return `${dateStr}, ${timeStr}`
 }
 
 export default function LeadDetail() {
@@ -350,96 +318,12 @@ export default function LeadDetail() {
                 {/* ── Email Activity ────────────────────────────────── */}
                 <div className="space-y-3">
                     <h2 className="text-lg font-semibold">Email Activity</h2>
-
-                    {loading ? (
-                        <div className="space-y-3">
-                            {[1, 2, 3].map(i => <Skeleton key={i} className="h-16 rounded-xl" />)}
-                        </div>
-                    ) : activity.length === 0 ? (
-                        <div className="text-center py-12 border border-dashed rounded-xl">
-                            <p className="text-sm text-muted-foreground">No emails sent yet</p>
-                        </div>
-                    ) : (
-                        <div className="relative pl-6">
-                            {/* Timeline line */}
-                            <div className="absolute left-[7px] top-2 bottom-2 w-px bg-border" />
-
-                            <div className="space-y-3">
-                                {activity.map(email => {
-                                    const isExpanded = expandedIds.has(email.id)
-                                    const s = getEmailStatus(email.status)
-                                    const dotColor = email.status === "sent" ? "bg-emerald-500"
-                                        : email.status === "received" ? "bg-blue-500"
-                                        : email.status === "failed" ? "bg-red-500"
-                                        : "bg-yellow-500"
-
-                                    return (
-                                        <div key={email.id} className="relative">
-                                            {/* Dot */}
-                                            <div className={`absolute -left-6 top-4 w-3.5 h-3.5 rounded-full border-2 border-background ${dotColor} ring-2 ring-background`} />
-
-                                            <div
-                                                className={`bg-card border rounded-xl p-4 cursor-pointer transition-colors hover:bg-accent/50 ${isExpanded ? "bg-accent/30" : ""}`}
-                                                onClick={() => toggleExpand(email.id)}
-                                            >
-                                                <div className="flex items-start justify-between gap-2">
-                                                    <div className="flex items-center gap-2 min-w-0">
-                                                        {email.status === "sent" ? <Send size={13} className="text-emerald-600 flex-shrink-0" />
-                                                            : email.status === "received" ? <Reply size={13} className="text-blue-600 flex-shrink-0" />
-                                                            : email.status === "failed" ? <AlertCircle size={13} className="text-red-600 flex-shrink-0" />
-                                                            : <Clock size={13} className="text-yellow-600 flex-shrink-0" />}
-                                                        <span className="font-medium text-[13px]">
-                                                            {email.status === "received" || email.sequence_number <= 0
-                                                                ? "Reply Received"
-                                                                : `Email #${email.sequence_number}`}
-                                                        </span>
-                                                        <span className="text-[11px] text-muted-foreground hidden sm:inline">
-                                                            {formatDate(email.sent_at || email.created_at)}
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <Badge variant={s.variant} className={`${s.className} text-[10px]`}>{s.label}</Badge>
-                                                        <svg className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${isExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                                        </svg>
-                                                    </div>
-                                                </div>
-
-                                                <p className={`text-[13px] mt-2 ${isExpanded ? "" : "line-clamp-1"} text-muted-foreground`}>
-                                                    {email.subject}
-                                                </p>
-
-                                                <div
-                                                    className={`grid transition-[grid-template-rows,opacity,margin-top] duration-300 ease-out ${
-                                                        isExpanded ? "grid-rows-[1fr] opacity-100 mt-3" : "grid-rows-[0fr] opacity-0 mt-0"
-                                                    }`}
-                                                >
-                                                    <div className="overflow-hidden">
-                                                        <div className="pt-3 border-t">
-                                                        <div
-                                                            className="text-[13px] leading-relaxed [&>p]:mb-2.5 [&>p:last-child]:mb-0"
-                                                            dangerouslySetInnerHTML={{
-                                                                __html: email.status === "failed"
-                                                                    ? "We couldn't send this email. Please check if the email address is valid."
-                                                                    : DOMPurify.sanitize(email.body, {
-                                                                        // Strip all scripts, event handlers, and dangerous tags.
-                                                                        // Allow only the basic formatting Gmail and our LLM produce.
-                                                                        ALLOWED_TAGS: ["p", "br", "strong", "b", "em", "i", "u", "a", "ul", "ol", "li", "blockquote", "span", "div"],
-                                                                        ALLOWED_ATTR: ["href", "target", "rel"],
-                                                                        ALLOW_DATA_ATTR: false,
-                                                                    })
-                                                            }}
-                                                        />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )
-                                })}
-                            </div>
-                        </div>
-                    )}
+                    <EmailActivityTimeline
+                        activity={activity}
+                        loading={loading}
+                        expandedIds={expandedIds}
+                        toggleExpand={toggleExpand}
+                    />
                 </div>
 
                 {/* ── Delete Modal ──────────────────────────────────── */}

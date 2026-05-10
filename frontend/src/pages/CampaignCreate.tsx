@@ -1,6 +1,7 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { post } from "@/lib/api"
+import { type Campaign } from "@/lib/types"
 import { parseApiError } from "@/lib/errors"
 import { useBreadcrumbs } from "@/contexts/BreadcrumbContext"
 import { toast } from "sonner"
@@ -11,8 +12,6 @@ import { Textarea } from "@/components/ui/textarea"
 import {
     Info, Mail, Timer, Target,
 } from "lucide-react"
-
-type Campaign = { id: string; name: string }
 
 type FieldErrors = {
     name?: string
@@ -73,6 +72,15 @@ export default function CampaignCreate() {
     const [loading, setLoading] = useState(false)
     const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
     const [form, setForm] = useState(EMPTY_FORM)
+
+    const isDirty = form.name !== "" || form.sender_name !== "" || form.goal !== ""
+    useEffect(() => {
+        if (!isDirty) return
+        const handler = (e: BeforeUnloadEvent) => { e.preventDefault() }
+        window.addEventListener("beforeunload", handler)
+        return () => window.removeEventListener("beforeunload", handler)
+    }, [isDirty])
+
     const [delayDays, setDelayDays] = useState(2)
     const [delayHours, setDelayHours] = useState(0)
     const [delayMinutes, setDelayMinutes] = useState(0)

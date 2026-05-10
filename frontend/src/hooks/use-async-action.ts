@@ -33,7 +33,6 @@ export function useAsyncAction<TArgs extends unknown[], TRet>(
             setError(msg)
             toast.error(msg)
             options?.onError?.(msg)
-            throw err
         } finally {
             setIsLoading(false)
         }

@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { get } from "@/lib/api"
+import { type Campaign } from "@/lib/types"
 import { getCampaignStatus } from "@/lib/status"
 import { useBreadcrumbs } from "@/contexts/BreadcrumbContext"
 import { Button } from "@/components/ui/button"
@@ -8,18 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Plus, Search, Mail, Users, AlertCircle, ArrowUpRight } from "lucide-react"
-
-type Campaign = {
-    id: string
-    name: string
-    sender_name: string
-    sender_email: string
-    goal: string | null
-    max_follow_ups: number
-    status: string
-    created_at: string
-}
+import { Plus, Search, Mail, Users, AlertCircle, ArrowUpRight, RefreshCw } from "lucide-react"
 
 function CampaignCard({ campaign }: { campaign: Campaign }) {
     const status = getCampaignStatus(campaign.status)
@@ -181,7 +171,11 @@ export default function Campaigns() {
             {error ? (
                 <Alert variant="destructive">
                     <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>{error}</AlertDescription>
+                    <AlertDescription className="flex items-center gap-3">{error}
+                        <Button variant="outline" size="sm" onClick={() => { setError(null); fetchCampaigns() }} className="h-7 text-xs gap-1">
+                            <RefreshCw size={12} /> Retry
+                        </Button>
+                    </AlertDescription>
                 </Alert>
             ) : (
                 <CampaignContent
