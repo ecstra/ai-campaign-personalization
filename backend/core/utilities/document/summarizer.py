@@ -5,7 +5,8 @@ from moonlight import Agent, Content
 
 from core.mail.agent.provider import LLM_PROVIDER, LLM_MODEL
 
-class BriefSummarizationError(Exception): pass
+class BriefSummarizationError(Exception):
+    pass
 
 class ProductBrief(BaseModel):
     brief: str = Field(

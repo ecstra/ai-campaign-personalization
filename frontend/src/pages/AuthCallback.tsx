@@ -11,23 +11,40 @@ export default function AuthCallback() {
     const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
-        const code = searchParams.get("code")
-        const state = searchParams.get("state")
-        const errorParam = searchParams.get("error")
+        let mounted = true
 
-        if (errorParam) {
-            setError(`Google authentication failed: ${errorParam}`)
-            return
+        const processCallback = async () => {
+            // Delay slightly to prevent React warning about synchronous state updates during render phase
+            await Promise.resolve()
+            
+            if (!mounted) return
+
+            const code = searchParams.get("code")
+            const state = searchParams.get("state")
+            const errorParam = searchParams.get("error")
+
+            if (errorParam) {
+                setError(`Google authentication failed: ${errorParam}`)
+                return
+            }
+
+            if (!code || !state) {
+                setError("Missing authorization code or state parameter.")
+                return
+            }
+
+            try {
+                await handleCallback(code, state)
+                if (mounted) navigate("/", { replace: true })
+            } catch (err: unknown) {
+                const message = err instanceof Error ? err.message : "Authentication failed. Please try again.";
+                if (mounted) setError(message)
+            }
         }
 
-        if (!code || !state) {
-            setError("Missing authorization code or state parameter.")
-            return
-        }
+        processCallback()
 
-        handleCallback(code, state)
-            .then(() => navigate("/", { replace: true }))
-            .catch((err) => setError(err?.message || "Authentication failed. Please try again."))
+        return () => { mounted = false }
     }, [searchParams, handleCallback, navigate])
 
     if (error) {
@@ -49,11 +66,11 @@ export default function AuthCallback() {
     }
 
     return (
-        <div className="flex items-center justify-center min-h-screen">
-            <div className="text-center space-y-4">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
-                <p className="text-muted-foreground">Completing sign in...</p>
+        <div className="flex flex-col items-center justify-center min-h-screen space-y-4">
+            <div className="w-48 h-1 bg-muted rounded-full overflow-hidden relative">
+                <div className="absolute inset-0 bg-primary w-1/2 rounded-full animate-progress-indeterminate" />
             </div>
+            <p className="text-xs text-muted-foreground animate-pulse text-center">Completing sign in...</p>
         </div>
     )
 }

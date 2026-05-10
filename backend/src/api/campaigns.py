@@ -6,8 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from ..auth import get_current_user
 from ..db import DatabaseEngine
 from core.scheduler.config import CAMPAIGN_EMAIL_RATE_LIMIT, RATE_LIMIT_WINDOW_MINUTES
-from .models import CampaignCreate, CampaignUpdate, CampaignResponse, CampaignStatsResponse, EmailPreviewResponse
-from core.mail import MailAgentUtility
+from .models import CampaignCreate, CampaignUpdate, CampaignResponse, CampaignStatsResponse
 
 router = APIRouter(prefix="/campaigns", tags=["campaigns"])
 
@@ -94,14 +93,12 @@ async def create_campaign(
     campaign: CampaignCreate,
     user: dict[str, Any] = Depends(get_current_user),
 ):
-    scheduled_start_at = campaign.scheduled_start_at if campaign.scheduled_start_at else None
-
     with DatabaseEngine.get_cursor(commit=True) as cur:
         cur.execute(
             """
             INSERT INTO campaigns (user_id, name, sender_name, sender_email, goal,
-                                   follow_up_delay_minutes, max_follow_ups, scheduled_start_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                                   follow_up_delay_minutes, max_follow_ups)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
             RETURNING *
             """,
             (
@@ -112,7 +109,6 @@ async def create_campaign(
                 campaign.goal,
                 campaign.follow_up_delay_minutes,
                 campaign.max_follow_ups,
-                scheduled_start_at,
             ),
         )
         new_campaign = cur.fetchone()
@@ -215,94 +211,6 @@ async def update_campaign(
         updated = cur.fetchone()
 
     return updated
-
-@router.post("/{campaign_id}/preview", response_model=EmailPreviewResponse)
-async def preview_email(
-    campaign_id: str,
-    lead_id: str = Query(...),
-    user: dict[str, Any] = Depends(get_current_user),
-):
-    with DatabaseEngine.get_cursor() as cur:
-        cur.execute(
-            "SELECT * FROM campaigns WHERE id = %s AND user_id = %s",
-            (campaign_id, user["id"]),
-        )
-        campaign = cur.fetchone()
-
-        if not campaign:
-            raise HTTPException(status_code=404, detail="Campaign not found")
-
-        cur.execute(
-            """
-            SELECT id, email, first_name, last_name, company, title, notes, current_sequence
-            FROM leads WHERE id = %s AND campaign_id = %s
-            """,
-            (lead_id, campaign_id),
-        )
-        lead = cur.fetchone()
-
-        if not lead:
-            raise HTTPException(status_code=404, detail="Lead not found in this campaign")
-
-        cur.execute(
-            """
-            SELECT sequence_number, subject, body, sent_at
-            FROM emails WHERE lead_id = %s AND status = 'sent'
-            ORDER BY sequence_number ASC LIMIT 5
-            """,
-            (lead_id,),
-        )
-        previous_emails = cur.fetchall()
-
-        cur.execute(
-            """
-            SELECT d.name, d.brief
-            FROM campaign_documents cd
-            JOIN documents d ON cd.document_id = d.id
-            WHERE cd.campaign_id = %s
-            ORDER BY cd.created_at ASC
-            """,
-            (campaign_id,),
-        )
-        attached_docs = cur.fetchall()
-
-    user_info = {
-        "email": lead["email"],
-        "first_name": lead["first_name"],
-        "last_name": lead["last_name"],
-        "company": lead["company"],
-        "title": lead["title"],
-        "notes": lead["notes"],
-    }
-
-    campaign_info = {
-        "name": campaign["name"],
-        "goal": campaign["goal"],
-        "product_context": CampaignUtility._build_product_context(attached_docs),
-        "sender_name": campaign["sender_name"],
-        "sender_email": campaign["sender_email"],
-        "current_sequence": lead["current_sequence"] + 1,
-        "max_follow_ups": campaign["max_follow_ups"],
-    }
-
-    try:
-        result = await MailAgentUtility.generate_mail(
-            user_info=user_info,
-            campaign_info=campaign_info,
-            previous_emails=list(previous_emails)
-        )
-        subject = result.subject
-
-        if previous_emails:
-            original_subject = previous_emails[0]["subject"]
-            if original_subject and not original_subject.lower().startswith("re:"):
-                subject = f"Re: {original_subject}"
-            else:
-                subject = original_subject
-
-        return EmailPreviewResponse(subject=subject, body=result.body)
-    except Exception:
-        raise HTTPException(status_code=500, detail="Failed to generate preview. Please try again.")
 
 @router.patch("/{campaign_id}/status", response_model=CampaignResponse)
 async def update_campaign_status(

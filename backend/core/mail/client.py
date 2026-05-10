@@ -1,6 +1,7 @@
 import os
 import re
 import time
+from typing import Any
 import resend
 
 from .base import Mail
@@ -53,7 +54,7 @@ class MailClientUtility:
     def send_mail_batch(
         mails: list[Mail],
         idempotency_key: str | None = None,
-    ) -> list[resend.Emails.SendResponse]:
+    ) -> Any:
         params: list[resend.Emails.SendParams] = []
         for mail in mails:
             params.append({

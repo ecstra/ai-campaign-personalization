@@ -13,10 +13,10 @@ class CampaignStatus(str, Enum):
 
 class LeadStatus(str, Enum):
     PENDING = "pending"
-    PROCESSING = "processing"
     ACTIVE = "active"
-    REPLIED = "replied"
+    PROCESSING = "processing"
     COMPLETED = "completed"
+    REPLIED = "replied"
     FAILED = "failed"
 
 class EmailStatus(str, Enum):
@@ -26,18 +26,13 @@ class EmailStatus(str, Enum):
     RECEIVED = "received"
 
 class DatabaseInitializer:
-
     USERS_TABLE = """
     CREATE TABLE IF NOT EXISTS users (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        google_id TEXT NOT NULL UNIQUE,
-        email TEXT NOT NULL UNIQUE,
-        name TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        name TEXT,
         picture_url TEXT,
-        access_token_encrypted TEXT,
-        refresh_token_encrypted TEXT,
-        token_expiry TIMESTAMPTZ,
-        scopes TEXT,
+        google_id TEXT UNIQUE NOT NULL,
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW()
     );
@@ -46,7 +41,7 @@ class DatabaseInitializer:
     CAMPAIGNS_TABLE = """
     CREATE TABLE IF NOT EXISTS campaigns (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         name TEXT NOT NULL,
         sender_name TEXT NOT NULL,
         sender_email TEXT NOT NULL,
@@ -54,7 +49,6 @@ class DatabaseInitializer:
         follow_up_delay_minutes INTEGER DEFAULT 2880,
         max_follow_ups INTEGER DEFAULT 3,
         status TEXT DEFAULT 'draft' CHECK (status IN ('draft', 'active', 'paused', 'completed')),
-        scheduled_start_at TIMESTAMPTZ,
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW()
     );
@@ -63,7 +57,7 @@ class DatabaseInitializer:
     LEADS_TABLE = """
     CREATE TABLE IF NOT EXISTS leads (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        campaign_id UUID REFERENCES campaigns(id) ON DELETE CASCADE,
+        campaign_id UUID NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
         email TEXT NOT NULL,
         first_name TEXT NOT NULL,
         last_name TEXT NOT NULL,
@@ -106,7 +100,8 @@ class DatabaseInitializer:
         size_bytes INTEGER,
         extension TEXT,
         created_at TIMESTAMPTZ DEFAULT NOW(),
-        updated_at TIMESTAMPTZ DEFAULT NOW()
+        updated_at TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE(user_id, name)
     );
     """
 
@@ -120,14 +115,9 @@ class DatabaseInitializer:
     """
 
     INDEXES = """
-    CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);
-    CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
     CREATE INDEX IF NOT EXISTS idx_campaigns_user_id ON campaigns(user_id);
-    CREATE INDEX IF NOT EXISTS idx_campaigns_status ON campaigns(status);
     CREATE INDEX IF NOT EXISTS idx_leads_campaign_id ON leads(campaign_id);
     CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status);
-    CREATE INDEX IF NOT EXISTS idx_leads_next_email_at ON leads(next_email_at);
-    CREATE INDEX IF NOT EXISTS idx_leads_locked_at ON leads(locked_at);
     CREATE INDEX IF NOT EXISTS idx_emails_lead_id ON emails(lead_id);
     CREATE INDEX IF NOT EXISTS idx_emails_lead_seq ON emails(lead_id, sequence_number);
     CREATE INDEX IF NOT EXISTS idx_emails_status ON emails(status);
@@ -144,6 +134,13 @@ class DatabaseInitializer:
                 cur.execute(DatabaseInitializer.LEADS_TABLE)
                 cur.execute(DatabaseInitializer.EMAILS_TABLE)
                 cur.execute(DatabaseInitializer.DOCUMENTS_TABLE)
+                
+                # Safe migration for existing documents table
+                try:
+                    cur.execute("ALTER TABLE documents ADD CONSTRAINT documents_user_id_name_key UNIQUE (user_id, name)")
+                except Exception:
+                    pass # Already exists
+
                 cur.execute(DatabaseInitializer.CAMPAIGN_DOCUMENTS_TABLE)
                 cur.execute(DatabaseInitializer.INDEXES)
             return True

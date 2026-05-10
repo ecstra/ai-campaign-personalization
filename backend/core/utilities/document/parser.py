@@ -4,7 +4,8 @@ from typing import Literal, Optional, Any
 
 from llama_cloud import AsyncLlamaCloud
 
-class DocumentParseError(Exception): pass
+class DocumentParseError(Exception):
+    pass
 
 MIN_USEFUL_CHARS = 200
 

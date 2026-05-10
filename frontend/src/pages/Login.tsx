@@ -10,8 +10,11 @@ export default function Login() {
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            <div className="flex flex-col items-center justify-center min-h-screen space-y-4">
+                <div className="w-48 h-1 bg-muted rounded-full overflow-hidden relative">
+                    <div className="absolute inset-0 bg-primary w-1/2 rounded-full animate-progress-indeterminate" />
+                </div>
+                <p className="text-xs text-muted-foreground animate-pulse">Initializing outreach...</p>
             </div>
         )
     }

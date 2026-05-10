@@ -46,7 +46,7 @@ export default function DocumentDetail() {
     useBreadcrumbs(
         doc
             ? [{ label: "Documents", href: "/documents" }, { label: doc.name }]
-            : [{ label: "Documents", href: "/documents" }]
+            : [{ label: "Documents", href: "/documents" }, { label: "Loading..." }]
     )
 
     useEffect(() => {

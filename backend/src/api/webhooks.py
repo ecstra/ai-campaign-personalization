@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/webhooks", tags=["webhooks"])
 
-RESEND_WEBHOOK_SECRET = os.getenv("RESEND_WEBHOOK_SECRET")
+RESEND_WEBHOOK_SECRET = os.getenv("RESEND_WEBHOOK_SECRET", "")
 if not RESEND_WEBHOOK_SECRET:
     raise ValueError("RESEND_WEBHOOK_SECRET environment variable is not set")
 

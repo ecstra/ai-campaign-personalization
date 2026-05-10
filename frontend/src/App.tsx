@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom"
+import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/contexts/AuthContext"
 import { BreadcrumbProvider } from "@/contexts/BreadcrumbContext"
@@ -17,13 +17,32 @@ import Documents from "./pages/Documents"
 import DocumentDetail from "./pages/DocumentDetail"
 import NotFound from "./pages/NotFound"
 
-function ProtectedLayout({ children }: { children: React.ReactNode }) {
+function ProtectedLayout() {
   return (
     <ProtectedRoute>
-      <AppLayout>{children}</AppLayout>
+      <AppLayout>
+        <Outlet />
+      </AppLayout>
     </ProtectedRoute>
   )
 }
+
+const router = createBrowserRouter([
+  { path: "/login", element: <Login /> },
+  { path: "/auth/callback", element: <AuthCallback /> },
+  {
+    element: <ProtectedLayout />,
+    children: [
+      { path: "/", element: <Campaigns /> },
+      { path: "/campaigns/new", element: <CampaignCreate /> },
+      { path: "/campaigns/:id", element: <CampaignDetail /> },
+      { path: "/campaigns/:campaignId/leads/:leadId", element: <LeadDetail /> },
+      { path: "/documents", element: <Documents /> },
+      { path: "/documents/:id", element: <DocumentDetail /> }
+    ]
+  },
+  { path: "*", element: <NotFound /> }
+])
 
 export default function App() {
   return (
@@ -31,24 +50,8 @@ export default function App() {
       <AuthProvider>
         <BreadcrumbProvider>
           <TooltipProvider>
-          <BrowserRouter>
-            <Routes>
-              {/* Public routes */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/auth/callback" element={<AuthCallback />} />
-
-              {/* Protected routes with persistent layout */}
-              <Route path="/" element={<ProtectedLayout><Campaigns /></ProtectedLayout>} />
-              <Route path="/campaigns/new" element={<ProtectedLayout><CampaignCreate /></ProtectedLayout>} />
-              <Route path="/campaigns/:id" element={<ProtectedLayout><CampaignDetail /></ProtectedLayout>} />
-              <Route path="/campaigns/:campaignId/leads/:leadId" element={<ProtectedLayout><LeadDetail /></ProtectedLayout>} />
-              <Route path="/documents" element={<ProtectedLayout><Documents /></ProtectedLayout>} />
-              <Route path="/documents/:id" element={<ProtectedLayout><DocumentDetail /></ProtectedLayout>} />
-
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-          <Toaster />
+            <RouterProvider router={router} />
+            <Toaster />
           </TooltipProvider>
         </BreadcrumbProvider>
       </AuthProvider>

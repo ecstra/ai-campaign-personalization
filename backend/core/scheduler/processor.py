@@ -80,12 +80,12 @@ class SchedulerProcessorUtility:
             if not locked_ids:
                 return
 
-            locked_leads = [l for l in leads if str(l["lead_id"]) in locked_ids]
+            locked_leads = [lead_item for lead_item in leads if str(lead_item["lead_id"]) in locked_ids]
 
             previous_emails_map = await SchedulerProcessorUtility.run_sync(
                 SchedulerQueryUtility.get_previous_emails_batch, locked_ids
             )
-            unique_campaign_ids = list({str(l["campaign_id"]) for l in locked_leads})
+            unique_campaign_ids = list({str(lead_item["campaign_id"]) for lead_item in locked_leads})
             product_context_map = await SchedulerProcessorUtility.run_sync(
                 SchedulerQueryUtility.get_product_context_by_campaign, unique_campaign_ids
             )
@@ -147,7 +147,7 @@ class SchedulerProcessorUtility:
                     filtered_generations.extend(gens)
 
             if skipped_leads:
-                skipped_ids = [str(l["lead_id"]) for l in skipped_leads]
+                skipped_ids = [str(lead_item["lead_id"]) for lead_item in skipped_leads]
                 with DatabaseEngine.get_cursor(commit=True) as cur:
                     cur.execute(
                         """
@@ -290,40 +290,3 @@ class SchedulerProcessorUtility:
         finally:
             if work_done:
                 await SchedulerProcessorUtility.run_sync(SchedulerQueryUtility.check_all_active_campaigns_completion)
-
-    @staticmethod
-    async def check_scheduled_campaigns() -> None:
-        try:
-            with DatabaseEngine.get_cursor(commit=True) as cur:
-                cur.execute(
-                    """
-                    SELECT id FROM campaigns
-                    WHERE status = 'draft'
-                      AND scheduled_start_at IS NOT NULL
-                      AND scheduled_start_at <= NOW()
-                    """
-                )
-                campaigns = cur.fetchall()
-
-                for campaign in campaigns:
-                    cid = str(campaign["id"])
-
-                    cur.execute("SELECT COUNT(*) as count FROM leads WHERE campaign_id = %s", (cid,))
-                    if cur.fetchone()["count"] == 0:
-                        continue
-
-                    cur.execute(
-                        "UPDATE campaigns SET status = 'active', updated_at = NOW() WHERE id = %s",
-                        (cid,),
-                    )
-
-                    cur.execute(
-                        """
-                        UPDATE leads
-                        SET next_email_at = NOW(), updated_at = NOW()
-                        WHERE campaign_id = %s AND status = 'pending' AND next_email_at IS NULL
-                        """,
-                        (cid,),
-                    )
-        except Exception:
-            logger.exception("check_scheduled_campaigns failed — job will retry on next tick")

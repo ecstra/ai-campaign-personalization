@@ -24,7 +24,6 @@ import {
     BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import {
     DropdownMenu,
@@ -33,8 +32,9 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Send, MailPlus, LogOut, ChevronsUpDown, Moon, Sun, Plus, FileText } from "lucide-react"
+import { Send, MailPlus, LogOut, ChevronsUpDown, Moon, Sun, FileText } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
     const breadcrumbItems = useBreadcrumbItems()
@@ -66,16 +66,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </SidebarHeader>
 
                 <SidebarContent>
-                    <SidebarGroup>
-                        <SidebarGroupContent>
-                            <Button asChild size="sm" className="w-full justify-start gap-2 h-9">
-                                <Link to="/campaigns/new">
-                                    <Plus className="size-4" />
-                                    New campaign
-                                </Link>
-                            </Button>
-                        </SidebarGroupContent>
-                    </SidebarGroup>
                     <SidebarGroup>
                         <SidebarGroupContent>
                             <SidebarMenu>
@@ -160,16 +150,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     <SidebarTrigger className="-ml-1" />
                     {breadcrumbItems.length > 0 && (
                         <>
-                            <Separator orientation="vertical" className="mr-2 !h-4" />
+                            <Separator orientation="vertical" className="mr-2 h-full" />
                             <Breadcrumb>
                                 <BreadcrumbList>
                                     {breadcrumbItems.map((item, index) => {
                                         const isLast = index === breadcrumbItems.length - 1
                                         return (
-                                            <span key={item.label} className="flex items-center gap-1.5">
+                                            <span key={index} className="flex items-center gap-1.5">
                                                 {index > 0 && <BreadcrumbSeparator />}
                                                 <BreadcrumbItem>
-                                                    {isLast || !item.href ? (
+                                                    {item.label === "Loading..." ? (
+                                                        <Skeleton className="h-4 w-24" />
+                                                    ) : isLast || !item.href ? (
                                                         <BreadcrumbPage>{item.label}</BreadcrumbPage>
                                                     ) : (
                                                         <BreadcrumbLink asChild>

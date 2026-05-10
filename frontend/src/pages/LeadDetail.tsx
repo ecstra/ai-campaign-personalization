@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useParams } from "react-router-dom"
 import DOMPurify from "dompurify"
 import { get, patch } from "@/lib/api"
@@ -88,7 +88,7 @@ export default function LeadDetail() {
         { label: lead ? `${lead.first_name} ${lead.last_name}` : "Loading..." },
     ])
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         if (!leadId || !campaignId) return
         try {
             setLoading(true)
@@ -105,11 +105,11 @@ export default function LeadDetail() {
         } finally {
             setLoading(false)
         }
-    }
+    }, [campaignId, leadId])
 
     useEffect(() => {
         fetchData()
-    }, [leadId, campaignId])
+    }, [fetchData])
 
     const handleSaveNotes = async () => {
         if (!leadId || !lead) return
@@ -321,27 +321,31 @@ export default function LeadDetail() {
                 )}
 
                 {/* ── Notes ─────────────────────────────────────────── */}
-                <div className="bg-card border rounded-xl p-5 space-y-3">
-                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Notes</p>
-                    <Textarea
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
-                        placeholder="Add notes about this lead..."
-                        className="min-h-[80px] text-[14px] resize-none"
-                        disabled={loading}
-                    />
-                    <div className="flex items-center gap-2">
-                        <Button size="sm" onClick={handleSaveNotes} disabled={saving || loading}>
-                            {saving ? "Saving..." : "Save Notes"}
-                        </Button>
-                        {lead && !lead.has_replied && (
-                            <Button variant="outline" size="sm" onClick={handleMarkAsReplied} disabled={marking || loading} className="gap-1.5">
-                                <CheckCircle2 size={13} />
-                                {marking ? "Marking..." : "Mark as Replied"}
+                {loading ? (
+                    <Skeleton className="h-[140px] rounded-xl" />
+                ) : lead && (
+                    <div className="bg-card border rounded-xl p-5 space-y-3">
+                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Notes</p>
+                        <Textarea
+                            value={notes}
+                            onChange={(e) => setNotes(e.target.value)}
+                            placeholder="Add notes about this lead..."
+                            className="min-h-[80px] text-[14px] resize-none"
+                            disabled={loading || saving}
+                        />
+                        <div className="flex items-center gap-2">
+                            <Button size="sm" onClick={handleSaveNotes} disabled={saving || loading}>
+                                {saving ? "Saving..." : "Save Notes"}
                             </Button>
-                        )}
+                            {!lead.has_replied && (
+                                <Button variant="outline" size="sm" onClick={handleMarkAsReplied} disabled={marking || loading} className="gap-1.5">
+                                    <CheckCircle2 size={13} />
+                                    {marking ? "Marking..." : "Mark as Replied"}
+                                </Button>
+                            )}
+                        </div>
                     </div>
-                </div>
+                )}
 
                 {/* ── Email Activity ────────────────────────────────── */}
                 <div className="space-y-3">

@@ -1,13 +1,15 @@
-import { useState, useEffect, useRef } from "react"
-import { Link } from "react-router-dom"
+import { useState, useEffect, useRef, useMemo, useCallback } from "react"
+import { Link, useBlocker } from "react-router-dom"
 import { get, del, API_URL } from "@/lib/api"
 import { parseApiError } from "@/lib/errors"
 import { useBreadcrumbs } from "@/contexts/BreadcrumbContext"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { FileText, Upload, Trash2, ArrowUpRight, AlertCircle } from "lucide-react"
+import { Progress } from "@/components/ui/progress"
+import { FileText, Upload, Trash2, ArrowUpRight, AlertCircle, CheckCircle2, XCircle, Loader2, Search } from "lucide-react"
 
 type DocumentSummary = {
     id: string
@@ -18,8 +20,27 @@ type DocumentSummary = {
     updated_at: string
 }
 
+type UploadTaskStatus = {
+    taskId: string
+    task_id?: string
+    status: "processing" | "parsing" | "summarizing" | "saving" | "success" | "error"
+    progress: number
+    filename?: string
+    error?: string
+    document?: DocumentSummary
+}
+
+type UploadTask = {
+    id: string 
+    file?: File // Optional since reloaded tasks don't have the File object
+    name: string // Display name
+    progress: number
+    status: "uploading" | "processing" | "parsing" | "summarizing" | "saving" | "success" | "error"
+    error?: string
+}
+
 const ACCEPT = ".pdf,.docx,.pptx,.txt,.md"
-const MAX_MB = 10
+const MAX_MB = 30
 
 function formatSize(bytes: number | null): string {
     if (!bytes) return "—"
@@ -42,8 +63,11 @@ export default function Documents() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [isDragging, setIsDragging] = useState(false)
+    const [uploads, setUploads] = useState<UploadTask[]>([])
+    const [searchQuery, setSearchQuery] = useState("")
 
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const pollingIntervals = useRef<{ [key: string]: NodeJS.Timeout }>({})
 
     const fetchDocs = async () => {
         try {
@@ -58,66 +82,197 @@ export default function Documents() {
         }
     }
 
-    useEffect(() => { fetchDocs() }, [])
+    const pollTaskStatus = useCallback((localId: string, taskId: string) => {
+        if (pollingIntervals.current[localId]) return // Already polling
 
-    const uploadFile = (file: File) => {
+        const interval = setInterval(async () => {
+            try {
+                const status = await get<UploadTaskStatus>(`/documents/status/${taskId}`)
+                setUploads(prev => prev.map(u => {
+                    if (u.id === localId) {
+                        return {
+                            ...u,
+                            progress: status.progress,
+                            status: status.status,
+                            error: status.error,
+                            name: status.filename || u.name
+                        }
+                    }
+                    return u
+                }))
+
+                if (status.status === "success") {
+                    clearInterval(interval)
+                    delete pollingIntervals.current[localId]
+                    fetchDocs()
+                    setTimeout(() => {
+                        setUploads(prev => prev.filter(u => u.id !== localId))
+                    }, 3000)
+                } else if (status.status === "error") {
+                    clearInterval(interval)
+                    delete pollingIntervals.current[localId]
+                }
+            } catch {
+                clearInterval(interval)
+                delete pollingIntervals.current[localId]
+                setUploads(prev => prev.map(u => 
+                    u.id === localId ? { ...u, status: "error", error: "Failed to fetch status" } : u
+                ))
+            }
+        }, 1000)
+
+        pollingIntervals.current[localId] = interval
+    }, [])
+
+    const fetchActiveTasks = useCallback(async () => {
+        try {
+            const activeTasks = await get<UploadTaskStatus[]>("/documents/tasks")
+            activeTasks.forEach(task => {
+                const taskId = task.taskId || task.task_id
+                if (!taskId) return
+
+                setUploads(prev => {
+                    if (prev.find(u => u.id === taskId)) return prev
+                    return [...prev, {
+                        id: taskId,
+                        name: task.filename || "Unknown document",
+                        progress: task.progress,
+                        status: task.status,
+                        error: task.error
+                    }]
+                })
+                pollTaskStatus(taskId, taskId)
+            })
+        } catch { /* ignore silenty */ }
+    }, [pollTaskStatus])
+
+    useEffect(() => { 
+        fetchDocs()
+        fetchActiveTasks()
+        return () => {
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+            Object.values(pollingIntervals.current).forEach(clearInterval)
+        }
+    }, [fetchActiveTasks])
+
+    const hasUploadingFiles = uploads.some(u => u.status === "uploading")
+
+    // Block SPA navigation ONLY if there are active network uploads
+    const blocker = useBlocker(({ currentLocation, nextLocation }) => {
+        if (!hasUploadingFiles) return false
+        return currentLocation.pathname !== nextLocation.pathname
+    })
+
+    useEffect(() => {
+        if (blocker.state === "blocked") {
+            const leave = window.confirm("A file is still uploading. If you leave now, the upload will be cancelled. Continue?")
+            if (leave) {
+                blocker.proceed()
+            } else {
+                blocker.reset()
+            }
+        }
+    }, [blocker])
+
+    // Prevent browser refresh/close ONLY if uploads are active
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (hasUploadingFiles) {
+                e.preventDefault()
+                e.returnValue = "A file is still uploading."
+                return e.returnValue
+            }
+        }
+        window.addEventListener("beforeunload", handleBeforeUnload)
+        return () => window.removeEventListener("beforeunload", handleBeforeUnload)
+    }, [hasUploadingFiles])
+
+    const startUpload = (file: File) => {
         const ext = "." + (file.name.split(".").pop() || "").toLowerCase()
         if (!ACCEPT.includes(ext)) {
-            toast.error(`Unsupported file type. Allowed: ${ACCEPT}.`)
+            toast.error(`Unsupported file: ${file.name}`)
             return
         }
         if (file.size > MAX_MB * 1024 * 1024) {
-            toast.error(`File too large. Max ${MAX_MB} MB.`)
+            toast.error(`File too large: ${file.name} (Max ${MAX_MB} MB)`)
             return
         }
 
-        // Kick off the upload and immediately hand it to sonner's toast.promise.
-        // sonner's Toaster is mounted at the app root, so the loading +
-        // success/error notification follows the user across route changes —
-        // they can navigate away and still see the final toast when it lands.
-        const uploadPromise = (async () => {
-            const form = new FormData()
-            form.append("file", file)
-            const resp = await fetch(`${API_URL}/documents`, {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem("auth_token") || ""}`,
-                },
-                body: form,
-            })
-            if (!resp.ok) {
-                let detail = `Upload failed (${resp.status})`
-                try {
-                    const body = await resp.json()
-                    if (body?.detail) detail = body.detail
-                } catch { /* ignore */ }
-                throw new Error(detail)
+        const localId = Math.random().toString(36).substring(7)
+        
+        setUploads(prev => [...prev, {
+            id: localId,
+            file,
+            name: file.name,
+            progress: 0,
+            status: "uploading"
+        }])
+
+        const xhr = new XMLHttpRequest()
+        xhr.open("POST", `${API_URL}/documents`)
+        xhr.setRequestHeader("Authorization", `Bearer ${localStorage.getItem("auth_token") || ""}`)
+
+        xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+                const percent = Math.round((e.loaded / e.total) * 50)
+                setUploads(prev => prev.map(u => 
+                    u.id === localId && u.status === "uploading" ? { ...u, progress: percent } : u
+                ))
             }
-            return await resp.json()
-        })()
+        }
 
-        toast.promise(uploadPromise, {
-            loading: `Parsing ${file.name}...`,
-            success: "Document processed",
-            error: (err) => err instanceof Error ? err.message : "Upload failed",
-        })
+        xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                try {
+                    const resp = JSON.parse(xhr.responseText)
+                    const backendTaskId = resp.taskId || resp.task_id
+                    if (!backendTaskId) throw new Error("No task ID")
 
-        // If the user stays on this page, refresh the library when it lands.
-        // If they navigate away, the refresh is a no-op on the unmounted
-        // component and the library will fetch fresh on next mount.
-        uploadPromise.then(fetchDocs).catch(() => { /* toast already handled */ })
+                    setUploads(prev => prev.map(u => 
+                        u.id === localId ? { ...u, id: backendTaskId, status: "processing", progress: 50 } : u
+                    ))
+                    pollTaskStatus(backendTaskId, backendTaskId)
+                } catch {
+                    setUploads(prev => prev.map(u => 
+                        u.id === localId ? { ...u, status: "error", error: "Invalid server response" } : u
+                    ))
+                }
+            } else {
+                let errorMsg = `Upload failed (${xhr.status})`
+                try {
+                    const resp = JSON.parse(xhr.responseText)
+                    if (resp.detail) errorMsg = resp.detail
+                } catch { /* ignore */ }
+                setUploads(prev => prev.map(u => 
+                    u.id === localId ? { ...u, progress: 100, status: "error", error: errorMsg } : u
+                ))
+            }
+        }
+
+        xhr.onerror = () => {
+            setUploads(prev => prev.map(u => 
+                u.id === localId ? { ...u, progress: 100, status: "error", error: "Network error" } : u
+            ))
+        }
+
+        const form = new FormData()
+        form.append("file", file)
+        xhr.send(form)
+    }
+
+    const handleFiles = (files: FileList | null) => {
+        if (!files) return
+        Array.from(files).forEach(startUpload)
     }
 
     const handleDrop = (e: React.DragEvent) => {
         e.preventDefault()
         setIsDragging(false)
-        const file = e.dataTransfer.files?.[0]
-        if (file) uploadFile(file)
+        handleFiles(e.dataTransfer.files)
     }
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
-        if (file) uploadFile(file)
+        handleFiles(e.target.files)
         if (fileInputRef.current) fileInputRef.current.value = ""
     }
 
@@ -134,7 +289,19 @@ export default function Documents() {
         }
     }
 
-    // ── Render ──────────────────────────────────────────────────────────
+    const removeTask = (taskId: string) => {
+        setUploads(prev => prev.filter(u => u.id !== taskId))
+        if (pollingIntervals.current[taskId]) {
+            clearInterval(pollingIntervals.current[taskId])
+            delete pollingIntervals.current[taskId]
+        }
+    }
+
+    const filteredDocs = useMemo(() => {
+        if (!searchQuery.trim()) return docs
+        const query = searchQuery.toLowerCase()
+        return docs.filter(d => d.name.toLowerCase().includes(query))
+    }, [docs, searchQuery])
 
     return (
         <div className="p-6">
@@ -161,7 +328,7 @@ export default function Documents() {
                     <Upload size={22} className={`mx-auto mb-2 ${isDragging ? "text-primary" : "text-muted-foreground"}`} />
                     <p className="text-[13px] text-muted-foreground">Drag &amp; drop or click to upload</p>
                     <p className="text-[11px] text-muted-foreground/70 mt-1">
-                        PDF, DOCX, PPTX, TXT, MD · Max {MAX_MB} MB · Parsing takes ~30-60s
+                        PDF, DOCX, PPTX, TXT, MD · Max {MAX_MB} MB
                     </p>
                 </label>
                 <input
@@ -169,6 +336,7 @@ export default function Documents() {
                     type="file"
                     id="doc-upload-input"
                     accept={ACCEPT}
+                    multiple
                     className="hidden"
                     onChange={handleInputChange}
                 />
@@ -180,24 +348,91 @@ export default function Documents() {
                     </Alert>
                 )}
 
+                {/* Active Uploads */}
+                {uploads.length > 0 && (
+                    <div className="space-y-3">
+                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-2">
+                            Uploading & Processing ({uploads.length})
+                        </p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {uploads.map(task => (
+                                <div key={task.id} className="bg-card border rounded-xl p-4 space-y-3 shadow-sm relative overflow-hidden">
+                                    <div className="flex items-start justify-between gap-3 relative z-10">
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <div className={`h-8 w-8 rounded-md flex items-center justify-center shrink-0 ${
+                                                task.status === "success" ? "bg-emerald-500/10 text-emerald-600" :
+                                                task.status === "error" ? "bg-red-500/10 text-red-600" :
+                                                "bg-primary/10 text-primary"
+                                            }`}>
+                                                {task.status === "success" ? <CheckCircle2 size={16} /> :
+                                                 task.status === "error" ? <XCircle size={16} /> :
+                                                 <Loader2 size={16} className="animate-spin" />}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="text-[13px] font-medium truncate">{task.name}</p>
+                                                <p className={`text-[11px] ${task.status === "error" ? "text-red-500" : "text-muted-foreground"}`}>
+                                                    {task.status === "uploading" ? `Uploading... ${task.progress}%` :
+                                                     task.status === "parsing" ? `Parsing via LLM... ${task.progress}%` :
+                                                     task.status === "summarizing" ? `Summarizing... ${task.progress}%` :
+                                                     task.status === "saving" ? `Saving to DB... ${task.progress}%` :
+                                                     task.status === "processing" ? `Processing... ${task.progress}%` :
+                                                     task.status === "success" ? "Completed" :
+                                                     task.error}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        {(task.status === "success" || task.status === "error") && (
+                                            <Button variant="ghost" size="icon-sm" onClick={() => removeTask(task.id)} className="h-6 w-6 text-muted-foreground hover:bg-muted">
+                                                <XCircle size={14} />
+                                            </Button>
+                                        )}
+                                    </div>
+                                    <Progress 
+                                        value={task.progress} 
+                                        className="h-1.5" 
+                                        indicatorClassName={
+                                            task.status === "success" ? "bg-emerald-500" :
+                                            task.status === "error" ? "bg-red-500" :
+                                            "bg-primary transition-all duration-500 ease-out"
+                                        }
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 {/* Library list */}
                 <div>
-                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-2">
-                        Your library ({docs.length})
-                    </p>
+                    <div className="flex items-center justify-between mb-3 mt-2">
+                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                            Your library ({filteredDocs.length})
+                        </p>
+                        <div className="relative w-64">
+                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
+                            <Input 
+                                placeholder="Search documents..." 
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="pl-8 h-8 text-[13px]" 
+                            />
+                        </div>
+                    </div>
 
                     {loading ? (
                         <div className="space-y-2">
                             {[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}
                         </div>
-                    ) : docs.length === 0 ? (
+                    ) : filteredDocs.length === 0 ? (
                         <div className="text-center py-12 border border-dashed rounded-xl">
                             <FileText size={22} className="mx-auto mb-2 text-muted-foreground/60" />
-                            <p className="text-[13px] text-muted-foreground">No documents yet</p>
+                            <p className="text-[13px] text-muted-foreground">
+                                {docs.length === 0 ? "No documents yet" : "No documents match your search"}
+                            </p>
                         </div>
                     ) : (
                         <div className="space-y-2">
-                            {docs.map(doc => (
+                            {filteredDocs.map(doc => (
                                 <Link
                                     key={doc.id}
                                     to={`/documents/${doc.id}`}

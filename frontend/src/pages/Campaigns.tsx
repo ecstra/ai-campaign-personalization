@@ -162,7 +162,7 @@ export default function Campaigns() {
                     <h1 className="text-2xl font-semibold tracking-tight">Campaigns</h1>
                     <p className="text-muted-foreground text-sm">Manage your email outreach campaigns</p>
                 </div>
-                <Button onClick={goToCreate} className="gap-2" size="sm">
+                <Button onClick={goToCreate} className="gap-2">
                     <Plus size={14} />
                     Create Campaign
                 </Button>

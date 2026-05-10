@@ -1,14 +1,14 @@
-from dotenv import load_dotenv
-
-load_dotenv()
-
+import os
 from contextlib import asynccontextmanager
 
+from dotenv import load_dotenv
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.db import DatabaseEngine, DatabaseInitializer
-from src.api import (
+load_dotenv()
+
+from src.db import DatabaseEngine, DatabaseInitializer  # noqa: E402
+from src.api import (  # noqa: E402
     campaigns_router,
     leads_router,
     leads_detail_router,
@@ -16,10 +16,8 @@ from src.api import (
     documents_attach_router,
     webhooks_router,
 )
-from src.auth import auth_router
-from core.scheduler import SchedulerUtility
-
-import os
+from src.auth import auth_router  # noqa: E402
+from core.scheduler import SchedulerUtility  # noqa: E402
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
