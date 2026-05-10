@@ -1,12 +1,8 @@
 import asyncio
-import email
-import email.utils
 import functools
-import imaplib
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
-from ..auth.tokens import TokenUtility
 from ..db import DatabaseEngine
 from ..mail.agent import MailAgentUtility
 from ..mail.client import MailClientUtility, GMAIL_DAILY_SEND_LIMIT
@@ -25,90 +21,6 @@ class SchedulerProcessorUtility:
             None,
             functools.partial(func, *args, **kwargs),
         )
-
-    @staticmethod
-    def _build_imap_xoauth2(user_email: str, access_token: str) -> bytes:
-        return f"user={user_email}\x01auth=Bearer {access_token}\x01\x01".encode()
-
-    @staticmethod
-    def _targeted_reply_check(
-        user_id: str,
-        user_email: str,
-        lead_emails: list[str],
-        lead_email_to_id: dict[str, str],
-    ) -> set[str]:
-        if not lead_emails:
-            return set()
-
-        replied_lead_ids: set[str] = set()
-        earliest_sent = SchedulerQueryUtility.get_lead_earliest_sent_map(list(lead_email_to_id.values()))
-
-        try:
-            access_token = TokenUtility.get_valid_access_token(user_id)
-            auth_string = SchedulerProcessorUtility._build_imap_xoauth2(user_email, access_token)
-
-            imap_conn = imaplib.IMAP4_SSL("imap.gmail.com", 993)
-            imap_conn.authenticate("XOAUTH2", lambda _: auth_string)
-            imap_conn.select("INBOX", readonly=True)
-
-            try:
-                if len(lead_emails) == 1:
-                    from_criteria = f'FROM "{lead_emails[0]}"'
-                else:
-                    from_criteria = f'FROM "{lead_emails[0]}"'
-                    for addr in lead_emails[1:]:
-                        from_criteria = f'OR ({from_criteria}) (FROM "{addr}")'
-
-                status, msg_nums = imap_conn.search(None, f"({from_criteria})")
-                if status == "OK" and msg_nums[0]:
-                    for num in msg_nums[0].split():
-                        status, data = imap_conn.fetch(num, "(RFC822.HEADER)")
-                        if status != "OK" or not data:
-                            continue
-                        for part in data:
-                            if isinstance(part, tuple) and b"HEADER" in part[0]:
-                                msg = email.message_from_bytes(part[1])
-                                from_addr = email.utils.parseaddr(msg.get("From", ""))[1].lower()
-                                if from_addr not in lead_email_to_id:
-                                    continue
-
-                                lead_id = lead_email_to_id[from_addr]
-                                lead_earliest = earliest_sent.get(lead_id)
-                                if not lead_earliest:
-                                    continue
-
-                                reply_date: Optional[datetime] = None
-                                date_header = msg.get("Date", "")
-                                if date_header and isinstance(date_header, str):
-                                    try:
-                                        parsed = email.utils.parsedate_to_datetime(date_header)
-                                        # Normalize to UTC-naive for consistent DB storage and comparison
-                                        reply_date = parsed.astimezone(timezone.utc).replace(tzinfo=None)
-                                    except (TypeError, ValueError):
-                                        reply_date = None
-
-                                # lead_earliest from DB is UTC-naive; compare apples to apples
-                                lead_earliest_utc = lead_earliest.replace(tzinfo=None)
-                                if not reply_date or reply_date < lead_earliest_utc:
-                                    continue
-
-                                replied_lead_ids.add(lead_id)
-                                subject_raw = msg.get("Subject", "")
-                                msg_id_raw = msg.get("Message-ID", "")
-                                ReplyUtility.mark_lead_replied(
-                                    lead_id=lead_id,
-                                    subject=subject_raw if isinstance(subject_raw, str) else "",
-                                    reply_content="(detected pre-send)",
-                                    gmail_message_id=msg_id_raw if isinstance(msg_id_raw, str) else "",
-                                    received_at=reply_date,
-                                )
-            finally:
-                imap_conn.logout()
-
-        except Exception:
-            pass
-
-        return replied_lead_ids
 
     @staticmethod
     async def generate_email_for_lead(
@@ -307,13 +219,18 @@ class SchedulerProcessorUtility:
 
             for uid, gens in user_gen_groups.items():
                 user_email_for_check = gens[0]["lead"]["sender_email"]
-                lead_emails_to_check = [g["lead"]["email"].lower() for g in gens]
                 lead_email_to_id_map = {g["lead"]["email"].lower(): g["lead_id"] for g in gens}
 
                 try:
+                    earliest_sent_map = SchedulerQueryUtility.get_lead_earliest_sent_map(
+                        list(lead_email_to_id_map.values())
+                    )
                     just_replied = await SchedulerProcessorUtility.run_sync(
-                        SchedulerProcessorUtility._targeted_reply_check, uid, user_email_for_check,
-                        lead_emails_to_check, lead_email_to_id_map,
+                        ImapUtility.check_replies_for_leads,
+                        uid,
+                        user_email_for_check,
+                        lead_email_to_id_map,
+                        earliest_sent_map,
                     )
                     if just_replied:
                         gens = [g for g in gens if g["lead_id"] not in just_replied]

@@ -312,3 +312,102 @@ class ImapUtility:
                     pass
 
         return replies
+
+    @staticmethod
+    def check_replies_for_leads(
+        user_id: str,
+        user_email: str,
+        lead_email_to_id: dict[str, str],
+        earliest_sent_map: dict[str, datetime],
+    ) -> set[str]:
+        """
+        Lightweight pre-send reply check: fetches headers only (no full RFC822),
+        no date window scoping. Returns the set of lead_ids that have replied.
+        Also calls ReplyUtility.mark_lead_replied for each match.
+
+        Accepts earliest_sent_map to remain DB-agnostic — caller is responsible
+        for fetching it (typically SchedulerQueryUtility.get_lead_earliest_sent_map).
+        """
+        if not lead_email_to_id:
+            return set()
+
+        lead_emails = list(lead_email_to_id.keys())
+        replied_lead_ids: set[str] = set()
+
+        try:
+            access_token = TokenUtility.get_valid_access_token(user_id)
+            auth_string = ImapUtility._build_xoauth2_string(user_email, access_token)
+
+            imap: Optional[imaplib.IMAP4_SSL] = None
+            imap = imaplib.IMAP4_SSL(GMAIL_IMAP_HOST, GMAIL_IMAP_PORT)
+            imap.authenticate("XOAUTH2", lambda _: auth_string)
+            imap.select("INBOX", readonly=True)
+
+            try:
+                if len(lead_emails) == 1:
+                    from_criteria = f'FROM "{lead_emails[0]}"'
+                else:
+                    from_criteria = f'FROM "{lead_emails[0]}"'
+                    for addr in lead_emails[1:]:
+                        from_criteria = f'OR ({from_criteria}) (FROM "{addr}")'
+
+                status, msg_nums = imap.search(None, f"({from_criteria})")
+                if status != "OK" or not msg_nums[0]:
+                    return set()
+
+                for num in msg_nums[0].split():
+                    status, data = imap.fetch(num, "(RFC822.HEADER)")
+                    if status != "OK" or not data:
+                        continue
+
+                    for part in data:
+                        if not (isinstance(part, tuple) and b"HEADER" in part[0]):
+                            continue
+
+                        msg = email.message_from_bytes(part[1])
+                        from_header = msg.get("From", "")
+                        from_addr = email.utils.parseaddr(
+                            from_header if isinstance(from_header, str) else ""
+                        )[1].lower()
+
+                        if from_addr not in lead_email_to_id:
+                            continue
+
+                        lead_id = lead_email_to_id[from_addr]
+                        lead_earliest = earliest_sent_map.get(lead_id)
+                        if not lead_earliest:
+                            continue
+
+                        reply_date: Optional[datetime] = None
+                        date_header = msg.get("Date", "")
+                        if date_header and isinstance(date_header, str):
+                            try:
+                                parsed = email.utils.parsedate_to_datetime(date_header)
+                                reply_date = parsed.astimezone(timezone.utc).replace(tzinfo=None)
+                            except (TypeError, ValueError):
+                                reply_date = None
+
+                        if not reply_date or reply_date < lead_earliest.replace(tzinfo=None):
+                            continue
+
+                        replied_lead_ids.add(lead_id)
+                        subject_raw = msg.get("Subject", "")
+                        msg_id_raw = msg.get("Message-ID", "")
+                        ReplyUtility.mark_lead_replied(
+                            lead_id=lead_id,
+                            subject=subject_raw if isinstance(subject_raw, str) else "",
+                            reply_content="(detected pre-send)",
+                            gmail_message_id=msg_id_raw if isinstance(msg_id_raw, str) else "",
+                            received_at=reply_date,
+                        )
+
+            finally:
+                try:
+                    imap.logout()
+                except Exception:
+                    pass
+
+        except Exception:
+            pass
+
+        return replied_lead_ids
