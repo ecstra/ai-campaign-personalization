@@ -1,20 +1,19 @@
 import os
 import secrets
-from datetime import datetime, timedelta, timezone
-
 import httpx
 import jwt
-from fastapi import APIRouter, Depends, HTTPException
+
+from datetime import datetime, timedelta, timezone
+from pydantic import BaseModel
+
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
+
 from google.oauth2 import id_token as google_id_token
 from google.auth.transport import requests as google_requests
-from pydantic import BaseModel
-from dotenv import load_dotenv
 
-from .encryption import EncryptionUtility
-from .dependencies import AuthUtility, JWT_SECRET, JWT_ALGORITHM
+from core.auth import EncryptionUtility
+from .dependencies import get_current_user, JWT_SECRET, JWT_ALGORITHM
 from ..db import DatabaseEngine
-
-load_dotenv()
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
@@ -31,14 +30,17 @@ SCOPES = [
 ]
 
 JWT_EXPIRY_DAYS = 7
+OAUTH_STATE_MAX_AGE_SECONDS = 600
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-
 
 class AuthCallbackRequest(BaseModel):
     code: str
     state: str
 
+class LoginResponse(BaseModel):
+    url: str
+    state: str
 
 class UserResponse(BaseModel):
     id: str
@@ -46,14 +48,14 @@ class UserResponse(BaseModel):
     name: str
     picture_url: str | None
 
-
 class AuthResponse(BaseModel):
     token: str
     user: UserResponse
 
-
-@router.get("/google/login")
-async def google_login():
+@router.get("/google/login", response_model=LoginResponse)
+async def google_login(
+    response: Response,
+):
     """Return the Google OAuth2 authorization URL for the frontend to redirect to."""
     if not GOOGLE_CLIENT_ID or not GOOGLE_REDIRECT_URI:
         raise HTTPException(
@@ -62,6 +64,15 @@ async def google_login():
         )
 
     state = secrets.token_urlsafe(32)
+
+    response.set_cookie(
+        key="oauth_state",
+        value=state,
+        max_age=OAUTH_STATE_MAX_AGE_SECONDS,
+        httponly=True,
+        secure=True,
+        samesite="lax",
+    )
 
     params = {
         "client_id": GOOGLE_CLIENT_ID,
@@ -77,15 +88,21 @@ async def google_login():
 
     return {"url": auth_url, "state": state}
 
-
 @router.post("/google/callback", response_model=AuthResponse)
 async def google_callback(
     body: AuthCallbackRequest,
+    response: Response,
+    oauth_state: str | None = Cookie(default=None),
 ):
     """
     Exchange the Google authorization code for tokens, create/update the user,
     and return a JWT session token.
     """
+    if oauth_state is None or oauth_state != body.state:
+        raise HTTPException(status_code=400, detail="Invalid OAuth state parameter")
+
+    response.delete_cookie(key="oauth_state")
+
     token_response = httpx.post(
         GOOGLE_TOKEN_URL,
         data={
@@ -180,12 +197,10 @@ async def google_callback(
         ),
     )
 
-
 @router.get("/me", response_model=UserResponse)
 async def get_me(
-    user: dict = Depends(AuthUtility.get_current_user),
+    user: dict = Depends(get_current_user),
 ):
-    """Return the currently authenticated user's info."""
     return UserResponse(
         id=user["id"],
         email=user["email"],

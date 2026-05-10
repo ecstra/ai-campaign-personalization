@@ -4,13 +4,9 @@ from typing import Literal, Optional, Any
 
 from llama_cloud import AsyncLlamaCloud
 
-
-class DocumentParseError(Exception):
-    """Raised when the upstream parser fails or returns empty content."""
-
+class DocumentParseError(Exception): pass
 
 MIN_USEFUL_CHARS = 200
-
 
 class DocumentParserUtility:
 

@@ -1,33 +1,52 @@
 import email
 import email.utils
 import imaplib
+import logging
 import re
 from datetime import datetime, timezone, timedelta
 from email.header import decode_header
 from typing import Optional
 
-from ..auth.tokens import TokenUtility
-from ..db import DatabaseEngine
+from core.auth import TokenUtility
+from src.db import DatabaseEngine
+from ._xoauth2 import build_xoauth2_imap
 from .replies import ReplyUtility
+
+logger = logging.getLogger(__name__)
 
 GMAIL_IMAP_HOST = "imap.gmail.com"
 GMAIL_IMAP_PORT = 993
 
+
+def _build_imap_from_criteria(addresses: list[str]) -> str:
+    if len(addresses) == 1:
+        return f'FROM "{addresses[0]}"'
+    criteria = f'FROM "{addresses[0]}"'
+    for addr in addresses[1:]:
+        criteria = f'OR ({criteria}) (FROM "{addr}")'
+    return criteria
+
+
+def _parse_email_date(date_header: Optional[str]) -> Optional[datetime]:
+    if not date_header:
+        return None
+    try:
+        parsed = email.utils.parsedate_to_datetime(date_header)
+        return parsed.astimezone(timezone.utc).replace(tzinfo=None)
+    except (TypeError, ValueError):
+        return None
+
+
+def _normalize_to_utc_naive(dt: Optional[datetime]) -> Optional[datetime]:
+    if dt is None:
+        return None
+    return dt.astimezone(timezone.utc).replace(tzinfo=None)
+
+
 class ImapUtility:
 
     @staticmethod
-    def _build_xoauth2_string(
-        user_email: str,
-        access_token: str,
-    ) -> bytes:
-        auth_string = f"user={user_email}\x01auth=Bearer {access_token}\x01\x01"
-        return auth_string.encode()
-
-    @staticmethod
-    def _decode_header_value(
-        raw: Optional[str],
-    ) -> str:
-        """Decode an email header that may be MIME-encoded."""
+    def _decode_header_value(raw: Optional[str]) -> str:
         if not raw:
             return ""
         decoded_parts = decode_header(raw)
@@ -40,22 +59,15 @@ class ImapUtility:
         return " ".join(parts)
 
     @staticmethod
-    def _extract_clean_body(
-        msg: email.message.Message,
-    ) -> str:
-        """
-        Walk a parsed MIME message and return a clean reply body with quotes stripped.
-        Prefers text/plain; falls back to stripping HTML if only text/html is available.
-        """
+    def _extract_clean_body(msg: email.message.Message) -> str:
         plain_text: Optional[str] = None
         html_text: Optional[str] = None
 
         if msg.is_multipart():
             for part in msg.walk():
                 ctype = part.get_content_type()
-                disp = part.get("Content-Disposition", "")
-                disposition = disp.lower() if isinstance(disp, str) else ""
-                if "attachment" in disposition:
+                disp = str(part.get("Content-Disposition", "")).lower()
+                if "attachment" in disp:
                     continue
                 payload = part.get_payload(decode=True)
                 if not payload or not isinstance(payload, bytes):
@@ -92,13 +104,7 @@ class ImapUtility:
         return ""
 
     @staticmethod
-    def _get_lead_emails_for_user(
-        user_id: str,
-    ) -> dict[str, list[dict]]:
-        """
-        Fetch all lead email addresses for active campaigns of this user,
-        along with the message_ids of emails we sent to them.
-        """
+    def _get_lead_emails_for_user(user_id: str) -> dict[str, list[dict]]:
         with DatabaseEngine.get_cursor() as cur:
             cur.execute(
                 """
@@ -135,13 +141,7 @@ class ImapUtility:
         return lead_map
 
     @staticmethod
-    def _get_lead_earliest_sent(
-        user_id: str,
-    ) -> dict[str, datetime]:
-        """
-        For every lead in the user's active campaigns, return the earliest
-        timestamp at which we sent them an email (status='sent').
-        """
+    def _get_lead_earliest_sent(user_id: str) -> dict[str, datetime]:
         with DatabaseEngine.get_cursor() as cur:
             cur.execute(
                 """
@@ -158,10 +158,7 @@ class ImapUtility:
         return {str(row["lead_id"]): row["earliest_sent_at"] for row in rows}
 
     @staticmethod
-    def _get_earliest_campaign_start(
-        user_id: str,
-    ) -> Optional[datetime]:
-        """Get the earliest active campaign start date to scope the IMAP search."""
+    def _get_earliest_campaign_start(user_id: str) -> Optional[datetime]:
         with DatabaseEngine.get_cursor() as cur:
             cur.execute(
                 """
@@ -177,14 +174,7 @@ class ImapUtility:
         return None
 
     @staticmethod
-    def check_replies_for_user(
-        user_id: str,
-        user_email: str,
-    ) -> list[dict]:
-        """
-        Connect to the user's Gmail via IMAP XOAUTH2 and check for replies
-        from lead email addresses. Matches replies using In-Reply-To headers.
-        """
+    def check_replies_for_user(user_id: str, user_email: str) -> list[dict]:
         lead_map = ImapUtility._get_lead_emails_for_user(user_id)
         if not lead_map:
             return []
@@ -198,7 +188,7 @@ class ImapUtility:
         since_date = (earliest_start - timedelta(days=1)).strftime("%d-%b-%Y")
 
         access_token = TokenUtility.get_valid_access_token(user_id)
-        auth_string = ImapUtility._build_xoauth2_string(user_email, access_token)
+        auth_string = build_xoauth2_imap(user_email, access_token)
 
         imap: Optional[imaplib.IMAP4_SSL] = None
         replies: list[dict] = []
@@ -208,15 +198,7 @@ class ImapUtility:
             imap.authenticate("XOAUTH2", lambda _: auth_string)
             imap.select("INBOX", readonly=True)
 
-            lead_addrs = list(lead_map.keys())
-
-            if len(lead_addrs) == 1:
-                from_criteria = f'FROM "{lead_addrs[0]}"'
-            else:
-                from_criteria = f'FROM "{lead_addrs[0]}"'
-                for addr in lead_addrs[1:]:
-                    from_criteria = f'OR ({from_criteria}) (FROM "{addr}")'
-
+            from_criteria = _build_imap_from_criteria(list(lead_map.keys()))
             search_query = f"({from_criteria} SINCE {since_date})"
 
             status, msg_nums = imap.search(None, search_query)
@@ -251,28 +233,21 @@ class ImapUtility:
                 msg = email.message_from_bytes(raw_message)
                 in_reply_to_header = msg.get("In-Reply-To", "")
                 in_reply_to = in_reply_to_header.strip() if isinstance(in_reply_to_header, str) else ""
-                
+
                 references_header = msg.get("References", "")
                 references = references_header.strip() if isinstance(references_header, str) else ""
-                
+
                 from_header = msg.get("From", "")
                 from_addr = email.utils.parseaddr(from_header if isinstance(from_header, str) else "")[1].lower()
-                
-                subject_header = msg.get("Subject")
-                subject = ImapUtility._decode_header_value(subject_header if isinstance(subject_header, str) else "")
-                
-                gmail_message_id_header = msg.get("Message-ID", "")
-                gmail_message_id = gmail_message_id_header.strip() if isinstance(gmail_message_id_header, str) else ""
-                
-                reply_date_header = msg.get("Date", "")
-                reply_date: Optional[datetime] = None
-                if reply_date_header and isinstance(reply_date_header, str):
-                    try:
-                        parsed = email.utils.parsedate_to_datetime(reply_date_header)
-                        # Normalize to UTC-naive for consistent DB storage and comparison
-                        reply_date = parsed.astimezone(timezone.utc).replace(tzinfo=None)
-                    except (TypeError, ValueError):
-                        reply_date = None
+
+                subject_raw = msg.get("Subject")
+                subject = ImapUtility._decode_header_value(subject_raw if isinstance(subject_raw, str) else "")
+
+                gmail_msg_id_raw = msg.get("Message-ID", "")
+                gmail_message_id = gmail_msg_id_raw.strip() if isinstance(gmail_msg_id_raw, str) else ""
+
+                date_header = msg.get("Date", "")
+                reply_date = _parse_email_date(date_header if isinstance(date_header, str) else "")
 
                 matched_lead = sent_msg_lookup.get(in_reply_to)
 
@@ -285,8 +260,8 @@ class ImapUtility:
                 if not matched_lead and from_addr in lead_map and lead_map[from_addr]:
                     candidate_lead_id = lead_map[from_addr][0]["lead_id"]
                     earliest_sent = lead_earliest_sent.get(candidate_lead_id)
-                    # Normalize both to UTC-naive before comparing
-                    if earliest_sent and reply_date and reply_date >= earliest_sent.replace(tzinfo=None):
+                    earliest_normalized = _normalize_to_utc_naive(earliest_sent)
+                    if earliest_normalized and reply_date and reply_date >= earliest_normalized:
                         matched_lead = {
                             "lead_id": candidate_lead_id,
                             "lead_email": from_addr,
@@ -303,7 +278,7 @@ class ImapUtility:
                     })
 
         except Exception:
-            pass
+            logger.exception("IMAP reply check failed for user %s — returning empty results", user_id)
         finally:
             if imap:
                 try:
@@ -320,14 +295,6 @@ class ImapUtility:
         lead_email_to_id: dict[str, str],
         earliest_sent_map: dict[str, datetime],
     ) -> set[str]:
-        """
-        Lightweight pre-send reply check: fetches headers only (no full RFC822),
-        no date window scoping. Returns the set of lead_ids that have replied.
-        Also calls ReplyUtility.mark_lead_replied for each match.
-
-        Accepts earliest_sent_map to remain DB-agnostic — caller is responsible
-        for fetching it (typically SchedulerQueryUtility.get_lead_earliest_sent_map).
-        """
         if not lead_email_to_id:
             return set()
 
@@ -336,21 +303,14 @@ class ImapUtility:
 
         try:
             access_token = TokenUtility.get_valid_access_token(user_id)
-            auth_string = ImapUtility._build_xoauth2_string(user_email, access_token)
+            auth_string = build_xoauth2_imap(user_email, access_token)
 
-            imap: Optional[imaplib.IMAP4_SSL] = None
             imap = imaplib.IMAP4_SSL(GMAIL_IMAP_HOST, GMAIL_IMAP_PORT)
             imap.authenticate("XOAUTH2", lambda _: auth_string)
             imap.select("INBOX", readonly=True)
 
             try:
-                if len(lead_emails) == 1:
-                    from_criteria = f'FROM "{lead_emails[0]}"'
-                else:
-                    from_criteria = f'FROM "{lead_emails[0]}"'
-                    for addr in lead_emails[1:]:
-                        from_criteria = f'OR ({from_criteria}) (FROM "{addr}")'
-
+                from_criteria = _build_imap_from_criteria(lead_emails)
                 status, msg_nums = imap.search(None, f"({from_criteria})")
                 if status != "OK" or not msg_nums[0]:
                     return set()
@@ -378,16 +338,11 @@ class ImapUtility:
                         if not lead_earliest:
                             continue
 
-                        reply_date: Optional[datetime] = None
                         date_header = msg.get("Date", "")
-                        if date_header and isinstance(date_header, str):
-                            try:
-                                parsed = email.utils.parsedate_to_datetime(date_header)
-                                reply_date = parsed.astimezone(timezone.utc).replace(tzinfo=None)
-                            except (TypeError, ValueError):
-                                reply_date = None
+                        reply_date = _parse_email_date(date_header if isinstance(date_header, str) else "")
 
-                        if not reply_date or reply_date < lead_earliest.replace(tzinfo=None):
+                        earliest_normalized = _normalize_to_utc_naive(lead_earliest)
+                        if not reply_date or not earliest_normalized or reply_date < earliest_normalized:
                             continue
 
                         replied_lead_ids.add(lead_id)
@@ -408,6 +363,6 @@ class ImapUtility:
                     pass
 
         except Exception:
-            pass
+            logger.exception("IMAP pre-send reply check failed for user %s — returning empty results", user_id)
 
         return replied_lead_ids

@@ -1,16 +1,15 @@
 import asyncio
 import functools
+import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
-from ..db import DatabaseEngine
-from ..mail.agent import MailAgentUtility
-from ..mail.client import MailClientUtility, GMAIL_DAILY_SEND_LIMIT
-from ..mail.base import Mail, Sender
-from ..mail.imap import ImapUtility
-from ..mail.replies import ReplyUtility
+from src.db import DatabaseEngine
+from core.mail import MailAgentUtility, MailClientUtility, GMAIL_DAILY_SEND_LIMIT, Mail, Sender, ImapUtility, ReplyUtility
 from .config import MAX_CONCURRENT_GENERATIONS
 from .queries import SchedulerQueryUtility
+
+logger = logging.getLogger(__name__)
 
 class SchedulerProcessorUtility:
 
@@ -67,6 +66,7 @@ class SchedulerProcessorUtility:
 
     @staticmethod
     async def process_leads_job() -> None:
+        work_done = False
         try:
             leads = await SchedulerProcessorUtility.run_sync(SchedulerQueryUtility.get_eligible_leads)
             if not leads:
@@ -237,7 +237,7 @@ class SchedulerProcessorUtility:
                         if not gens:
                             continue
                 except Exception:
-                    pass
+                    logger.exception("IMAP pre-send check failed for user %s — proceeding with all leads", uid)
 
                 lead_ids_in_group = [gen["lead_id"] for gen in gens]
                 last_message_ids: Dict[str, Optional[str]] = {}
@@ -326,6 +326,7 @@ class SchedulerProcessorUtility:
                             )
                             all_send_failures.append(matching_lead)
                 except Exception:
+                    logger.exception("Batch send failed for user %s — marking all %d leads as failed", uid, len(gens))
                     all_send_failures.extend([g["lead"] for g in gens])
 
             if all_email_records:
@@ -342,12 +343,14 @@ class SchedulerProcessorUtility:
             all_campaign_ids = list(
                 {gen["lead"]["campaign_id"] for gen in successful_generations}
             )
+            work_done = True
             await SchedulerProcessorUtility.run_sync(SchedulerQueryUtility.check_campaign_completion, all_campaign_ids)
 
         except Exception:
-            pass
+            logger.exception("process_leads_job failed — job will retry on next tick")
         finally:
-            await SchedulerProcessorUtility.run_sync(SchedulerQueryUtility.check_all_active_campaigns_completion)
+            if work_done:
+                await SchedulerProcessorUtility.run_sync(SchedulerQueryUtility.check_all_active_campaigns_completion)
 
     @staticmethod
     async def check_replies_job() -> None:
@@ -404,10 +407,11 @@ class SchedulerProcessorUtility:
                             SchedulerQueryUtility.check_campaign_completion(campaign_ids)
 
                 except Exception:
+                    logger.exception("IMAP reply check failed for user %s", uid)
                     continue
 
         except Exception:
-            pass
+            logger.exception("check_replies_job failed — job will retry on next tick")
 
     @staticmethod
     async def check_scheduled_campaigns() -> None:
@@ -444,4 +448,4 @@ class SchedulerProcessorUtility:
                         (cid,),
                     )
         except Exception:
-            pass
+            logger.exception("check_scheduled_campaigns failed — job will retry on next tick")

@@ -1,13 +1,17 @@
 import os
+import logging
+
 from contextlib import contextmanager
 from typing import Any, Generator
 
 import psycopg2
 from psycopg2 import pool
 from psycopg2.extras import RealDictCursor
-from dotenv import load_dotenv
 
-load_dotenv()
+logger = logging.getLogger(__name__)
+
+_POOL_MIN = int(os.getenv("DB_POOL_MIN", "2"))
+_POOL_MAX = int(os.getenv("DB_POOL_MAX", "20"))
 
 class DatabaseEngine:
 
@@ -25,7 +29,7 @@ class DatabaseEngine:
         if not db_uri:
             raise ValueError("DATABASE_URI environment variable is not set")
 
-        cls._pg_pool = pool.ThreadedConnectionPool(2, 20, db_uri)
+        cls._pg_pool = pool.ThreadedConnectionPool(_POOL_MIN, _POOL_MAX, db_uri)
 
     @classmethod
     def close_pool(cls) -> None:
@@ -90,4 +94,5 @@ class DatabaseEngine:
                 cur.execute("SELECT 1")
                 return True
         except Exception:
+            logger.exception("Database connection test failed")
             return False

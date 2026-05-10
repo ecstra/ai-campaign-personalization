@@ -1,6 +1,6 @@
 moonlight-ai==0.2.7
 python-dotenv==1.2.1
-fastapi[standard]==0.128.0
+fastapi[standard]==0.136.1
 psycopg2-binary==2.9.11
 pydantic==2.12.5
 apscheduler==3.11.0

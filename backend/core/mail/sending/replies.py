@@ -1,19 +1,12 @@
 import re
 from datetime import datetime
-from typing import Optional
 
-from ..db import DatabaseEngine
+from src.db import DatabaseEngine
 
 class ReplyUtility:
 
     @staticmethod
-    def extract_reply_html(
-        html: str,
-    ) -> str:
-        """
-        Extract only the user's actual reply from email HTML,
-        stripping quoted/forwarded content from various email clients.
-        """
+    def extract_reply_html(html: str) -> str:
         if not html:
             return ""
 
@@ -36,12 +29,7 @@ class ReplyUtility:
         return result.strip()
 
     @staticmethod
-    def extract_reply_text(
-        text: str,
-    ) -> str:
-        """
-        Extract reply content from plain text email, stripping quoted lines.
-        """
+    def extract_reply_text(text: str) -> str:
         if not text:
             return ""
 
@@ -67,13 +55,9 @@ class ReplyUtility:
         lead_id: str,
         subject: str,
         reply_content: str,
-        gmail_message_id: Optional[str] = None,
-        received_at: Optional[datetime] = None,
+        gmail_message_id: str | None = None,
+        received_at: datetime | None = None,
     ) -> bool:
-        """
-        Mark a lead as replied and record the reply in the emails table.
-        Idempotent: returns True if the lead was already marked as replied.
-        """
         try:
             with DatabaseEngine.get_cursor(commit=True) as cur:
                 cur.execute(

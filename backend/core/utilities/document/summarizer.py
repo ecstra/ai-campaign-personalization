@@ -1,19 +1,13 @@
-import os
 from textwrap import dedent
 
 from pydantic import BaseModel, Field
 from moonlight import Agent, Content
 
-from ..mail.provider import LLM_PROVIDER, LLM_MODEL
+from core.llm import LLM_PROVIDER, LLM_MODEL
 
-
-class BriefSummarizationError(Exception):
-    """Raised when the LLM fails to produce a usable brief."""
-
+class BriefSummarizationError(Exception): pass
 
 class ProductBrief(BaseModel):
-    """Structured output for the summarizer."""
-
     brief: str = Field(
         ...,
         description=(
@@ -22,7 +16,6 @@ class ProductBrief(BaseModel):
             "capability specs verbatim. No hype, no marketing fluff."
         ),
     )
-
 
 BRIEF_SYSTEM_PROMPT = dedent("""
 You distill company / product documentation into a compact brief that a

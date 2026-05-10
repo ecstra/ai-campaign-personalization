@@ -1,32 +1,31 @@
 from enum import Enum
+import logging
 
 from .engine import DatabaseEngine
 
+logger = logging.getLogger(__name__)
 
-class Status:
-    class CampaignStatus(str, Enum):
-        DRAFT = "draft"
-        ACTIVE = "active"
-        PAUSED = "paused"
-        COMPLETED = "completed"
+class CampaignStatus(str, Enum):
+    DRAFT = "draft"
+    ACTIVE = "active"
+    PAUSED = "paused"
+    COMPLETED = "completed"
 
-    class LeadStatus(str, Enum):
-        PENDING = "pending"
-        PROCESSING = "processing"
-        ACTIVE = "active"
-        REPLIED = "replied"
-        COMPLETED = "completed"
-        FAILED = "failed"
+class LeadStatus(str, Enum):
+    PENDING = "pending"
+    PROCESSING = "processing"
+    ACTIVE = "active"
+    REPLIED = "replied"
+    COMPLETED = "completed"
+    FAILED = "failed"
 
-    class EmailStatus(str, Enum):
-        SENT = "sent"
-        FAILED = "failed"
-        RECEIVED = "received"
-
+class EmailStatus(str, Enum):
+    PENDING = "pending"
+    SENT = "sent"
+    FAILED = "failed"
+    RECEIVED = "received"
 
 class DatabaseInitializer:
-
-    # ── Table Schemas ──────────────────────────────────────────────────────────
 
     USERS_TABLE = """
     CREATE TABLE IF NOT EXISTS users (
@@ -54,7 +53,7 @@ class DatabaseInitializer:
         goal TEXT NOT NULL,
         follow_up_delay_minutes INTEGER DEFAULT 2880,
         max_follow_ups INTEGER DEFAULT 3,
-        status TEXT DEFAULT 'draft',
+        status TEXT DEFAULT 'draft' CHECK (status IN ('draft', 'active', 'paused', 'completed')),
         scheduled_start_at TIMESTAMPTZ,
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -71,7 +70,7 @@ class DatabaseInitializer:
         company TEXT,
         title TEXT,
         notes TEXT,
-        status TEXT DEFAULT 'pending',
+        status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'processing', 'completed', 'replied', 'failed')),
         has_replied BOOLEAN DEFAULT FALSE,
         current_sequence INTEGER DEFAULT 0,
         next_email_at TIMESTAMPTZ,
@@ -89,7 +88,7 @@ class DatabaseInitializer:
         sequence_number INTEGER NOT NULL DEFAULT 0,
         subject TEXT NOT NULL,
         body TEXT NOT NULL,
-        status TEXT DEFAULT 'pending',
+        status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'sent', 'failed', 'received')),
         message_id TEXT,
         in_reply_to TEXT,
         gmail_thread_id TEXT,
@@ -125,23 +124,22 @@ class DatabaseInitializer:
     CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);
     CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
     CREATE INDEX IF NOT EXISTS idx_campaigns_user_id ON campaigns(user_id);
+    CREATE INDEX IF NOT EXISTS idx_campaigns_status ON campaigns(status);
     CREATE INDEX IF NOT EXISTS idx_leads_campaign_id ON leads(campaign_id);
     CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status);
     CREATE INDEX IF NOT EXISTS idx_leads_next_email_at ON leads(next_email_at);
     CREATE INDEX IF NOT EXISTS idx_leads_locked_at ON leads(locked_at);
     CREATE INDEX IF NOT EXISTS idx_emails_lead_id ON emails(lead_id);
+    CREATE INDEX IF NOT EXISTS idx_emails_lead_seq ON emails(lead_id, sequence_number);
     CREATE INDEX IF NOT EXISTS idx_emails_message_id ON emails(message_id);
     CREATE INDEX IF NOT EXISTS idx_emails_gmail_thread_id ON emails(gmail_thread_id);
+    CREATE INDEX IF NOT EXISTS idx_emails_status ON emails(status);
     CREATE INDEX IF NOT EXISTS idx_documents_user_id ON documents(user_id);
     CREATE INDEX IF NOT EXISTS idx_campaign_documents_document_id ON campaign_documents(document_id);
     """
 
     @staticmethod
     def init_db() -> bool:
-        """
-        Initializes database tables.
-        Creates: users, campaigns, leads, emails, documents, campaign_documents tables with indexes.
-        """
         try:
             with DatabaseEngine.get_cursor(commit=True) as cur:
                 cur.execute(DatabaseInitializer.USERS_TABLE)
@@ -153,4 +151,5 @@ class DatabaseInitializer:
                 cur.execute(DatabaseInitializer.INDEXES)
             return True
         except Exception:
+            logger.exception("Database initialization failed")
             return False

@@ -1,9 +1,9 @@
 from typing import Any, List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from psycopg2.extras import execute_values
 
-from ..auth import AuthUtility
+from ..auth import get_current_user
 from ..db import DatabaseEngine
 from .models import (
     LeadCreate,
@@ -18,13 +18,11 @@ from .models import (
 router = APIRouter(prefix="/campaigns/{campaign_id}/leads", tags=["leads"])
 detail_router = APIRouter(prefix="/leads", tags=["leads"])
 
-
 def _verify_campaign_ownership(
     cur: Any,
     campaign_id: str,
     user_id: str,
 ) -> dict[str, Any]:
-    """Check that campaign exists and belongs to the authenticated user. Returns campaign row."""
     cur.execute(
         "SELECT id, status FROM campaigns WHERE id = %s AND user_id = %s",
         (campaign_id, user_id),
@@ -34,11 +32,12 @@ def _verify_campaign_ownership(
         raise HTTPException(status_code=404, detail="Campaign not found")
     return campaign
 
-
 @router.get("", response_model=List[LeadResponse])
 async def list_leads(
     campaign_id: str,
-    user: dict[str, Any] = Depends(AuthUtility.get_current_user),
+    user: dict[str, Any] = Depends(get_current_user),
+    limit: int = Query(default=50, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
 ):
     with DatabaseEngine.get_cursor() as cur:
         _verify_campaign_ownership(cur, campaign_id, user["id"])
@@ -49,18 +48,18 @@ async def list_leads(
             FROM leads
             WHERE campaign_id = %s
             ORDER BY created_at DESC
+            LIMIT %s OFFSET %s
             """,
-            (campaign_id,),
+            (campaign_id, limit, offset),
         )
         leads = cur.fetchall()
     return leads
-
 
 @router.post("", response_model=LeadResponse)
 async def create_lead(
     campaign_id: str,
     lead: LeadCreate,
-    user: dict[str, Any] = Depends(AuthUtility.get_current_user),
+    user: dict[str, Any] = Depends(get_current_user),
 ):
     with DatabaseEngine.get_cursor(commit=True) as cur:
         campaign = _verify_campaign_ownership(cur, campaign_id, user["id"])
@@ -97,12 +96,11 @@ async def create_lead(
         new_lead = cur.fetchone()
     return new_lead
 
-
 @router.post("/bulk", response_model=List[LeadResponse])
 async def bulk_create_leads(
     campaign_id: str,
     data: LeadBulkCreate,
-    user: dict[str, Any] = Depends(AuthUtility.get_current_user),
+    user: dict[str, Any] = Depends(get_current_user),
 ):
     if not data.leads:
         raise HTTPException(status_code=400, detail="No leads provided")
@@ -151,12 +149,11 @@ async def bulk_create_leads(
 
     return created_leads
 
-
 @router.delete("/{lead_id}")
 async def delete_lead(
     campaign_id: str,
     lead_id: str,
-    user: dict[str, Any] = Depends(AuthUtility.get_current_user),
+    user: dict[str, Any] = Depends(get_current_user),
 ):
     with DatabaseEngine.get_cursor(commit=True) as cur:
         _verify_campaign_ownership(cur, campaign_id, user["id"])
@@ -171,12 +168,11 @@ async def delete_lead(
 
     return {"message": "Lead deleted"}
 
-
 @router.post("/bulk-delete")
 async def bulk_delete_leads(
     campaign_id: str,
     data: LeadBulkDelete,
-    user: dict[str, Any] = Depends(AuthUtility.get_current_user),
+    user: dict[str, Any] = Depends(get_current_user),
 ):
     if not data.lead_ids:
         raise HTTPException(status_code=400, detail="No lead IDs provided")
@@ -195,7 +191,7 @@ async def bulk_delete_leads(
 @detail_router.get("/{lead_id}", response_model=LeadDetailResponse)
 async def get_lead_detail(
     lead_id: str,
-    user: dict[str, Any] = Depends(AuthUtility.get_current_user),
+    user: dict[str, Any] = Depends(get_current_user),
 ):
     with DatabaseEngine.get_cursor() as cur:
         cur.execute(
@@ -218,12 +214,12 @@ async def get_lead_detail(
 
     return lead
 
-
 @detail_router.get("/{lead_id}/activity", response_model=List[EmailActivityResponse])
 async def get_lead_activity(
     lead_id: str,
-    campaign_id: str,
-    user: dict[str, Any] = Depends(AuthUtility.get_current_user),
+    user: dict[str, Any] = Depends(get_current_user),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
 ):
     with DatabaseEngine.get_cursor() as cur:
         cur.execute(
@@ -231,12 +227,12 @@ async def get_lead_activity(
             SELECT l.id
             FROM leads l
             JOIN campaigns c ON l.campaign_id = c.id
-            WHERE l.id = %s AND l.campaign_id = %s AND c.user_id = %s
+            WHERE l.id = %s AND c.user_id = %s
             """,
-            (lead_id, campaign_id, user["id"]),
+            (lead_id, user["id"]),
         )
         if not cur.fetchone():
-            raise HTTPException(status_code=404, detail="Lead not found in this campaign")
+            raise HTTPException(status_code=404, detail="Lead not found")
 
         cur.execute(
             """
@@ -244,19 +240,19 @@ async def get_lead_activity(
             FROM emails
             WHERE lead_id = %s
             ORDER BY created_at DESC
+            LIMIT %s OFFSET %s
             """,
-            (lead_id,),
+            (lead_id, limit, offset),
         )
         emails = cur.fetchall()
 
     return emails
 
-
 @detail_router.patch("/{lead_id}", response_model=LeadResponse)
 async def update_lead(
     lead_id: str,
     update: LeadUpdate,
-    user: dict[str, Any] = Depends(AuthUtility.get_current_user),
+    user: dict[str, Any] = Depends(get_current_user),
 ):
     updates: list[str] = []
     params: list[Any] = []

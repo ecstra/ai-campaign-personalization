@@ -1,14 +1,9 @@
 import os
 import time
-from typing import Optional
 
-from dotenv import load_dotenv
-
-from .base import Mail
+from ..base import Mail
 from .gmail import GmailUtility
-from ..db import DatabaseEngine
-
-load_dotenv()
+from src.db import DatabaseEngine
 
 INTER_SEND_DELAY_MS = int(os.getenv("GMAIL_INTER_SEND_DELAY_MS", "200"))
 GMAIL_DAILY_SEND_LIMIT = int(os.getenv("GMAIL_DAILY_SEND_LIMIT", "450"))
@@ -16,10 +11,7 @@ GMAIL_DAILY_SEND_LIMIT = int(os.getenv("GMAIL_DAILY_SEND_LIMIT", "450"))
 class MailClientUtility:
 
     @staticmethod
-    def get_daily_send_count(
-        user_id: str,
-    ) -> int:
-        """Count emails sent by this user in the last 24 hours."""
+    def get_daily_send_count(user_id: str) -> int:
         with DatabaseEngine.get_cursor() as cur:
             cur.execute(
                 """
@@ -37,11 +29,7 @@ class MailClientUtility:
         return row["count"] if row else 0
 
     @staticmethod
-    def check_already_sent(
-        lead_id: str,
-        sequence_number: int,
-    ) -> bool:
-        """Check if an email has already been sent for this lead + sequence. Idempotency guard."""
+    def check_already_sent(lead_id: str, sequence_number: int) -> bool:
         with DatabaseEngine.get_cursor() as cur:
             cur.execute(
                 """
@@ -58,15 +46,12 @@ class MailClientUtility:
         user_id: str,
         lead_id: str,
         sequence_number: int,
-        in_reply_to: Optional[str] = None,
-    ) -> Optional[str]:
-        """
-        Send a single email via Gmail SMTP. Records the result in the emails table.
-        """
+        in_reply_to: str | None = None,
+    ) -> str | None:
         if MailClientUtility.check_already_sent(lead_id, sequence_number):
             return None
 
-        message_id = GmailUtility.send_gmail(
+        return GmailUtility.send_gmail(
             user_id=user_id,
             from_email=mail.sender.email,
             from_name=mail.sender.name,
@@ -76,23 +61,15 @@ class MailClientUtility:
             in_reply_to=in_reply_to,
         )
 
-        return message_id
-
     @staticmethod
-    def send_mails_sequential(
-        mails: list[dict],
-        user_id: str,
-    ) -> list[dict]:
-        """
-        Send a list of emails sequentially with a delay between sends.
-        """
+    def send_mails_sequential(mails: list[dict], user_id: str) -> list[dict]:
         results: list[dict] = []
 
         for i, item in enumerate(mails):
             mail: Mail = item["mail"]
             lead_id: str = item["lead_id"]
             sequence_number: int = item["sequence_number"]
-            in_reply_to: Optional[str] = item.get("in_reply_to")
+            in_reply_to: str | None = item.get("in_reply_to")
 
             try:
                 message_id = MailClientUtility.send_mail(

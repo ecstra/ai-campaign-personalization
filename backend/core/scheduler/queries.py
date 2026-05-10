@@ -1,8 +1,9 @@
 from typing import Any, Dict, List, Optional
+
 from datetime import datetime
 from psycopg2.extras import execute_batch, execute_values
 
-from ..db import DatabaseEngine
+from src.db import DatabaseEngine
 from .config import LOCK_TIMEOUT_MINUTES, CAMPAIGN_EMAIL_RATE_LIMIT, RATE_LIMIT_WINDOW_MINUTES, MAX_LEADS_PER_RUN
 
 class SchedulerQueryUtility:
@@ -333,11 +334,9 @@ class SchedulerQueryUtility:
                 )
 
     @staticmethod
-    def check_campaign_completion(campaign_ids: List[str]) -> None:
+    def check_campaign_completion(campaign_ids: list[str]) -> None:
         if not campaign_ids:
             return
-
-        unique_ids = list(set(campaign_ids))
 
         with DatabaseEngine.get_cursor(commit=True) as cur:
             cur.execute(
@@ -352,7 +351,7 @@ class SchedulerQueryUtility:
                         AND l.status NOT IN ('completed', 'replied', 'failed')
                   )
                 """,
-                (unique_ids,),
+                (campaign_ids,),
             )
 
     @staticmethod

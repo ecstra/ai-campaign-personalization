@@ -4,9 +4,9 @@ from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from pydantic import BaseModel
 
-from ..auth import AuthUtility
+from ..auth import get_current_user
 from ..db import DatabaseEngine
-from ..documents import (
+from core.utilities.document import (
     DocumentParserUtility,
     DocumentParseError,
     DocumentSummarizerUtility,
@@ -18,10 +18,8 @@ MAX_DOCUMENTS_PER_CAMPAIGN = 2
 ALLOWED_EXTENSIONS = {".pdf", ".docx", ".pptx", ".txt", ".md"}
 MAX_FILE_BYTES = 10 * 1024 * 1024
 
-
 library_router = APIRouter(prefix="/documents", tags=["documents"])
 attach_router = APIRouter(prefix="/campaigns/{campaign_id}/documents", tags=["documents"])
-
 
 class DocumentSummary(BaseModel):
     id: str
@@ -31,20 +29,17 @@ class DocumentSummary(BaseModel):
     created_at: Any
     updated_at: Any
 
-
 class DocumentDetail(DocumentSummary):
     brief: str
     word_count: int
 
-
 class CampaignDocumentsUpdate(BaseModel):
     document_ids: List[str]
-
 
 @library_router.post("", response_model=DocumentDetail)
 async def upload_document(
     file: UploadFile = File(...),
-    user: dict[str, Any] = Depends(AuthUtility.get_current_user),
+    user: dict[str, Any] = Depends(get_current_user),
 ):
     if not file.filename:
         raise HTTPException(status_code=400, detail="Missing filename")
@@ -101,10 +96,9 @@ async def upload_document(
         updated_at=row["updated_at"],
     )
 
-
 @library_router.get("", response_model=List[DocumentSummary])
 async def list_documents(
-    user: dict[str, Any] = Depends(AuthUtility.get_current_user),
+    user: dict[str, Any] = Depends(get_current_user),
 ):
     with DatabaseEngine.get_cursor() as cur:
         cur.execute(
@@ -129,11 +123,10 @@ async def list_documents(
         for r in rows
     ]
 
-
 @library_router.get("/{document_id}", response_model=DocumentDetail)
 async def get_document(
     document_id: str,
-    user: dict[str, Any] = Depends(AuthUtility.get_current_user),
+    user: dict[str, Any] = Depends(get_current_user),
 ):
     with DatabaseEngine.get_cursor() as cur:
         cur.execute(
@@ -158,11 +151,10 @@ async def get_document(
         updated_at=row["updated_at"],
     )
 
-
 @library_router.delete("/{document_id}")
 async def delete_document(
     document_id: str,
-    user: dict[str, Any] = Depends(AuthUtility.get_current_user),
+    user: dict[str, Any] = Depends(get_current_user),
 ):
     with DatabaseEngine.get_cursor(commit=True) as cur:
         cur.execute(
@@ -173,12 +165,11 @@ async def delete_document(
             raise HTTPException(status_code=404, detail="Document not found")
     return {"message": "Document deleted"}
 
-
 @attach_router.put("", response_model=List[DocumentSummary])
 async def set_campaign_documents(
     campaign_id: str,
     payload: CampaignDocumentsUpdate,
-    user: dict[str, Any] = Depends(AuthUtility.get_current_user),
+    user: dict[str, Any] = Depends(get_current_user),
 ):
     if len(payload.document_ids) > MAX_DOCUMENTS_PER_CAMPAIGN:
         raise HTTPException(

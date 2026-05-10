@@ -1,8 +1,5 @@
 import os
 from moonlight import Provider
-from dotenv import load_dotenv
-
-load_dotenv()
 
 LLM_PROVIDER = Provider(
     source=os.getenv("LLM_SOURCE", ""),
