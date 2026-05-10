@@ -11,7 +11,6 @@ from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
 from google.oauth2 import id_token as google_id_token
 from google.auth.transport import requests as google_requests
 
-from core.auth import EncryptionUtility
 from .dependencies import get_current_user, JWT_SECRET, JWT_ALGORITHM
 from ..db import DatabaseEngine
 
@@ -26,7 +25,6 @@ SCOPES = [
     "openid",
     "email",
     "profile",
-    "https://mail.google.com/",
 ]
 
 JWT_EXPIRY_DAYS = 7
@@ -119,10 +117,7 @@ async def google_callback(
         raise HTTPException(status_code=400, detail="Failed to exchange authorization code")
 
     token_data = token_response.json()
-    access_token = token_data["access_token"]
-    refresh_token = token_data.get("refresh_token")
     raw_id_token = token_data.get("id_token")
-    expires_in = token_data.get("expires_in", 3600)
 
     if not raw_id_token:
         raise HTTPException(status_code=400, detail="No id_token in Google response")
@@ -140,41 +135,20 @@ async def google_callback(
     email = id_info["email"]
     name = id_info.get("name", email.split("@")[0])
     picture_url = id_info.get("picture")
-    granted_scopes = token_data.get("scope", " ".join(SCOPES))
-
-    token_expiry = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
-
-    encrypted_access = EncryptionUtility.encrypt_token(access_token)
-    encrypted_refresh = EncryptionUtility.encrypt_token(refresh_token) if refresh_token else None
 
     with DatabaseEngine.get_cursor(commit=True) as cur:
         cur.execute(
             """
-            INSERT INTO users (google_id, email, name, picture_url,
-                               access_token_encrypted, refresh_token_encrypted,
-                               token_expiry, scopes)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO users (google_id, email, name, picture_url)
+            VALUES (%s, %s, %s, %s)
             ON CONFLICT (google_id) DO UPDATE SET
                 email = EXCLUDED.email,
                 name = EXCLUDED.name,
                 picture_url = EXCLUDED.picture_url,
-                access_token_encrypted = EXCLUDED.access_token_encrypted,
-                refresh_token_encrypted = COALESCE(EXCLUDED.refresh_token_encrypted, users.refresh_token_encrypted),
-                token_expiry = EXCLUDED.token_expiry,
-                scopes = EXCLUDED.scopes,
                 updated_at = NOW()
             RETURNING id
             """,
-            (
-                google_id,
-                email,
-                name,
-                picture_url,
-                encrypted_access,
-                encrypted_refresh,
-                token_expiry,
-                granted_scopes,
-            ),
+            (google_id, email, name, picture_url),
         )
         user_row = cur.fetchone()
         user_id = str(user_row["id"])

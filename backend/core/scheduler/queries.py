@@ -51,7 +51,6 @@ class SchedulerQueryUtility:
                 JOIN users u ON c.user_id = u.id
                 LEFT JOIN campaign_email_counts cec ON cec.campaign_id = c.id
                 WHERE c.status = 'active'
-                  AND u.refresh_token_encrypted IS NOT NULL
                   AND COALESCE(cec.emails_in_window, 0) < %s
                   AND l.has_replied = false
                   AND l.status NOT IN ('completed', 'replied', 'processing')

@@ -134,13 +134,6 @@ class DatabaseInitializer:
                 cur.execute(DatabaseInitializer.LEADS_TABLE)
                 cur.execute(DatabaseInitializer.EMAILS_TABLE)
                 cur.execute(DatabaseInitializer.DOCUMENTS_TABLE)
-                
-                # Safe migration for existing documents table
-                try:
-                    cur.execute("ALTER TABLE documents ADD CONSTRAINT documents_user_id_name_key UNIQUE (user_id, name)")
-                except Exception:
-                    pass # Already exists
-
                 cur.execute(DatabaseInitializer.CAMPAIGN_DOCUMENTS_TABLE)
                 cur.execute(DatabaseInitializer.INDEXES)
             return True
