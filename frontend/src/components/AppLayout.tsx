@@ -51,7 +51,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                         <SidebarMenuItem>
                             <SidebarMenuButton size="lg" asChild>
                                 <Link to="/">
-                                    <div className="flex aspect-square size-8 items-center justify-center rounded-full bg-primary/20 text-primary dark:bg-primary dark:text-primary-foreground shadow-sm">
+                                    <div className="flex aspect-square size-8 items-center justify-center rounded-full bg-primary/20 text-primary dark:bg-primary dark:text-primary-foreground">
                                         <span className="material-symbols-rounded" style={{ fontSize: '16px', transform: 'rotate(-45deg) translateX(8%)' }}>send</span>
                                     </div>
                                     <div className="grid flex-1 text-left text-[14px] leading-tight ml-2">

@@ -26,19 +26,19 @@
   --ring: #7050d9;                /* focus ring color */
 
   /* ── Secondary / Surface variants ────────────────────── */
-  --secondary: #f2ecee;           /* secondary button bg, subtle surfaces */
-  --secondary-foreground: #1c1b1d;/* text on secondary */
-  --muted: #e5dfe2;               /* muted backgrounds, skeleton, disabled */
-  --muted-foreground: #49454f;    /* muted/helper text, icons */
-  --accent: #e5dfe2;              /* hover/focus highlight on items */
-  --accent-foreground: #1c1b1d;   /* text on accent */
+  --secondary: #e8def8;           /* M3 Secondary Container */
+  --secondary-foreground: #1d192b;/* M3 On Secondary Container */
+  --muted: #e5dfe2;               /* M3 Surface Container Highest */
+  --muted-foreground: #49454f;    /* M3 On Surface Variant */
+  --accent: #e5dfe2;              /* M3 Surface Container Highest */
+  --accent-foreground: #1c1b1d;   /* M3 On Surface */
 
   /* ── Borders & Inputs ────────────────────────────────── */
-  --border: #e5dfe2;              /* card borders, table borders, dividers */
-  --input: #e5dfe2;               /* input / textarea / select border */
+  --border: #cac4d0;              /* M3 Outline Variant */
+  --input: #cac4d0;               /* M3 Outline Variant */
 
   /* ── Destructive / Error (legacy shadcn) ─────────────── */
-  --destructive: #fef2f2;         /* destructive bg (rarely used now) */
+  --destructive: #b3261e;         /* M3 Error */
 
   /* ── Sidebar ─────────────────────────────────────────── */
   --sidebar: #f2ecee;
@@ -47,7 +47,7 @@
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #e5dfe2;
   --sidebar-accent-foreground: #1c1b1d;
-  --sidebar-border: #e5dfe2;
+  --sidebar-border: #cac4d0;
   --sidebar-ring: #7050d9;
 
   /* ── Chart palette (unused, kept for shadcn compat) ──── */
@@ -75,13 +75,13 @@
      destructive-alert      → Error alert banners
      destructive-hover      → Ghost delete icon hover states
      ────────────────────────────────────────────────────── */
-  --destructive-container: #fce4ec;
-  --destructive-container-foreground: #c62828;
-  --destructive-container-hover: #f8bbd0;
-  --destructive-alert: #fce4ec;
-  --destructive-alert-foreground: #c62828;
-  --destructive-hover: #fce4ec;
-  --destructive-hover-foreground: #d32f2f;
+  --destructive-container: #f9dedc;
+  --destructive-container-foreground: #410e0b;
+  --destructive-container-hover: #f2b8b5;
+  --destructive-alert: #f9dedc;
+  --destructive-alert-foreground: #410e0b;
+  --destructive-hover: #f9dedc;
+  --destructive-hover-foreground: #b3261e;
 
   /* ── Semantic status colors ────────────────────────────
      Used by progress bars, status dots, email activity
@@ -98,12 +98,12 @@
      Used by <Badge> for campaign/lead/email statuses
      (Active, Pending, Processing, Replied, Failed, etc.)
      ────────────────────────────────────────────────────── */
-  --badge-emerald: #d1fae5;
-  --badge-amber:   #fef3c7;
-  --badge-orange:  #ffedd5;
-  --badge-sky:     #e0f2fe;
-  --badge-red:     #fee2e2;
-  --badge-slate:   #f1f5f9;
+  --badge-emerald: #c4eed0;
+  --badge-amber:   #f9e3ba;
+  --badge-orange:  #ffdf99;
+  --badge-sky:     #c3e7ff;
+  --badge-red:     #f9dedc;
+  --badge-slate:   #e0e2ec;
 
   /* ── Overlay (dialog / sheet backdrop) ───────────────── */
   --overlay: rgba(0, 0, 0, 0.8);
@@ -141,28 +141,28 @@
   --ring: #a68fff;
 
   /* ── Secondary / Surface variants ────────────────────── */
-  --secondary: #211f21;
-  --secondary-foreground: #e6e1e3;
-  --muted: #2f2c2f;
+  --secondary: #4a4458;
+  --secondary-foreground: #e8def8;
+  --muted: #36343b;
   --muted-foreground: #cac4d0;
-  --accent: #2f2c2f;
+  --accent: #36343b;
   --accent-foreground: #e6e1e3;
 
   /* ── Borders & Inputs ────────────────────────────────── */
-  --border: #2f2c2f;
-  --input: #2f2c2f;
+  --border: #49454f;
+  --input: #49454f;
 
   /* ── Destructive / Error (legacy shadcn) ─────────────── */
-  --destructive: rgba(153, 27, 27, 0.2);
+  --destructive: #f2b8b5;
 
   /* ── Sidebar ─────────────────────────────────────────── */
   --sidebar: #211f21;
   --sidebar-foreground: #e6e1e3;
   --sidebar-primary: #a68fff;
   --sidebar-primary-foreground: #381e72;
-  --sidebar-accent: #2f2c2f;
+  --sidebar-accent: #36343b;
   --sidebar-accent-foreground: #e6e1e3;
-  --sidebar-border: #2f2c2f;
+  --sidebar-border: #49454f;
   --sidebar-ring: #a68fff;
 
   /* ── Chart palette (unused, kept for shadcn compat) ──── */
@@ -183,13 +183,13 @@
   --shadow-2xl: none;
 
   /* ── Destructive system ──────────────────────────────── */
-  --destructive-container: #4a1515;
-  --destructive-container-foreground: #ef9a9a;
-  --destructive-container-hover: #5c1a1a;
-  --destructive-alert: #4a1515;
-  --destructive-alert-foreground: #ef9a9a;
-  --destructive-hover: rgba(153, 27, 27, 0.2);
-  --destructive-hover-foreground: #f87171;
+  --destructive-container: #8c1d18;
+  --destructive-container-foreground: #f9dedc;
+  --destructive-container-hover: #b3261e;
+  --destructive-alert: #8c1d18;
+  --destructive-alert-foreground: #f9dedc;
+  --destructive-hover: rgba(242, 184, 181, 0.2);
+  --destructive-hover-foreground: #f2b8b5;
 
   /* ── Semantic status colors ──────────────────────────── */
   --success: #10b981;
@@ -200,12 +200,12 @@
   --info-foreground: #93c5fd;
 
   /* ── Status badge backgrounds ────────────────────────── */
-  --badge-emerald: #064e3b;
-  --badge-amber:   #78350f;
-  --badge-orange:  #7c2d12;
-  --badge-sky:     #0c4a6e;
-  --badge-red:     #450a0a;
-  --badge-slate:   #1e293b;
+  --badge-emerald: #0f5223;
+  --badge-amber:   #5b4200;
+  --badge-orange:  #633b00;
+  --badge-sky:     #004a77;
+  --badge-red:     #8c1d18;
+  --badge-slate:   #44474f;
 
   /* ── Overlay (dialog / sheet backdrop) ───────────────── */
   --overlay: rgba(0, 0, 0, 0.8);
