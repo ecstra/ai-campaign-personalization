@@ -365,7 +365,7 @@ export default function Documents() {
                         </p>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {uploads.map(task => (
-                                <div key={task.id} className="bg-card border rounded-lg p-5 space-y-3 shadow-sm relative overflow-hidden">
+                                <div key={task.id} className="bg-card border rounded-lg p-5 space-y-3  relative overflow-hidden">
                                     <div className="flex items-start justify-between gap-3 relative z-10">
                                         <div className="flex items-center gap-4 min-w-0">
                                             <div className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 ${
@@ -445,7 +445,7 @@ export default function Documents() {
                                 <Link
                                     key={doc.id}
                                     to={`/documents/${doc.id}`}
-                                    className="group bg-card border rounded-lg p-5 flex items-center gap-4 transition-colors duration-150 hover:shadow-sm hover:border-primary/30"
+                                    className="group bg-card border rounded-lg p-5 flex items-center gap-4 transition-colors duration-150 hover: hover:border-primary/30"
                                 >
                                     <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                                         <span className="material-symbols-rounded text-primary text-[20px]">description</span>

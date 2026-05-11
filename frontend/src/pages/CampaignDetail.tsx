@@ -170,7 +170,7 @@ export default function CampaignDetail() {
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <span>
-                                                <Button variant={canStart ? "default" : "outline"} onClick={handleToggleStatus} disabled={toggling || (!canStart && !canStop)} className="gap-1 rounded-full h-10 px-5 shadow-sm text-[14px]">
+                                                <Button variant={canStart ? "default" : "outline"} onClick={handleToggleStatus} disabled={toggling || (!canStart && !canStop)} className="gap-1 rounded-full h-10 px-5  text-[14px]">
                                                     <span className="material-symbols-rounded text-[18px] -ml-0.5">{canStop ? "pause" : "play_arrow"}</span>
                                                     <span className="leading-none">{canStop ? (toggling ? "Pausing..." : "Pause") : (toggling ? "Starting..." : "Start")}</span>
                                                 </Button>
@@ -180,12 +180,12 @@ export default function CampaignDetail() {
                                     </Tooltip>
                                 </TooltipProvider>
                             )}
-                            <Button variant="outline" onClick={handleDuplicate} className="gap-2 rounded-full h-10 px-5 shadow-sm text-[14px]"><span className="material-symbols-rounded text-[18px]">content_copy</span> Duplicate</Button>
-                            {canEdit && <Button variant="outline" onClick={startEditing} className="gap-2 rounded-full h-10 px-5 shadow-sm text-[14px]"><span className="material-symbols-rounded text-[18px]">edit</span> Edit</Button>}
+                            <Button variant="outline" onClick={handleDuplicate} className="gap-2 rounded-full h-10 px-5  text-[14px]"><span className="material-symbols-rounded text-[18px]">content_copy</span> Duplicate</Button>
+                            {canEdit && <Button variant="outline" onClick={startEditing} className="gap-2 rounded-full h-10 px-5  text-[14px]"><span className="material-symbols-rounded text-[18px]">edit</span> Edit</Button>}
                             {!isCompleted && (
                                 <>
-                                    <Button variant="outline" onClick={() => setShowImportCSV(true)} className="gap-2 rounded-full h-10 px-5 shadow-sm text-[14px]"><span className="material-symbols-rounded text-[18px]">upload</span> Import</Button>
-                                    <Button variant="outline" onClick={() => setShowAddLead(true)} className="gap-2 rounded-full h-10 px-5 shadow-sm text-[14px]"><span className="material-symbols-rounded text-[18px]">person_add</span> Add Lead</Button>
+                                    <Button variant="outline" onClick={() => setShowImportCSV(true)} className="gap-2 rounded-full h-10 px-5  text-[14px]"><span className="material-symbols-rounded text-[18px]">upload</span> Import</Button>
+                                    <Button variant="outline" onClick={() => setShowAddLead(true)} className="gap-2 rounded-full h-10 px-5  text-[14px]"><span className="material-symbols-rounded text-[18px]">person_add</span> Add Lead</Button>
                                 </>
                             )}
                             <Button variant="ghost" size="icon" onClick={() => setShowDelete(true)} className="text-muted-foreground hover:text-destructive-hover-foreground hover:bg-destructive-hover rounded-full h-10 w-10"><span className="material-symbols-rounded text-[20px]">delete</span></Button>
@@ -209,7 +209,7 @@ export default function CampaignDetail() {
 
                 {/* ── Goal ────────────────────────────────────────────── */}
                 {!loading && !editing && campaign?.goal && (
-                    <div className="bg-card border rounded-lg p-6 space-y-3 shadow-sm">
+                    <div className="bg-card border rounded-lg p-6 space-y-3 ">
                         <h2 className="text-[15px] font-semibold">Campaign goal</h2>
                         <div className="border-t" />
                         <p className="text-[14px] leading-relaxed text-foreground/80">{campaign.goal}</p>

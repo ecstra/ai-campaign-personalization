@@ -37,11 +37,11 @@ export default function CampaignEditForm({ editForm, setEditForm, saving, onSave
     }
 
     return (
-        <div className="bg-card border rounded-lg p-6 space-y-5 shadow-sm">
+        <div className="bg-card border rounded-lg p-6 space-y-5 ">
             <div className="flex items-center justify-between">
                 <h2 className="text-[18px] font-semibold">Edit Campaign</h2>
                 <div className="flex items-center gap-3">
-                    <Button onClick={handleSave} disabled={saving} className="gap-2 rounded-full h-10 px-5 shadow-sm text-[14px]">
+                    <Button onClick={handleSave} disabled={saving} className="gap-2 rounded-full h-10 px-5  text-[14px]">
                         <span className="material-symbols-rounded text-[18px]">check</span>{saving ? "Saving..." : "Save"}
                     </Button>
                     <Button variant="ghost" onClick={onCancel} className="gap-2 rounded-full h-10 px-5 text-[14px]">

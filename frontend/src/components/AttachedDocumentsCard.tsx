@@ -114,7 +114,7 @@ export default function AttachedDocumentsCard({
     const remainingSlots = MAX_PER_CAMPAIGN - attached.length
 
     return (
-        <div className="bg-card border rounded-lg p-6 space-y-4 shadow-sm">
+        <div className="bg-card border rounded-lg p-6 space-y-4 ">
             <div className="flex items-start justify-between gap-3">
                 <div>
                     <h2 className="text-[15px] font-semibold">Attached documents</h2>
@@ -123,7 +123,7 @@ export default function AttachedDocumentsCard({
                     </p>
                 </div>
                 {canEdit && (
-                    <Button variant="outline" onClick={openPicker} className="gap-2 rounded-full h-9 px-4 shadow-sm text-[13px] shrink-0">
+                    <Button variant="secondary" onClick={openPicker} className="gap-2 rounded-full h-9 px-4  text-[13px] shrink-0">
                         <span className="material-symbols-rounded text-[18px]">add</span>
                         Manage
                     </Button>

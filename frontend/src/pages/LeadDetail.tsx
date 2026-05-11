@@ -187,7 +187,7 @@ export default function LeadDetail() {
                     {!loading && lead && (
                         <div className="flex items-center gap-2">
                             {!isTerminal && (
-                                <Button variant="outline" onClick={startEditingLead} className="gap-2 rounded-full h-10 px-5 shadow-sm text-[14px]">
+                                <Button variant="outline" onClick={startEditingLead} className="gap-2 rounded-full h-10 px-5  text-[14px]">
                                     <span className="material-symbols-rounded text-[18px]">edit</span> Edit
                                 </Button>
                             )}
@@ -200,11 +200,11 @@ export default function LeadDetail() {
 
                 {/* ── Edit Panel ────────────────────────────────────── */}
                 {editingLead && (
-                    <div className="bg-card border rounded-lg p-6 space-y-5 shadow-sm">
+                    <div className="bg-card border rounded-lg p-6 space-y-5 ">
                         <div className="flex items-center justify-between">
                             <h2 className="text-[18px] font-semibold">Edit Lead</h2>
                             <div className="flex items-center gap-3">
-                                <Button onClick={handleSaveLead} disabled={savingLead} className="gap-2 rounded-full h-10 px-5 shadow-sm text-[14px]">
+                                <Button onClick={handleSaveLead} disabled={savingLead} className="gap-2 rounded-full h-10 px-5  text-[14px]">
                                     <span className="material-symbols-rounded text-[18px]">check</span> {savingLead ? "Saving..." : "Save"}
                                 </Button>
                                 <Button variant="ghost" onClick={() => setEditingLead(false)} className="gap-2 rounded-full h-10 px-5 text-[14px]">
@@ -244,28 +244,28 @@ export default function LeadDetail() {
                     </div>
                 ) : lead && (
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        <div className="bg-card border rounded-lg p-5 shadow-sm">
+                        <div className="bg-card border rounded-lg p-5 ">
                             <div className="flex items-center gap-2 text-muted-foreground mb-2">
                                 <span className="material-symbols-rounded text-[16px]">domain</span>
                                 <span className="text-[12px] font-semibold uppercase tracking-wider">Company</span>
                             </div>
                             <p className="text-[15px] font-medium truncate">{lead.company || "—"}</p>
                         </div>
-                        <div className="bg-card border rounded-lg p-5 shadow-sm">
+                        <div className="bg-card border rounded-lg p-5 ">
                             <div className="flex items-center gap-2 text-muted-foreground mb-2">
                                 <span className="material-symbols-rounded text-[16px]">work</span>
                                 <span className="text-[12px] font-semibold uppercase tracking-wider">Title</span>
                             </div>
                             <p className="text-[15px] font-medium truncate">{lead.title || "—"}</p>
                         </div>
-                        <div className="bg-card border rounded-lg p-5 shadow-sm">
+                        <div className="bg-card border rounded-lg p-5 ">
                             <div className="flex items-center gap-2 text-muted-foreground mb-2">
                                 <span className="material-symbols-rounded text-[16px]">tag</span>
                                 <span className="text-[12px] font-semibold uppercase tracking-wider">Sequence</span>
                             </div>
                             <p className="text-[15px] font-medium">{lead.current_sequence} / {lead.max_follow_ups}</p>
                         </div>
-                        <div className="bg-card border rounded-lg p-5 shadow-sm">
+                        <div className="bg-card border rounded-lg p-5 ">
                             <div className="flex items-center gap-2 text-muted-foreground mb-2">
                                 <span className="material-symbols-rounded text-[16px]">event_available</span>
                                 <span className="text-[12px] font-semibold uppercase tracking-wider">Next Email</span>
@@ -281,7 +281,7 @@ export default function LeadDetail() {
                 {loading ? (
                     <Skeleton className="h-[160px] rounded-lg" />
                 ) : lead && (
-                    <div className="bg-card border rounded-lg p-6 space-y-4 shadow-sm">
+                    <div className="bg-card border rounded-lg p-6 space-y-4 ">
                         <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">Notes</p>
                         <Textarea
                             value={notes}
@@ -291,11 +291,11 @@ export default function LeadDetail() {
                             disabled={loading || saving}
                         />
                         <div className="flex items-center gap-3">
-                            <Button onClick={handleSaveNotes} disabled={saving || loading} className="rounded-full h-10 px-5 shadow-sm text-[14px]">
+                            <Button onClick={handleSaveNotes} disabled={saving || loading} className="rounded-full h-10 px-5  text-[14px]">
                                 {saving ? "Saving..." : "Save Notes"}
                             </Button>
                             {!lead.has_replied && (
-                                <Button variant="outline" onClick={handleMarkAsReplied} disabled={marking || loading} className="gap-2 rounded-full h-10 px-5 shadow-sm text-[14px]">
+                                <Button variant="secondary" onClick={handleMarkAsReplied} disabled={marking || loading} className="gap-2 rounded-full h-10 px-5  text-[14px]">
                                     <span className="material-symbols-rounded text-[18px]">check_circle</span>
                                     {marking ? "Marking..." : "Mark as Replied"}
                                 </Button>

@@ -28,7 +28,7 @@ export default function CampaignOverview({ campaign, stats, leads, loading }: Ca
     const notesPercent = leads.length > 0 ? Math.round((leadsWithNotes / leads.length) * 100) : 0
 
     return (
-        <div className="bg-card border rounded-lg overflow-hidden shadow-sm">
+        <div className="bg-card border rounded-lg overflow-hidden ">
             {/* Stat row: single container, divided columns */}
             <div className="grid grid-cols-3 sm:grid-cols-6 divide-x">
                 {[

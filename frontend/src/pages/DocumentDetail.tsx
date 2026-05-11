@@ -122,7 +122,7 @@ export default function DocumentDetail() {
                             </div>
                         </div>
                         <div className="flex items-center gap-3 shrink-0">
-                            <Button variant="outline" onClick={handleCopy} className="gap-2 rounded-full h-10 px-5 shadow-sm text-[14px] hover:bg-muted/80">
+                            <Button variant="outline" onClick={handleCopy} className="gap-2 rounded-full h-10 px-5  text-[14px] hover:bg-muted/80">
                                 <span className="material-symbols-rounded text-[18px]">{copied ? "check" : "content_copy"}</span>
                                 {copied ? "Copied" : "Copy"}
                             </Button>
@@ -152,7 +152,7 @@ export default function DocumentDetail() {
                     </div>
                 ) : doc ? (
                     <article
-                        className="bg-card border rounded-lg p-8 text-[14px] leading-relaxed whitespace-pre-wrap font-mono shadow-sm"
+                        className="bg-card border rounded-lg p-8 text-[14px] leading-relaxed whitespace-pre-wrap font-mono "
                     >
                         {doc.brief}
                     </article>

@@ -13,45 +13,45 @@
 :root {
 
   /* ── Surfaces ────────────────────────────────────────── */
-  --background: #f9fafb;          /* main page background */
-  --foreground: #121212;          /* primary text color */
-  --card: #ffffff;                /* card / section backgrounds */
-  --card-foreground: #121212;     /* text inside cards */
-  --popover: #ffffff;             /* dropdown, tooltip, popover bg */
-  --popover-foreground: #121212;  /* text inside popovers */
+  --background: #fefbff;          /* main page background */
+  --foreground: #1c1b1d;          /* primary text color */
+  --card: #f8f1f6;                /* card / section backgrounds */
+  --card-foreground: #1c1b1d;     /* text inside cards */
+  --popover: #f8f1f6;             /* dropdown, tooltip, popover bg */
+  --popover-foreground: #1c1b1d;  /* text inside popovers */
 
   /* ── Brand / Primary ─────────────────────────────────── */
-  --primary: #8b5cf6;             /* buttons, links, accents */
+  --primary: #7050d9;             /* buttons, links, accents */
   --primary-foreground: #ffffff;  /* text on primary backgrounds */
-  --ring: #8b5cf6;                /* focus ring color */
+  --ring: #7050d9;                /* focus ring color */
 
   /* ── Secondary / Surface variants ────────────────────── */
-  --secondary: #f3f4f6;           /* secondary button bg, subtle surfaces */
-  --secondary-foreground: #121212;/* text on secondary */
-  --muted: #f3f4f6;               /* muted backgrounds, skeleton, disabled */
-  --muted-foreground: #6b7280;    /* muted/helper text, icons */
-  --accent: #f3f4f6;              /* hover/focus highlight on items */
-  --accent-foreground: #121212;   /* text on accent */
+  --secondary: #f2ecee;           /* secondary button bg, subtle surfaces */
+  --secondary-foreground: #1c1b1d;/* text on secondary */
+  --muted: #e5dfe2;               /* muted backgrounds, skeleton, disabled */
+  --muted-foreground: #49454f;    /* muted/helper text, icons */
+  --accent: #e5dfe2;              /* hover/focus highlight on items */
+  --accent-foreground: #1c1b1d;   /* text on accent */
 
   /* ── Borders & Inputs ────────────────────────────────── */
-  --border: #dadce0;              /* card borders, table borders, dividers */
-  --input: #dadce0;               /* input / textarea / select border */
+  --border: #e5dfe2;              /* card borders, table borders, dividers */
+  --input: #e5dfe2;               /* input / textarea / select border */
 
   /* ── Destructive / Error (legacy shadcn) ─────────────── */
   --destructive: #fef2f2;         /* destructive bg (rarely used now) */
 
   /* ── Sidebar ─────────────────────────────────────────── */
-  --sidebar: #ffffff;
-  --sidebar-foreground: #121212;
-  --sidebar-primary: #8b5cf6;
+  --sidebar: #f2ecee;
+  --sidebar-foreground: #1c1b1d;
+  --sidebar-primary: #7050d9;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f3f4f6;
-  --sidebar-accent-foreground: #121212;
-  --sidebar-border: #dadce0;
-  --sidebar-ring: #8b5cf6;
+  --sidebar-accent: #e5dfe2;
+  --sidebar-accent-foreground: #1c1b1d;
+  --sidebar-border: #e5dfe2;
+  --sidebar-ring: #7050d9;
 
   /* ── Chart palette (unused, kept for shadcn compat) ──── */
-  --chart-1: #8b5cf6;
+  --chart-1: #7050d9;
   --chart-2: #34d399;
   --chart-3: #fbbf24;
   --chart-4: #f87171;
@@ -60,15 +60,15 @@
   /* ── Global radius ───────────────────────────────────── */
   --radius: 24px;                 /* base rounding used by cards, modals */
 
-  /* ── Shadows (1 → 7, lightest → heaviest) ────────────── */
-  --shadow-2xs: 0 1px 2px 0px rgba(0,0,0,0.03);
-  --shadow-xs:  0 1px 2px 0px rgba(0,0,0,0.05);
-  --shadow-sm:  0 1px 3px 0px rgba(0,0,0,0.06), 0 1px 2px -1px rgba(0,0,0,0.06);  /* card, section */
-  --shadow:     0 1px 3px 0px rgba(0,0,0,0.1),  0 1px 2px -1px rgba(0,0,0,0.1);   /* toast, popover */
-  --shadow-md:  0 4px 6px -1px rgba(0,0,0,0.1),  0 2px 4px -2px rgba(0,0,0,0.1);
-  --shadow-lg:  0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
-  --shadow-xl:  0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
-  --shadow-2xl: 0 25px 50px -12px rgba(0,0,0,0.25);
+  /* ── Shadows (None for M3) ────────────── */
+  --shadow-2xs: none;
+  --shadow-xs:  none;
+  --shadow-sm:  none;
+  --shadow:     none;
+  --shadow-md:  none;
+  --shadow-lg:  none;
+  --shadow-xl:  none;
+  --shadow-2xl: none;
 
   /* ── Destructive system ────────────────────────────────
      destructive-container  → Delete modals, destructive buttons
@@ -108,11 +108,11 @@
   /* ── Overlay (dialog / sheet backdrop) ───────────────── */
   --overlay: rgba(0, 0, 0, 0.8);
 
-  /* ── Google brand reference colors ───────────────────── */
-  --google-blue: #4285F4;
-  --google-green: #34A853;
-  --google-yellow: #FBBC05;
-  --google-red: #EA4335;
+  /* ── Material brand reference colors ───────────────────── */
+  --material-blue: #4285F4;
+  --material-green: #34A853;
+  --material-yellow: #FBBC05;
+  --material-red: #EA4335;
 
   /* ── Login page decorative gradient ──────────────────── */
   --login-gradient: radial-gradient(circle at 30% 20%, oklch(0.52 0.12 30 / 0.04), transparent 50%),
@@ -128,59 +128,59 @@
 .dark {
 
   /* ── Surfaces ────────────────────────────────────────── */
-  --background: #121212;
-  --foreground: #f3f4f6;
-  --card: #1e1e1e;
-  --card-foreground: #f3f4f6;
-  --popover: #2a2a2a;
-  --popover-foreground: #f3f4f6;
+  --background: #141314;
+  --foreground: #e6e1e3;
+  --card: #1c1b1d;
+  --card-foreground: #e6e1e3;
+  --popover: #1c1b1d;
+  --popover-foreground: #e6e1e3;
 
   /* ── Brand / Primary ─────────────────────────────────── */
-  --primary: #8b5cf6;
-  --primary-foreground: #ffffff;
-  --ring: #8b5cf6;
+  --primary: #a68fff;
+  --primary-foreground: #381e72;
+  --ring: #a68fff;
 
   /* ── Secondary / Surface variants ────────────────────── */
-  --secondary: #1e1e1e;
-  --secondary-foreground: #f3f4f6;
-  --muted: #2a2a2a;
-  --muted-foreground: #9ca3af;
-  --accent: #2a2a2a;
-  --accent-foreground: #f3f4f6;
+  --secondary: #211f21;
+  --secondary-foreground: #e6e1e3;
+  --muted: #2f2c2f;
+  --muted-foreground: #cac4d0;
+  --accent: #2f2c2f;
+  --accent-foreground: #e6e1e3;
 
   /* ── Borders & Inputs ────────────────────────────────── */
-  --border: #3c4043;
-  --input: #3c4043;
+  --border: #2f2c2f;
+  --input: #2f2c2f;
 
   /* ── Destructive / Error (legacy shadcn) ─────────────── */
   --destructive: rgba(153, 27, 27, 0.2);
 
   /* ── Sidebar ─────────────────────────────────────────── */
-  --sidebar: #1e1e1e;
-  --sidebar-foreground: #f3f4f6;
-  --sidebar-primary: #8b5cf6;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #2a2a2a;
-  --sidebar-accent-foreground: #f3f4f6;
-  --sidebar-border: #3c4043;
-  --sidebar-ring: #8b5cf6;
+  --sidebar: #211f21;
+  --sidebar-foreground: #e6e1e3;
+  --sidebar-primary: #a68fff;
+  --sidebar-primary-foreground: #381e72;
+  --sidebar-accent: #2f2c2f;
+  --sidebar-accent-foreground: #e6e1e3;
+  --sidebar-border: #2f2c2f;
+  --sidebar-ring: #a68fff;
 
   /* ── Chart palette (unused, kept for shadcn compat) ──── */
-  --chart-1: #8b5cf6;
+  --chart-1: #a68fff;
   --chart-2: #34d399;
   --chart-3: #fbbf24;
   --chart-4: #f87171;
   --chart-5: #60a5fa;
 
-  /* ── Shadows (heavier in dark mode) ──────────────────── */
-  --shadow-2xs: 0 1px 2px 0px rgba(0,0,0,0.15);
-  --shadow-xs:  0 1px 2px 0px rgba(0,0,0,0.20);
-  --shadow-sm:  0 1px 3px 0px rgba(0,0,0,0.25), 0 1px 2px -1px rgba(0,0,0,0.20);
-  --shadow:     0 1px 3px 0px rgba(0,0,0,0.30), 0 1px 2px -1px rgba(0,0,0,0.25);
-  --shadow-md:  0 4px 6px -1px rgba(0,0,0,0.30), 0 2px 4px -2px rgba(0,0,0,0.25);
-  --shadow-lg:  0 10px 15px -3px rgba(0,0,0,0.30), 0 4px 6px -4px rgba(0,0,0,0.25);
-  --shadow-xl:  0 20px 25px -5px rgba(0,0,0,0.30), 0 8px 10px -6px rgba(0,0,0,0.25);
-  --shadow-2xl: 0 25px 50px -12px rgba(0,0,0,0.50);
+  /* ── Shadows (None for M3) ──────────────────── */
+  --shadow-2xs: none;
+  --shadow-xs:  none;
+  --shadow-sm:  none;
+  --shadow:     none;
+  --shadow-md:  none;
+  --shadow-lg:  none;
+  --shadow-xl:  none;
+  --shadow-2xl: none;
 
   /* ── Destructive system ──────────────────────────────── */
   --destructive-container: #4a1515;
@@ -277,11 +277,11 @@
 
   --color-overlay: var(--overlay);
 
-  /* ── Google brand colors (SVG logo) ──────────────────── */
-  --color-google-blue: var(--google-blue);
-  --color-google-green: var(--google-green);
-  --color-google-yellow: var(--google-yellow);
-  --color-google-red: var(--google-red);
+  /* ── Material brand colors (SVG logo) ──────────────────── */
+  --color-material-blue: var(--material-blue);
+  --color-material-green: var(--material-green);
+  --color-material-yellow: var(--material-yellow);
+  --color-material-red: var(--material-red);
 
   /* ── Derived radius tokens ───────────────────────────── */
   --radius-xs: calc(var(--radius) - 8px);
@@ -328,6 +328,10 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+  }
+
+  ::selection {
+    @apply bg-primary/20 text-foreground;
   }
 
   html {
@@ -396,9 +400,9 @@
    ─────────────────────────────────────────────────────────────────── */
 
 [data-sonner-toast] {
-  border-radius: var(--radius-xs) !important;
-  box-shadow: var(--shadow) !important;
-  background: var(--card) !important;
-  color: var(--card-foreground) !important;
-  border: 1px solid var(--border) !important;
+  border-radius: 9999px !important;
+  box-shadow: none !important;
+  background: var(--foreground) !important;
+  color: var(--background) !important;
+  border: none !important;
 }

@@ -15,7 +15,7 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
 
     return (
         <Link to={`/campaigns/${campaign.id}`} className="group">
-            <div className="bg-card border rounded-lg p-6 h-full transition-colors duration-150 hover:shadow-sm hover:border-primary/30">
+            <div className="bg-card border rounded-lg p-6 h-full transition-colors duration-150 hover: hover:border-primary/30">
                 <div className="flex justify-between items-start mb-3">
                     <div className="flex items-center gap-2 min-w-0 flex-1">
                         <h3 className="font-semibold text-[16px] truncate">{campaign.name}</h3>
@@ -151,7 +151,7 @@ export default function Campaigns() {
                     <h1 className="text-[28px] font-bold tracking-tight">Campaigns</h1>
                     <p className="text-muted-foreground text-[14px] mt-1">Manage your email outreach campaigns</p>
                 </div>
-                <Button onClick={goToCreate} className="gap-1.5 rounded-full h-12 px-6 shadow-sm hover:bg-primary/80 text-[15px]">
+                <Button onClick={goToCreate} className="gap-1.5 rounded-full h-12 px-6 text-[15px]">
                     <span className="material-symbols-rounded text-[20px] -ml-0.5">add</span>
                     <span className="leading-none">Create Campaign</span>
                 </Button>

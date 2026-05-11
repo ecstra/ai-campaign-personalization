@@ -74,7 +74,7 @@ export default function LeadsTable({
             )}
 
             {selectedLeads.size > 0 && (
-                <div className="flex items-center gap-2 bg-muted/30 border rounded-full px-5 py-3 shadow-sm">
+                <div className="flex items-center gap-2 bg-muted/30 border rounded-full px-5 py-3 ">
                     <span className="text-[14px] font-medium leading-none">
                         {confirmingDelete ? `Delete ${selectedLeads.size} lead(s)?` : `${selectedLeads.size} selected`}
                     </span>
@@ -105,7 +105,7 @@ export default function LeadsTable({
                     </p>
                 </div>
             ) : (
-                <div className="border rounded-lg overflow-y-auto max-h-[50vh] shadow-sm bg-card">
+                <div className="border rounded-lg overflow-y-auto max-h-[50vh]  bg-card">
                     <Table containerClassName="rounded-lg">
                         <TableHeader className="bg-muted">
                             <TableRow>

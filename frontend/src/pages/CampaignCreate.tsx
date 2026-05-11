@@ -43,7 +43,7 @@ function SectionCard({
     children: React.ReactNode
 }) {
     return (
-        <div className="bg-card border rounded-lg p-6 space-y-5 shadow-sm">
+        <div className="bg-card border rounded-lg p-6 space-y-5 ">
             <div className="flex items-center gap-4">
                 <div className="size-11 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
                     <span className="material-symbols-rounded text-[22px]">{icon}</span>
@@ -329,7 +329,7 @@ export default function CampaignCreate() {
 
                     {/* RIGHT: live summary */}
                     <aside className="lg:sticky lg:top-6 lg:self-start space-y-4">
-                        <div className="bg-card border rounded-lg p-5 space-y-4 shadow-sm">
+                        <div className="bg-card border rounded-lg p-5 space-y-4 ">
                             <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">Summary</p>
                             <dl className="space-y-4">
                                 <div className="flex justify-between gap-3">
