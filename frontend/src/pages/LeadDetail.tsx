@@ -1,69 +1,27 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useParams } from "react-router-dom"
-import DOMPurify from "dompurify"
 import { get, patch } from "@/lib/api"
-import { formatTime } from "@/lib/utils"
-import { getLeadStatus, getEmailStatus } from "@/lib/status"
+import { getLeadStatus } from "@/lib/status"
 import { parseApiError } from "@/lib/errors"
 import { useBreadcrumbs } from "@/contexts/BreadcrumbContext"
 import { toast } from "sonner"
+import { type Lead } from "@/lib/types"
+import EmailActivityTimeline, { type EmailActivity } from "@/components/lead/EmailActivityTimeline"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Textarea } from "@/components/ui/textarea"
-import {
-    Building2,
-    Briefcase,
-    CheckCircle2,
-    Clock,
-    Send,
-    AlertCircle,
-    Trash2,
-    Reply,
-    Hash,
-    CalendarClock,
-    Pencil,
-    Check,
-    X
-} from "lucide-react"
+
 import DeleteLeadModal from "@/components/DeleteLeadModal"
-
-type Lead = {
-    id: string
-    campaign_id: string
-    email: string
-    first_name: string
-    last_name: string
-    company: string | null
-    title: string | null
-    notes: string | null
-    status: string
-    has_replied: boolean
-    current_sequence: number
-    next_email_at: string | null
-    created_at: string
-    updated_at: string
-    campaign_name: string
-}
-
-type EmailActivity = {
-    id: string
-    sequence_number: number
-    subject: string
-    body: string
-    status: string
-    sent_at: string | null
-    created_at: string
-}
 
 function formatDate(dateString: string | null) {
     if (!dateString) return "Not scheduled"
     const date = new Date(dateString)
-    const formatted = formatTime(dateString)
     const dateStr = date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
-    return formatted ? `${dateStr}, ${formatted.time} ${formatted.timezone}` : date.toLocaleString()
+    const timeStr = date.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })
+    return `${dateStr}, ${timeStr}`
 }
 
 export default function LeadDetail() {
@@ -87,7 +45,7 @@ export default function LeadDetail() {
         { label: lead ? `${lead.first_name} ${lead.last_name}` : "Loading..." },
     ])
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         if (!leadId || !campaignId) return
         try {
             setLoading(true)
@@ -104,11 +62,11 @@ export default function LeadDetail() {
         } finally {
             setLoading(false)
         }
-    }
+    }, [campaignId, leadId])
 
     useEffect(() => {
         fetchData()
-    }, [leadId, campaignId])
+    }, [fetchData])
 
     const handleSaveNotes = async () => {
         if (!leadId || !lead) return
@@ -184,9 +142,9 @@ export default function LeadDetail() {
         return (
             <div className="p-6">
                 <div className="w-full">
-                    <Alert variant="destructive">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>{error}</AlertDescription>
+                    <Alert variant="destructive" className="rounded-lg bg-destructive-alert text-destructive-alert-foreground border-none p-5">
+                        <span className="material-symbols-rounded text-[20px] mr-3">error</span>
+                        <AlertDescription className="text-[14px]">{error}</AlertDescription>
                     </Alert>
                 </div>
             </div>
@@ -215,7 +173,7 @@ export default function LeadDetail() {
                                         {lead.first_name} {lead.last_name}
                                     </h1>
                                     {leadStatus && (
-                                        <Badge variant={leadStatus.variant} className={leadStatus.className}>
+                                        <Badge variant={leadStatus.variant} className={`${leadStatus.className} text-[12px] px-3 py-1 rounded-full`}>
                                             {leadStatus.label}
                                         </Badge>
                                     )}
@@ -227,14 +185,14 @@ export default function LeadDetail() {
                         )}
                     </div>
                     {!loading && lead && (
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-2">
                             {!isTerminal && (
-                                <Button variant="outline" size="sm" onClick={startEditingLead} className="gap-1.5">
-                                    <Pencil size={13} /> Edit
+                                <Button variant="outline" onClick={startEditingLead} className="gap-2 rounded-full h-10 px-5  text-[14px]">
+                                    <span className="material-symbols-rounded text-[18px]">edit</span> Edit
                                 </Button>
                             )}
-                            <Button variant="ghost" size="icon" onClick={() => setShowDeleteModal(true)} className="text-muted-foreground hover:text-destructive">
-                                <Trash2 size={14} />
+                            <Button variant="ghost" size="icon" onClick={() => setShowDeleteModal(true)} className="text-muted-foreground hover:text-destructive-hover-foreground hover:bg-destructive-hover rounded-full h-10 w-10">
+                                <span className="material-symbols-rounded text-[20px]">delete</span>
                             </Button>
                         </div>
                     )}
@@ -242,38 +200,38 @@ export default function LeadDetail() {
 
                 {/* ── Edit Panel ────────────────────────────────────── */}
                 {editingLead && (
-                    <div className="bg-card border rounded-xl p-5 space-y-4">
+                    <div className="bg-card border rounded-lg p-6 space-y-5 ">
                         <div className="flex items-center justify-between">
-                            <h2 className="text-sm font-semibold">Edit Lead</h2>
-                            <div className="flex items-center gap-2">
-                                <Button size="sm" onClick={handleSaveLead} disabled={savingLead} className="gap-1.5">
-                                    <Check size={14} /> {savingLead ? "Saving..." : "Save"}
+                            <h2 className="text-[18px] font-semibold">Edit Lead</h2>
+                            <div className="flex items-center gap-3">
+                                <Button onClick={handleSaveLead} disabled={savingLead} className="gap-2 rounded-full h-10 px-5  text-[14px]">
+                                    <span className="material-symbols-rounded text-[18px]">check</span> {savingLead ? "Saving..." : "Save"}
                                 </Button>
-                                <Button size="sm" variant="ghost" onClick={() => setEditingLead(false)} className="gap-1.5">
-                                    <X size={14} /> Cancel
+                                <Button variant="ghost" onClick={() => setEditingLead(false)} className="gap-2 rounded-full h-10 px-5 text-[14px]">
+                                    <span className="material-symbols-rounded text-[18px]">close</span> Cancel
                                 </Button>
                             </div>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-1.5">
-                                <label className="text-[12px] font-medium text-muted-foreground">First Name</label>
-                                <Input value={leadForm.first_name} onChange={e => setLeadForm({ ...leadForm, first_name: e.target.value })} className="h-9 text-sm" />
+                                <label className="text-[13px] font-medium text-muted-foreground pl-2">First Name</label>
+                                <Input value={leadForm.first_name} onChange={e => setLeadForm({ ...leadForm, first_name: e.target.value })} className="h-11 text-[14px] rounded-lg px-4" />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-[12px] font-medium text-muted-foreground">Last Name</label>
-                                <Input value={leadForm.last_name} onChange={e => setLeadForm({ ...leadForm, last_name: e.target.value })} className="h-9 text-sm" />
+                                <label className="text-[13px] font-medium text-muted-foreground pl-2">Last Name</label>
+                                <Input value={leadForm.last_name} onChange={e => setLeadForm({ ...leadForm, last_name: e.target.value })} className="h-11 text-[14px] rounded-lg px-4" />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-[12px] font-medium text-muted-foreground">Email</label>
-                                <Input value={leadForm.email} onChange={e => setLeadForm({ ...leadForm, email: e.target.value })} className="h-9 text-sm" />
+                                <label className="text-[13px] font-medium text-muted-foreground pl-2">Email</label>
+                                <Input value={leadForm.email} onChange={e => setLeadForm({ ...leadForm, email: e.target.value })} className="h-11 text-[14px] rounded-lg px-4" />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-[12px] font-medium text-muted-foreground">Company</label>
-                                <Input value={leadForm.company} onChange={e => setLeadForm({ ...leadForm, company: e.target.value })} className="h-9 text-sm" />
+                                <label className="text-[13px] font-medium text-muted-foreground pl-2">Company</label>
+                                <Input value={leadForm.company} onChange={e => setLeadForm({ ...leadForm, company: e.target.value })} className="h-11 text-[14px] rounded-lg px-4" />
                             </div>
                             <div className="sm:col-span-2 space-y-1.5">
-                                <label className="text-[12px] font-medium text-muted-foreground">Title</label>
-                                <Input value={leadForm.title} onChange={e => setLeadForm({ ...leadForm, title: e.target.value })} className="h-9 text-sm" />
+                                <label className="text-[13px] font-medium text-muted-foreground pl-2">Title</label>
+                                <Input value={leadForm.title} onChange={e => setLeadForm({ ...leadForm, title: e.target.value })} className="h-11 text-[14px] rounded-lg px-4" />
                             </div>
                         </div>
                     </div>
@@ -281,38 +239,38 @@ export default function LeadDetail() {
 
                 {/* ── Info Grid ─────────────────────────────────────── */}
                 {loading ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-16 rounded-xl" />)}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-20 rounded-lg" />)}
                     </div>
                 ) : lead && (
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        <div className="bg-card border rounded-xl p-3.5">
-                            <div className="flex items-center gap-1.5 text-muted-foreground mb-1.5">
-                                <Building2 size={12} />
-                                <span className="text-[11px] font-medium uppercase tracking-wide">Company</span>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div className="bg-card border rounded-lg p-5 ">
+                            <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                                <span className="material-symbols-rounded text-[16px]">domain</span>
+                                <span className="text-[12px] font-semibold uppercase tracking-wider">Company</span>
                             </div>
-                            <p className="text-[14px] font-medium truncate">{lead.company || "—"}</p>
+                            <p className="text-[15px] font-medium truncate">{lead.company || "—"}</p>
                         </div>
-                        <div className="bg-card border rounded-xl p-3.5">
-                            <div className="flex items-center gap-1.5 text-muted-foreground mb-1.5">
-                                <Briefcase size={12} />
-                                <span className="text-[11px] font-medium uppercase tracking-wide">Title</span>
+                        <div className="bg-card border rounded-lg p-5 ">
+                            <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                                <span className="material-symbols-rounded text-[16px]">work</span>
+                                <span className="text-[12px] font-semibold uppercase tracking-wider">Title</span>
                             </div>
-                            <p className="text-[14px] font-medium truncate">{lead.title || "—"}</p>
+                            <p className="text-[15px] font-medium truncate">{lead.title || "—"}</p>
                         </div>
-                        <div className="bg-card border rounded-xl p-3.5">
-                            <div className="flex items-center gap-1.5 text-muted-foreground mb-1.5">
-                                <Hash size={12} />
-                                <span className="text-[11px] font-medium uppercase tracking-wide">Sequence</span>
+                        <div className="bg-card border rounded-lg p-5 ">
+                            <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                                <span className="material-symbols-rounded text-[16px]">tag</span>
+                                <span className="text-[12px] font-semibold uppercase tracking-wider">Sequence</span>
                             </div>
-                            <p className="text-[14px] font-medium">{lead.current_sequence} / {3}</p>
+                            <p className="text-[15px] font-medium">{lead.current_sequence} / {lead.max_follow_ups}</p>
                         </div>
-                        <div className="bg-card border rounded-xl p-3.5">
-                            <div className="flex items-center gap-1.5 text-muted-foreground mb-1.5">
-                                <CalendarClock size={12} />
-                                <span className="text-[11px] font-medium uppercase tracking-wide">Next Email</span>
+                        <div className="bg-card border rounded-lg p-5 ">
+                            <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                                <span className="material-symbols-rounded text-[16px]">event_available</span>
+                                <span className="text-[12px] font-semibold uppercase tracking-wider">Next Email</span>
                             </div>
-                            <p className="text-[13px] font-medium">
+                            <p className="text-[14px] font-medium">
                                 {isTerminal ? "—" : formatDate(lead.next_email_at)}
                             </p>
                         </div>
@@ -320,121 +278,41 @@ export default function LeadDetail() {
                 )}
 
                 {/* ── Notes ─────────────────────────────────────────── */}
-                <div className="bg-card border rounded-xl p-5 space-y-3">
-                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Notes</p>
-                    <Textarea
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
-                        placeholder="Add notes about this lead..."
-                        className="min-h-[80px] text-[14px] resize-none"
-                        disabled={loading}
-                    />
-                    <div className="flex items-center gap-2">
-                        <Button size="sm" onClick={handleSaveNotes} disabled={saving || loading}>
-                            {saving ? "Saving..." : "Save Notes"}
-                        </Button>
-                        {lead && !lead.has_replied && (
-                            <Button variant="outline" size="sm" onClick={handleMarkAsReplied} disabled={marking || loading} className="gap-1.5">
-                                <CheckCircle2 size={13} />
-                                {marking ? "Marking..." : "Mark as Replied"}
+                {loading ? (
+                    <Skeleton className="h-[160px] rounded-lg" />
+                ) : lead && (
+                    <div className="bg-card border rounded-lg p-6 space-y-4 ">
+                        <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">Notes</p>
+                        <Textarea
+                            value={notes}
+                            onChange={(e) => setNotes(e.target.value)}
+                            placeholder="Add notes about this lead..."
+                            className="min-h-[100px] text-[14px] p-4 rounded-sm resize-none"
+                            disabled={loading || saving}
+                        />
+                        <div className="flex items-center gap-3">
+                            <Button onClick={handleSaveNotes} disabled={saving || loading} className="rounded-full h-10 px-5  text-[14px]">
+                                {saving ? "Saving..." : "Save Notes"}
                             </Button>
-                        )}
+                            {!lead.has_replied && (
+                                <Button variant="secondary" onClick={handleMarkAsReplied} disabled={marking || loading} className="gap-2 rounded-full h-10 px-5  text-[14px]">
+                                    <span className="material-symbols-rounded text-[18px]">check_circle</span>
+                                    {marking ? "Marking..." : "Mark as Replied"}
+                                </Button>
+                            )}
+                        </div>
                     </div>
-                </div>
+                )}
 
                 {/* ── Email Activity ────────────────────────────────── */}
                 <div className="space-y-3">
                     <h2 className="text-lg font-semibold">Email Activity</h2>
-
-                    {loading ? (
-                        <div className="space-y-3">
-                            {[1, 2, 3].map(i => <Skeleton key={i} className="h-16 rounded-xl" />)}
-                        </div>
-                    ) : activity.length === 0 ? (
-                        <div className="text-center py-12 border border-dashed rounded-xl">
-                            <p className="text-sm text-muted-foreground">No emails sent yet</p>
-                        </div>
-                    ) : (
-                        <div className="relative pl-6">
-                            {/* Timeline line */}
-                            <div className="absolute left-[7px] top-2 bottom-2 w-px bg-border" />
-
-                            <div className="space-y-3">
-                                {activity.map(email => {
-                                    const isExpanded = expandedIds.has(email.id)
-                                    const s = getEmailStatus(email.status)
-                                    const dotColor = email.status === "sent" ? "bg-emerald-500"
-                                        : email.status === "received" ? "bg-blue-500"
-                                        : email.status === "failed" ? "bg-red-500"
-                                        : "bg-yellow-500"
-
-                                    return (
-                                        <div key={email.id} className="relative">
-                                            {/* Dot */}
-                                            <div className={`absolute -left-6 top-4 w-3.5 h-3.5 rounded-full border-2 border-background ${dotColor} ring-2 ring-background`} />
-
-                                            <div
-                                                className={`bg-card border rounded-xl p-4 cursor-pointer transition-colors hover:bg-accent/50 ${isExpanded ? "bg-accent/30" : ""}`}
-                                                onClick={() => toggleExpand(email.id)}
-                                            >
-                                                <div className="flex items-start justify-between gap-2">
-                                                    <div className="flex items-center gap-2 min-w-0">
-                                                        {email.status === "sent" ? <Send size={13} className="text-emerald-600 flex-shrink-0" />
-                                                            : email.status === "received" ? <Reply size={13} className="text-blue-600 flex-shrink-0" />
-                                                            : email.status === "failed" ? <AlertCircle size={13} className="text-red-600 flex-shrink-0" />
-                                                            : <Clock size={13} className="text-yellow-600 flex-shrink-0" />}
-                                                        <span className="font-medium text-[13px]">
-                                                            {email.status === "received" || email.sequence_number <= 0
-                                                                ? "Reply Received"
-                                                                : `Email #${email.sequence_number}`}
-                                                        </span>
-                                                        <span className="text-[11px] text-muted-foreground hidden sm:inline">
-                                                            {formatDate(email.sent_at || email.created_at)}
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <Badge variant={s.variant} className={`${s.className} text-[10px]`}>{s.label}</Badge>
-                                                        <svg className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${isExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                                        </svg>
-                                                    </div>
-                                                </div>
-
-                                                <p className={`text-[13px] mt-2 ${isExpanded ? "" : "line-clamp-1"} text-muted-foreground`}>
-                                                    {email.subject}
-                                                </p>
-
-                                                <div
-                                                    className={`grid transition-[grid-template-rows,opacity,margin-top] duration-300 ease-out ${
-                                                        isExpanded ? "grid-rows-[1fr] opacity-100 mt-3" : "grid-rows-[0fr] opacity-0 mt-0"
-                                                    }`}
-                                                >
-                                                    <div className="overflow-hidden">
-                                                        <div className="pt-3 border-t">
-                                                        <div
-                                                            className="text-[13px] leading-relaxed [&>p]:mb-2.5 [&>p:last-child]:mb-0"
-                                                            dangerouslySetInnerHTML={{
-                                                                __html: email.status === "failed"
-                                                                    ? "We couldn't send this email. Please check if the email address is valid."
-                                                                    : DOMPurify.sanitize(email.body, {
-                                                                        // Strip all scripts, event handlers, and dangerous tags.
-                                                                        // Allow only the basic formatting Gmail and our LLM produce.
-                                                                        ALLOWED_TAGS: ["p", "br", "strong", "b", "em", "i", "u", "a", "ul", "ol", "li", "blockquote", "span", "div"],
-                                                                        ALLOWED_ATTR: ["href", "target", "rel"],
-                                                                        ALLOW_DATA_ATTR: false,
-                                                                    })
-                                                            }}
-                                                        />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )
-                                })}
-                            </div>
-                        </div>
-                    )}
+                    <EmailActivityTimeline
+                        activity={activity}
+                        loading={loading}
+                        expandedIds={expandedIds}
+                        toggleExpand={toggleExpand}
+                    />
                 </div>
 
                 {/* ── Delete Modal ──────────────────────────────────── */}

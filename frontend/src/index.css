@@ -1,96 +1,227 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/inter";
 
 @custom-variant dark (&:is(.dark *));
 
-:root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-  --radius: 0.625rem;
+/* ───────────────────────────────────────────────────────────────────
+   THEME TOKENS — Light mode
+   Every color, shadow, and radius used by the app flows through
+   these variables.  Change values here to re-theme the entire UI.
+   ─────────────────────────────────────────────────────────────────── */
 
-  --shadow-2xs: 0 1px 2px 0px oklch(0.00 0 0 / 0.03);
-  --shadow-xs: 0 1px 2px 0px oklch(0.00 0 0 / 0.05);
-  --shadow-sm: 0 1px 3px 0px oklch(0.00 0 0 / 0.06), 0 1px 2px -1px oklch(0.00 0 0 / 0.06);
-  --shadow: 0 1px 3px 0px oklch(0.00 0 0 / 0.1), 0 1px 2px -1px oklch(0.00 0 0 / 0.1);
-  --shadow-md: 0 4px 6px -1px oklch(0.00 0 0 / 0.1), 0 2px 4px -2px oklch(0.00 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px oklch(0.00 0 0 / 0.1), 0 4px 6px -4px oklch(0.00 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px oklch(0.00 0 0 / 0.1), 0 8px 10px -6px oklch(0.00 0 0 / 0.1);
-  --shadow-2xl: 0 25px 50px -12px oklch(0.00 0 0 / 0.25);
+:root {
+
+  /* ── Surfaces ────────────────────────────────────────── */
+  --background: #fefbff;          /* main page background */
+  --foreground: #1c1b1d;          /* primary text color */
+  --card: #f8f1f6;                /* card / section backgrounds */
+  --card-foreground: #1c1b1d;     /* text inside cards */
+  --popover: #f8f1f6;             /* dropdown, tooltip, popover bg */
+  --popover-foreground: #1c1b1d;  /* text inside popovers */
+
+  /* ── Brand / Primary ─────────────────────────────────── */
+  --primary: #7050d9;             /* buttons, links, accents */
+  --primary-foreground: #ffffff;  /* text on primary backgrounds */
+  --ring: #7050d9;                /* focus ring color */
+
+  /* ── Secondary / Surface variants ────────────────────── */
+  --secondary: #e8def8;           /* M3 Secondary Container */
+  --secondary-foreground: #1d192b;/* M3 On Secondary Container */
+  --muted: #e5dfe2;               /* M3 Surface Container Highest */
+  --muted-foreground: #49454f;    /* M3 On Surface Variant */
+  --accent: #e5dfe2;              /* M3 Surface Container Highest */
+  --accent-foreground: #1c1b1d;   /* M3 On Surface */
+
+  /* ── Borders & Inputs ────────────────────────────────── */
+  --border: #cac4d0;              /* M3 Outline Variant */
+  --input: #cac4d0;               /* M3 Outline Variant */
+
+  /* ── Destructive / Error (legacy shadcn) ─────────────── */
+  --destructive: #b3261e;         /* M3 Error */
+
+  /* ── Sidebar ─────────────────────────────────────────── */
+  --sidebar: #f2ecee;
+  --sidebar-foreground: #1c1b1d;
+  --sidebar-primary: #7050d9;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e5dfe2;
+  --sidebar-accent-foreground: #1c1b1d;
+  --sidebar-border: #cac4d0;
+  --sidebar-ring: #7050d9;
+
+  /* ── Chart palette (unused, kept for shadcn compat) ──── */
+  --chart-1: #7050d9;
+  --chart-2: #34d399;
+  --chart-3: #fbbf24;
+  --chart-4: #f87171;
+  --chart-5: #60a5fa;
+
+  /* ── Global radius ───────────────────────────────────── */
+  --radius: 24px;                 /* base rounding used by cards, modals */
+
+  /* ── Shadows (None for M3) ────────────── */
+  --shadow-2xs: none;
+  --shadow-xs:  none;
+  --shadow-sm:  none;
+  --shadow:     none;
+  --shadow-md:  none;
+  --shadow-lg:  none;
+  --shadow-xl:  none;
+  --shadow-2xl: none;
+
+  /* ── Destructive system ────────────────────────────────
+     destructive-container  → Delete modals, destructive buttons
+     destructive-alert      → Error alert banners
+     destructive-hover      → Ghost delete icon hover states
+     ────────────────────────────────────────────────────── */
+  --destructive-container: #f9dedc;
+  --destructive-container-foreground: #410e0b;
+  --destructive-container-hover: #f2b8b5;
+  --destructive-alert: #f9dedc;
+  --destructive-alert-foreground: #410e0b;
+  --destructive-hover: #f9dedc;
+  --destructive-hover-foreground: #b3261e;
+
+  /* ── Semantic status colors ────────────────────────────
+     Used by progress bars, status dots, email activity
+     timeline icons, document upload task badges.
+     ────────────────────────────────────────────────────── */
+  --success: #10b981;             /* progress bar fill, status dot */
+  --success-foreground: #047857;  /* status icon, success text */
+  --warning: #f59e0b;             /* progress bar warning, status dot */
+  --warning-foreground: #b45309;  /* status icon, warning text */
+  --info: #3b82f6;                /* info status dot */
+  --info-foreground: #1d4ed8;     /* info status icon */
+
+  /* ── Status badge backgrounds ──────────────────────────
+     Used by <Badge> for campaign/lead/email statuses
+     (Active, Pending, Processing, Replied, Failed, etc.)
+     ────────────────────────────────────────────────────── */
+  --badge-emerald: #c4eed0;
+  --badge-amber:   #f9e3ba;
+  --badge-orange:  #ffdf99;
+  --badge-sky:     #c3e7ff;
+  --badge-red:     #f9dedc;
+  --badge-slate:   #e0e2ec;
+
+  /* ── Overlay (dialog / sheet backdrop) ───────────────── */
+  --overlay: rgba(0, 0, 0, 0.8);
+
+  /* ── Material brand reference colors ───────────────────── */
+  --material-blue: #4285F4;
+  --material-green: #34A853;
+  --material-yellow: #FBBC05;
+  --material-red: #EA4335;
+
+  /* ── Login page decorative gradient ──────────────────── */
+  --login-gradient: radial-gradient(circle at 30% 20%, oklch(0.52 0.12 30 / 0.04), transparent 50%),
+                    radial-gradient(circle at 70% 80%, oklch(0.52 0.12 30 / 0.03), transparent 50%);
+
 }
+
+/* ───────────────────────────────────────────────────────────────────
+   THEME TOKENS — Dark mode
+   Mirrors :root with dark-appropriate values.
+   ─────────────────────────────────────────────────────────────────── */
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
 
-  --shadow-2xs: 0 1px 2px 0px oklch(0.00 0 0 / 0.15);
-  --shadow-xs: 0 1px 2px 0px oklch(0.00 0 0 / 0.20);
-  --shadow-sm: 0 1px 3px 0px oklch(0.00 0 0 / 0.25), 0 1px 2px -1px oklch(0.00 0 0 / 0.20);
-  --shadow: 0 1px 3px 0px oklch(0.00 0 0 / 0.30), 0 1px 2px -1px oklch(0.00 0 0 / 0.25);
-  --shadow-md: 0 4px 6px -1px oklch(0.00 0 0 / 0.30), 0 2px 4px -2px oklch(0.00 0 0 / 0.25);
-  --shadow-lg: 0 10px 15px -3px oklch(0.00 0 0 / 0.30), 0 4px 6px -4px oklch(0.00 0 0 / 0.25);
-  --shadow-xl: 0 20px 25px -5px oklch(0.00 0 0 / 0.30), 0 8px 10px -6px oklch(0.00 0 0 / 0.25);
-  --shadow-2xl: 0 25px 50px -12px oklch(0.00 0 0 / 0.50);
+  /* ── Surfaces ────────────────────────────────────────── */
+  --background: #141314;
+  --foreground: #e6e1e3;
+  --card: #1c1b1d;
+  --card-foreground: #e6e1e3;
+  --popover: #1c1b1d;
+  --popover-foreground: #e6e1e3;
+
+  /* ── Brand / Primary ─────────────────────────────────── */
+  --primary: #a68fff;
+  --primary-foreground: #381e72;
+  --ring: #a68fff;
+
+  /* ── Secondary / Surface variants ────────────────────── */
+  --secondary: #4a4458;
+  --secondary-foreground: #e8def8;
+  --muted: #36343b;
+  --muted-foreground: #cac4d0;
+  --accent: #36343b;
+  --accent-foreground: #e6e1e3;
+
+  /* ── Borders & Inputs ────────────────────────────────── */
+  --border: #49454f;
+  --input: #49454f;
+
+  /* ── Destructive / Error (legacy shadcn) ─────────────── */
+  --destructive: #f2b8b5;
+
+  /* ── Sidebar ─────────────────────────────────────────── */
+  --sidebar: #211f21;
+  --sidebar-foreground: #e6e1e3;
+  --sidebar-primary: #a68fff;
+  --sidebar-primary-foreground: #381e72;
+  --sidebar-accent: #36343b;
+  --sidebar-accent-foreground: #e6e1e3;
+  --sidebar-border: #49454f;
+  --sidebar-ring: #a68fff;
+
+  /* ── Chart palette (unused, kept for shadcn compat) ──── */
+  --chart-1: #a68fff;
+  --chart-2: #34d399;
+  --chart-3: #fbbf24;
+  --chart-4: #f87171;
+  --chart-5: #60a5fa;
+
+  /* ── Shadows (None for M3) ──────────────────── */
+  --shadow-2xs: none;
+  --shadow-xs:  none;
+  --shadow-sm:  none;
+  --shadow:     none;
+  --shadow-md:  none;
+  --shadow-lg:  none;
+  --shadow-xl:  none;
+  --shadow-2xl: none;
+
+  /* ── Destructive system ──────────────────────────────── */
+  --destructive-container: #8c1d18;
+  --destructive-container-foreground: #f9dedc;
+  --destructive-container-hover: #b3261e;
+  --destructive-alert: #8c1d18;
+  --destructive-alert-foreground: #f9dedc;
+  --destructive-hover: rgba(242, 184, 181, 0.2);
+  --destructive-hover-foreground: #f2b8b5;
+
+  /* ── Semantic status colors ──────────────────────────── */
+  --success: #10b981;
+  --success-foreground: #6ee7b7;
+  --warning: #f59e0b;
+  --warning-foreground: #fcd34d;
+  --info: #3b82f6;
+  --info-foreground: #93c5fd;
+
+  /* ── Status badge backgrounds ────────────────────────── */
+  --badge-emerald: #0f5223;
+  --badge-amber:   #5b4200;
+  --badge-orange:  #633b00;
+  --badge-sky:     #004a77;
+  --badge-red:     #8c1d18;
+  --badge-slate:   #44474f;
+
+  /* ── Overlay (dialog / sheet backdrop) ───────────────── */
+  --overlay: rgba(0, 0, 0, 0.8);
+
+  /* ── Login page decorative gradient ──────────────────── */
+  --login-gradient: radial-gradient(circle at 30% 20%, oklch(0.52 0.12 30 / 0.04), transparent 50%),
+                    radial-gradient(circle at 70% 80%, oklch(0.52 0.12 30 / 0.03), transparent 50%);
+
 }
+
+/* ───────────────────────────────────────────────────────────────────
+   TAILWIND THEME REGISTRATION
+   Maps CSS variables to Tailwind utility classes.
+   e.g.  --color-primary  →  bg-primary, text-primary, etc.
+   ─────────────────────────────────────────────────────────────────── */
 
 @theme inline {
   --color-background: var(--background);
@@ -125,11 +256,50 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
+  --color-destructive-container: var(--destructive-container);
+  --color-destructive-container-foreground: var(--destructive-container-foreground);
+  --color-destructive-container-hover: var(--destructive-container-hover);
+  --color-destructive-alert: var(--destructive-alert);
+  --color-destructive-alert-foreground: var(--destructive-alert-foreground);
+  --color-destructive-hover: var(--destructive-hover);
+  --color-destructive-hover-foreground: var(--destructive-hover-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-badge-emerald: var(--badge-emerald);
+  --color-badge-amber: var(--badge-amber);
+  --color-badge-orange: var(--badge-orange);
+  --color-badge-sky: var(--badge-sky);
+  --color-badge-red: var(--badge-red);
+  --color-badge-slate: var(--badge-slate);
+
+  --color-overlay: var(--overlay);
+
+  /* ── Material brand colors (SVG logo) ──────────────────── */
+  --color-material-blue: var(--material-blue);
+  --color-material-green: var(--material-green);
+  --color-material-yellow: var(--material-yellow);
+  --color-material-red: var(--material-red);
+
+  /* ── Derived radius tokens ───────────────────────────── */
+  --radius-xs: calc(var(--radius) - 8px);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 
+  /* ── Responsive breakpoints (unified at 1170px) ──────── */
+  --breakpoint-sm: 1170px;
+  --breakpoint-md: 1170px;
+  --breakpoint-lg: 1170px;
+
+  /* ── Shadows ─────────────────────────────────────────── */
   --shadow-2xs: var(--shadow-2xs);
   --shadow-xs: var(--shadow-xs);
   --shadow-sm: var(--shadow-sm);
@@ -139,16 +309,30 @@
   --shadow-xl: var(--shadow-xl);
   --shadow-2xl: var(--shadow-2xl);
 
-  --font-sans: 'Inter Variable', sans-serif;
+  /* ── Typography ──────────────────────────────────────── */
+  --font-sans: 'Roboto', sans-serif;
   --font-heading: var(--font-sans);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* ── Animation ───────────────────────────────────────── */
+  @keyframes progress-indeterminate {
+    0%   { transform: translateX(-100%); }
+    50%  { transform: translateX(0%); }
+    100% { transform: translateX(100%); }
+  }
+  --animate-progress-indeterminate: progress-indeterminate 2s infinite linear;
 }
+
+/* ───────────────────────────────────────────────────────────────────
+   GLOBAL BASE STYLES
+   ─────────────────────────────────────────────────────────────────── */
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
+  }
+
+  ::selection {
+    @apply bg-primary/20 text-foreground;
   }
 
   html {
@@ -158,18 +342,39 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground text-[14px];
+  }
+
+  button, [role="button"], .cursor-pointer {
+    @apply transition-colors duration-150;
+  }
+
+  .material-symbols-rounded {
+    user-select: none;
+    -webkit-user-select: none;
+    line-height: 1;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-4 ring-primary/40 border-primary;
   }
 }
 
-/* Custom scrollbar */
+/* ───────────────────────────────────────────────────────────────────
+   CUSTOM SCROLLBAR — Material 3
+   ─────────────────────────────────────────────────────────────────── */
+
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
 }
 
+::-webkit-scrollbar-button:single-button,
 ::-webkit-scrollbar-button {
   display: none;
+  width: 0;
+  height: 0;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-corner {
@@ -178,18 +383,89 @@
 
 ::-webkit-scrollbar-track {
   background: transparent;
+  border: none;
 }
 
 ::-webkit-scrollbar-thumb {
   background: var(--border);
-  border-radius: 3px;
+  border-radius: 999px;
+  border: none;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--muted-foreground);
 }
 
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
+/* ───────────────────────────────────────────────────────────────────
+   TOASTS — Sonner Material 3
+   ─────────────────────────────────────────────────────────────────── */
+
+[data-sonner-toast] {
+  border-radius: 9999px !important;
+  box-shadow: none !important;
+  background: var(--foreground) !important;
+  color: var(--background) !important;
+  border: none !important;
+}
+
+/* ───────────────────────────────────────────────────────────────────
+   MARKDOWN TYPOGRAPHY — Material 3
+   ─────────────────────────────────────────────────────────────────── */
+
+@layer components {
+  .prose-m3 {
+    --tw-prose-body: var(--foreground) !important;
+    --tw-prose-headings: var(--foreground) !important;
+    --tw-prose-lead: var(--muted-foreground) !important;
+    --tw-prose-links: var(--primary) !important;
+    --tw-prose-bold: var(--foreground) !important;
+    --tw-prose-counters: var(--muted-foreground) !important;
+    --tw-prose-bullets: var(--muted-foreground) !important;
+    --tw-prose-hr: var(--border) !important;
+    --tw-prose-quotes: var(--foreground) !important;
+    --tw-prose-quote-borders: var(--border) !important;
+    --tw-prose-captions: var(--muted-foreground) !important;
+    --tw-prose-code: var(--foreground) !important;
+    --tw-prose-pre-code: var(--foreground) !important;
+    --tw-prose-pre-bg: var(--muted) !important;
+    --tw-prose-th-borders: var(--border) !important;
+    --tw-prose-td-borders: var(--border) !important;
+  }
+
+  /* Tighten Markdown Spacing */
+  .prose-m3 p,
+  .prose-m3 ul,
+  .prose-m3 ol,
+  .prose-m3 pre {
+    margin-top: 0.75em !important;
+    margin-bottom: 0.75em !important;
+    line-height: 1.6 !important;
+  }
+
+  .prose-m3 li {
+    margin-top: 0.25em !important;
+    margin-bottom: 0.25em !important;
+  }
+
+  .prose-m3 li > p {
+    margin-top: 0.25em !important;
+    margin-bottom: 0.25em !important;
+  }
+
+  .prose-m3 h1,
+  .prose-m3 h2,
+  .prose-m3 h3,
+  .prose-m3 h4 {
+    margin-top: 1.5em !important;
+    margin-bottom: 0.5em !important;
+    line-height: 1.3 !important;
+  }
+
+  .prose-m3 > :first-child {
+    margin-top: 0 !important;
+  }
+
+  .prose-m3 > :last-child {
+    margin-bottom: 0 !important;
+  }
 }

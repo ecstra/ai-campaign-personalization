@@ -33,12 +33,12 @@ export function useBreadcrumbs(items: BreadcrumbItem[]): void {
     }
 
     const { setItems } = context
+    const key = items.map(i => `${i.label}|${i.href ?? ""}`).join("::")
 
-    const serialized = JSON.stringify(items)
     useEffect(() => {
-        setItems(JSON.parse(serialized))
+        setItems([...items])
         return () => setItems([])
-    }, [serialized, setItems])
+    }, [key]) // eslint-disable-line react-hooks/exhaustive-deps
 }
 
 export function useBreadcrumbItems(): BreadcrumbItem[] {

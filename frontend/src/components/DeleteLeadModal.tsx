@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { del } from "@/lib/api"
-import { AlertTriangle } from "lucide-react"
+
 
 type DeleteLeadModalProps = {
     open: boolean
@@ -55,29 +55,30 @@ export default function DeleteLeadModal({
         <Dialog open={open} onOpenChange={handleClose}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2 text-destructive">
-                        <AlertTriangle size={20} />
-                        Delete Lead
-                    </DialogTitle>
-                    <DialogDescription>
+                    <div className="size-12 rounded-full bg-destructive-container flex items-center justify-center mx-auto mb-2">
+                        <span className="material-symbols-rounded text-[24px] text-destructive-container-foreground">delete_forever</span>
+                    </div>
+                    <DialogTitle className="text-center text-[20px]">Delete Lead</DialogTitle>
+                    <DialogDescription className="text-center text-[14px]">
                         Are you sure you want to delete <span className="font-semibold">{leadName}</span>? This will permanently remove this lead and all their email activity from the campaign.
                     </DialogDescription>
                 </DialogHeader>
 
                 {error && (
-                    <div className="text-sm text-destructive bg-destructive/10 p-3 rounded">
+                    <div className="text-[13px] text-destructive-alert-foreground bg-destructive-alert p-3 rounded-xs">
                         {error}
                     </div>
                 )}
 
                 <DialogFooter>
-                    <Button variant="outline" onClick={handleClose} disabled={deleting}>
+                    <Button variant="outline" onClick={handleClose} disabled={deleting} className="rounded-full h-10 px-5">
                         Cancel
                     </Button>
                     <Button
                         variant="destructive"
                         onClick={handleDelete}
                         disabled={deleting}
+                        className="rounded-full h-10 px-5"
                     >
                         {deleting ? "Deleting..." : "Delete Lead"}
                     </Button>

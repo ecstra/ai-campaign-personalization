@@ -5,31 +5,40 @@
 
 type StatusConfig = {
     label: string
-    variant: "default" | "secondary" | "destructive" | "outline"
+    variant: "default" | "secondary" | "destructive" | "outline" | "custom"
     className: string
 }
 
+const badgeBase = {
+    green: "bg-badge-emerald text-foreground border-transparent",
+    amber: "bg-badge-amber text-foreground border-transparent",
+    orange: "bg-badge-orange text-foreground border-transparent",
+    sky: "bg-badge-sky text-foreground border-transparent",
+    red: "bg-badge-red text-foreground border-transparent",
+    slate: "bg-badge-slate text-foreground border-transparent",
+}
+
 const campaignStatuses: Record<string, StatusConfig> = {
-    draft: { label: "Draft", variant: "secondary", className: "bg-muted text-muted-foreground" },
-    active: { label: "Active", variant: "default", className: "bg-green-100 text-green-700 border-green-200" },
-    paused: { label: "Paused", variant: "outline", className: "bg-yellow-100 text-yellow-700 border-yellow-200" },
-    completed: { label: "Completed", variant: "secondary", className: "bg-blue-100 text-blue-700 border-blue-200" },
+    draft: { label: "Draft", variant: "custom", className: "bg-muted text-muted-foreground" },
+    active: { label: "Active", variant: "custom", className: badgeBase.green },
+    paused: { label: "Paused", variant: "custom", className: badgeBase.amber },
+    completed: { label: "Completed", variant: "custom", className: badgeBase.sky },
 }
 
 const leadStatuses: Record<string, StatusConfig> = {
-    pending: { label: "Pending", variant: "outline", className: "bg-yellow-100 text-yellow-700 border-yellow-200" },
-    processing: { label: "Processing", variant: "outline", className: "bg-orange-100 text-orange-700 border-orange-200" },
-    active: { label: "Active", variant: "default", className: "bg-green-100 text-green-700 border-green-200" },
-    replied: { label: "Replied", variant: "default", className: "bg-blue-100 text-blue-700 border-blue-200" },
-    completed: { label: "Completed", variant: "secondary", className: "bg-gray-100 text-gray-700 border-gray-200" },
-    failed: { label: "Failed", variant: "destructive", className: "bg-red-100 text-red-700 border-red-200" },
+    pending: { label: "Pending", variant: "custom", className: badgeBase.amber },
+    processing: { label: "Processing", variant: "custom", className: badgeBase.orange },
+    active: { label: "Active", variant: "custom", className: badgeBase.green },
+    replied: { label: "Replied", variant: "custom", className: badgeBase.sky },
+    completed: { label: "Completed", variant: "custom", className: badgeBase.slate },
+    failed: { label: "Failed", variant: "custom", className: badgeBase.red },
 }
 
 const emailStatuses: Record<string, StatusConfig> = {
-    sent: { label: "Sent", variant: "default", className: "bg-green-100 text-green-700 border-green-200" },
-    pending: { label: "Pending", variant: "outline", className: "bg-yellow-100 text-yellow-700 border-yellow-200" },
-    failed: { label: "Failed", variant: "destructive", className: "bg-red-100 text-red-700 border-red-200" },
-    received: { label: "Received", variant: "default", className: "bg-blue-100 text-blue-700 border-blue-200" },
+    sent: { label: "Sent", variant: "custom", className: badgeBase.green },
+    pending: { label: "Pending", variant: "custom", className: badgeBase.amber },
+    failed: { label: "Failed", variant: "custom", className: badgeBase.red },
+    received: { label: "Received", variant: "custom", className: badgeBase.sky },
 }
 
 const fallback: StatusConfig = { label: "Unknown", variant: "outline", className: "bg-muted text-muted-foreground" }

@@ -37,3 +37,28 @@ export function formatTime(dateString: string | null): { time: string; timezone:
   const time = date.toLocaleString(undefined, { hour: "numeric", minute: "2-digit" })
   return { time, timezone: getTimezoneAbbr() }
 }
+
+export function formatDelay(minutes: number): string {
+    const days = Math.floor(minutes / (24 * 60))
+    const hours = Math.floor((minutes % (24 * 60)) / 60)
+    const mins = minutes % 60
+    const parts = []
+    if (days > 0) parts.push(`${days}d`)
+    if (hours > 0) parts.push(`${hours}h`)
+    if (mins > 0 || parts.length === 0) parts.push(`${mins}m`)
+    return parts.join(" ")
+}
+
+export function formatSize(bytes: number | null): string {
+    if (!bytes) return "\u2014"
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+export function formatDate(iso: string): string {
+    return new Date(iso).toLocaleString(undefined, {
+        month: "short", day: "numeric", year: "numeric",
+        hour: "numeric", minute: "2-digit",
+    })
+}

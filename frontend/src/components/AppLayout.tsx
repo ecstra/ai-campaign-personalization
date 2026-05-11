@@ -24,7 +24,6 @@ import {
     BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import {
     DropdownMenu,
@@ -33,8 +32,8 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Send, MailPlus, LogOut, ChevronsUpDown, Moon, Sun, Plus, FileText } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
     const breadcrumbItems = useBreadcrumbItems()
@@ -45,17 +44,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches)
 
     return (
-        <SidebarProvider>
+        <SidebarProvider className="h-svh overflow-hidden">
             <Sidebar variant="inset">
                 <SidebarHeader>
                     <SidebarMenu>
                         <SidebarMenuItem>
                             <SidebarMenuButton size="lg" asChild>
                                 <Link to="/">
-                                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                                        <Send className="size-4" />
+                                    <div className="flex aspect-square size-8 items-center justify-center rounded-full bg-primary/20 text-primary dark:bg-primary dark:text-primary-foreground">
+                                        <span className="material-symbols-rounded" style={{ fontSize: '16px', transform: 'rotate(-45deg) translateX(8%)' }}>send</span>
                                     </div>
-                                    <div className="grid flex-1 text-left text-sm leading-tight">
+                                    <div className="grid flex-1 text-left text-[14px] leading-tight ml-2">
                                         <span className="truncate font-semibold">Outreach</span>
                                         <span className="truncate text-xs text-muted-foreground">AI Mail Campaigns</span>
                                     </div>
@@ -68,25 +67,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <SidebarContent>
                     <SidebarGroup>
                         <SidebarGroupContent>
-                            <Button asChild size="sm" className="w-full justify-start gap-2 h-9">
-                                <Link to="/campaigns/new">
-                                    <Plus className="size-4" />
-                                    New campaign
-                                </Link>
-                            </Button>
-                        </SidebarGroupContent>
-                    </SidebarGroup>
-                    <SidebarGroup>
-                        <SidebarGroupContent>
-                            <SidebarMenu>
+                            <SidebarMenu className="gap-1">
                                 <SidebarMenuItem>
                                     <SidebarMenuButton
                                         asChild
                                         isActive={location.pathname === "/" || (location.pathname.startsWith("/campaigns") && location.pathname !== "/campaigns/new")}
+                                        className="h-12 rounded-full text-[15px] pl-3"
                                     >
                                         <Link to="/">
-                                            <MailPlus className="size-4" />
-                                            <span>Campaigns</span>
+                                            <span className="material-symbols-rounded text-[22px]">mark_email_read</span>
+                                            <span className="text-[15px] translate-y-[0.5px]">Campaigns</span>
                                         </Link>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
@@ -94,10 +84,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                                     <SidebarMenuButton
                                         asChild
                                         isActive={location.pathname.startsWith("/documents")}
+                                        className="h-12 rounded-full text-[15px] pl-3"
                                     >
                                         <Link to="/documents">
-                                            <FileText className="size-4" />
-                                            <span>Documents</span>
+                                            <span className="material-symbols-rounded text-[22px]">description</span>
+                                            <span className="text-[15px] translate-y-[0.5px]">Documents</span>
                                         </Link>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
@@ -109,42 +100,36 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <SidebarFooter>
                     <SidebarMenu>
                         <SidebarMenuItem>
-                            <SidebarMenuButton
-                                size="lg"
-                                onClick={() => setTheme(isDark ? "light" : "dark")}
-                                className="cursor-pointer"
-                            >
-                                {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
-                                <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                        <SidebarMenuItem>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <SidebarMenuButton size="lg" className="cursor-pointer">
-                                        <Avatar className="size-8">
+                                    <SidebarMenuButton size="lg" className="cursor-pointer rounded-full h-14">
+                                        <Avatar className="size-9 rounded-full">
                                             {user?.picture_url && (
                                                 <AvatarImage src={user.picture_url} referrerPolicy="no-referrer" />
                                             )}
-                                            <AvatarFallback className="text-xs">
+                                            <AvatarFallback className="text-xs bg-primary/10 text-primary">
                                                 {user?.name?.charAt(0)?.toUpperCase() || "?"}
                                             </AvatarFallback>
                                         </Avatar>
-                                        <div className="grid flex-1 text-left text-sm leading-tight">
-                                            <span className="truncate font-medium">{user?.name}</span>
-                                            <span className="truncate text-xs text-muted-foreground">{user?.email}</span>
+                                        <div className="grid flex-1 text-left text-sm leading-tight ml-1">
+                                            <span className="truncate font-medium text-[14px]">{user?.name}</span>
+                                            <span className="truncate text-[12px] text-muted-foreground">{user?.email}</span>
                                         </div>
-                                        <ChevronsUpDown className="ml-auto size-4" />
+                                        <span className="material-symbols-rounded ml-auto text-[20px]">unfold_more</span>
                                     </SidebarMenuButton>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent side="top" align="start" className="w-[--radix-dropdown-menu-trigger-width]">
+                                <DropdownMenuContent side="top" align="start" className="min-w-52">
                                     <div className="px-2 py-1.5">
                                         <p className="text-sm font-medium">{user?.name}</p>
                                         <p className="text-xs text-muted-foreground">{user?.email}</p>
                                     </div>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem onClick={logout} className="text-destructive">
-                                        <LogOut className="mr-2 size-4" />
+                                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} onClick={() => setTheme(isDark ? "light" : "dark")} className="rounded-full my-1 w-full cursor-pointer hover:bg-muted-foreground/15 focus:bg-muted-foreground/15">
+                                        <span className="material-symbols-rounded mr-2 text-[18px]">{isDark ? "light_mode" : "dark_mode"}</span>
+                                        {isDark ? "Light Mode" : "Dark Mode"}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={logout} className="text-destructive-container-foreground hover:!text-foreground focus:!text-foreground focus:bg-destructive-hover rounded-full my-1 w-full cursor-pointer">
+                                        <span className="material-symbols-rounded mr-2 text-[18px]">logout</span>
                                         Sign out
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
@@ -154,22 +139,24 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </SidebarFooter>
             </Sidebar>
 
-            <SidebarInset>
+            <SidebarInset className="flex flex-col">
                 {/* Top bar with trigger + breadcrumbs */}
-                <header className="flex h-12 shrink-0 items-center gap-2 border-b px-4">
-                    <SidebarTrigger className="-ml-1" />
+                <header className="flex h-16 shrink-0 items-center gap-3 border-b px-6">
+                    <SidebarTrigger className="-ml-2 h-10 w-10 rounded-full" />
                     {breadcrumbItems.length > 0 && (
                         <>
-                            <Separator orientation="vertical" className="mr-2 !h-4" />
-                            <Breadcrumb>
-                                <BreadcrumbList>
+                            <Separator orientation="vertical" className="mr-3 h-full" />
+                            <Breadcrumb className="mt-[2px]">
+                                <BreadcrumbList className="text-[15px]">
                                     {breadcrumbItems.map((item, index) => {
                                         const isLast = index === breadcrumbItems.length - 1
                                         return (
-                                            <span key={item.label} className="flex items-center gap-1.5">
+                                            <span key={index} className="flex items-center gap-1.5">
                                                 {index > 0 && <BreadcrumbSeparator />}
                                                 <BreadcrumbItem>
-                                                    {isLast || !item.href ? (
+                                                    {item.label === "Loading..." ? (
+                                                        <Skeleton className="h-4 w-24 rounded-full" />
+                                                    ) : isLast || !item.href ? (
                                                         <BreadcrumbPage>{item.label}</BreadcrumbPage>
                                                     ) : (
                                                         <BreadcrumbLink asChild>
@@ -187,9 +174,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </header>
 
                 {/* Page content */}
-                <main className="flex-1 overflow-y-auto">
+                <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
                     {children}
-                </main>
+                </div>
             </SidebarInset>
         </SidebarProvider>
     )

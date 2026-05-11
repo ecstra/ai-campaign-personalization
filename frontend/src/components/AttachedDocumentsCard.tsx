@@ -4,10 +4,11 @@ import { get, put } from "@/lib/api"
 import { parseApiError } from "@/lib/errors"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
     Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog"
-import { FileText, Plus, X, Check, AlertCircle, ArrowUpRight } from "lucide-react"
+
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
 const MAX_PER_CAMPAIGN = 2
@@ -44,6 +45,7 @@ export default function AttachedDocumentsCard({
     const [loadingLibrary, setLoadingLibrary] = useState(false)
     const [selected, setSelected] = useState<Set<string>>(new Set())
     const [saving, setSaving] = useState(false)
+    const [detachingId, setDetachingId] = useState<string | null>(null)
 
     // Keep the picker's selection in sync with what's currently attached
     useEffect(() => {
@@ -95,6 +97,7 @@ export default function AttachedDocumentsCard({
     }
 
     const detachOne = async (docId: string) => {
+        setDetachingId(docId)
         try {
             await put(`/campaigns/${campaignId}/documents`, {
                 document_ids: attached.filter(d => d.id !== docId).map(d => d.id),
@@ -103,57 +106,62 @@ export default function AttachedDocumentsCard({
             onChange()
         } catch (err) {
             toast.error(parseApiError(err))
+        } finally {
+            setDetachingId(null)
         }
     }
 
     const remainingSlots = MAX_PER_CAMPAIGN - attached.length
 
     return (
-        <div className="bg-card border rounded-xl p-5 space-y-3">
+        <div className="bg-card border rounded-lg p-6 space-y-4 ">
             <div className="flex items-start justify-between gap-3">
                 <div>
-                    <h2 className="text-[13px] font-semibold tracking-tight">Attached documents</h2>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                    <h2 className="text-[15px] font-semibold">Attached documents</h2>
+                    <p className="text-[13px] text-muted-foreground mt-1">
                         Up to {MAX_PER_CAMPAIGN} documents from your library. The LLM uses their briefs when personalizing every email for this campaign.
                     </p>
                 </div>
                 {canEdit && (
-                    <Button size="sm" variant="outline" onClick={openPicker} className="gap-1.5 shrink-0">
-                        <Plus size={13} />
+                    <Button variant="secondary" onClick={openPicker} className="gap-2 rounded-full h-9 px-4  text-[13px] shrink-0">
+                        <span className="material-symbols-rounded text-[18px]">add</span>
                         Manage
                     </Button>
                 )}
             </div>
 
             {attached.length === 0 ? (
-                <div className="text-center py-5 border border-dashed rounded-lg">
-                    <FileText size={18} className="mx-auto mb-1.5 text-muted-foreground/60" />
-                    <p className="text-[12px] text-muted-foreground">No documents attached</p>
-                    <p className="text-[11px] text-muted-foreground/70 mt-0.5">
+                <div className="text-center py-6 border border-dashed rounded-sm">
+                    <span className="material-symbols-rounded text-[24px] mx-auto mb-2 text-muted-foreground/40">description</span>
+                    <p className="text-[14px] text-muted-foreground">No documents attached</p>
+                    <p className="text-[13px] text-muted-foreground/70 mt-1">
                         Upload in <Link to="/documents" className="underline hover:text-foreground">Documents</Link>, then attach from here.
                     </p>
                 </div>
             ) : (
-                <div className="space-y-2">
+                <div className="space-y-3">
                     {attached.map(doc => (
-                        <div key={doc.id} className="group flex items-center gap-3 p-2.5 border rounded-lg bg-muted/20 hover:bg-muted/40 transition-colors">
-                            <FileText size={14} className="text-primary shrink-0" />
+                        <div key={doc.id} className="group flex items-center gap-4 p-3 border rounded-sm bg-muted/20 hover:bg-muted/40 transition-colors">
+                            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                <span className="material-symbols-rounded text-[16px] text-primary">description</span>
+                            </div>
                             <Link
                                 to={`/documents/${doc.id}`}
-                                className="text-[13px] font-medium truncate flex-1 hover:text-primary transition-colors inline-flex items-center gap-1.5"
+                                className="text-[14px] font-medium truncate flex-1 hover:text-primary transition-colors inline-flex items-center gap-1.5"
                             >
                                 {doc.name}
-                                <ArrowUpRight size={11} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <span className="material-symbols-rounded text-[14px] opacity-0 group-hover:opacity-100 transition-opacity">arrow_outward</span>
                             </Link>
                             {canEdit && (
                                 <Button
-                                    size="sm"
+                                    size="icon"
                                     variant="ghost"
                                     onClick={() => detachOne(doc.id)}
-                                    className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                                    disabled={detachingId === doc.id}
+                                    className="h-8 w-8 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive-hover"
                                     aria-label={`Detach ${doc.name}`}
                                 >
-                                    <X size={13} />
+                                    <span className="material-symbols-rounded text-[18px]">close</span>
                                 </Button>
                             )}
                         </div>
@@ -176,10 +184,14 @@ export default function AttachedDocumentsCard({
 
                     <div className="flex-1 overflow-y-auto -mx-6 px-6">
                         {loadingLibrary ? (
-                            <p className="text-[13px] text-muted-foreground py-4">Loading library...</p>
+                            <div className="space-y-3 py-2">
+                                <Skeleton className="h-16 rounded-sm" />
+                                <Skeleton className="h-16 rounded-sm" />
+                                <Skeleton className="h-16 rounded-sm" />
+                            </div>
                         ) : library.length === 0 ? (
-                            <Alert>
-                                <AlertCircle className="h-4 w-4" />
+                            <Alert className="rounded-lg">
+                                <span className="material-symbols-rounded text-[20px] mr-3">error</span>
                                 <AlertDescription>
                                     Your library is empty. <Link to="/documents" className="underline">Upload your first document</Link>.
                                 </AlertDescription>
@@ -193,15 +205,15 @@ export default function AttachedDocumentsCard({
                                             key={doc.id}
                                             type="button"
                                             onClick={() => toggleSelect(doc.id)}
-                                            className={`w-full flex items-center gap-3 p-3 border rounded-lg text-left transition-colors ${
+                                            className={`w-full flex items-center gap-3 p-4 border rounded-sm text-left transition-colors ${
                                                 isSelected
                                                     ? "border-primary bg-primary/5"
                                                     : "hover:bg-muted/40"
                                             }`}
                                         >
-                                            <FileText size={14} className={isSelected ? "text-primary" : "text-muted-foreground"} />
-                                            <p className="text-[13px] font-medium truncate flex-1">{doc.name}</p>
-                                            {isSelected && <Check size={14} className="text-primary shrink-0" />}
+                                            <span className={`material-symbols-rounded text-[20px] ${isSelected ? "text-primary" : "text-muted-foreground"}`}>description</span>
+                                            <p className="text-[14px] font-medium truncate flex-1">{doc.name}</p>
+                                            {isSelected && <span className="material-symbols-rounded text-[20px] text-primary shrink-0">check</span>}
                                         </button>
                                     )
                                 })}
@@ -209,11 +221,11 @@ export default function AttachedDocumentsCard({
                         )}
                     </div>
 
-                    <div className="flex justify-end gap-2 pt-2 border-t -mx-6 px-6 mt-2">
-                        <Button variant="outline" onClick={() => setPickerOpen(false)}>
+                    <div className="flex justify-end gap-3 pt-3 border-t -mx-6 px-6 mt-3">
+                        <Button variant="outline" onClick={() => setPickerOpen(false)} className="rounded-full h-10 px-5">
                             Cancel
                         </Button>
-                        <Button onClick={saveSelection} disabled={saving}>
+                        <Button onClick={saveSelection} disabled={saving} className="rounded-full h-10 px-5">
                             {saving ? "Saving..." : "Save"}
                         </Button>
                     </div>

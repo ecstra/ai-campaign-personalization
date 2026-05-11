@@ -1,30 +1,26 @@
 import os
-from typing import Any
-
 import jwt
+
 from fastapi import Header, HTTPException
-from dotenv import load_dotenv
 
-from ..db.engine import get_cursor
-
-load_dotenv()
+from ..db import DatabaseEngine
 
 JWT_SECRET = os.getenv("JWT_SECRET", "")
+if not JWT_SECRET:
+    raise ValueError(
+        "JWT_SECRET environment variable is not set. "
+        "Generate one with: python -c 'import secrets; print(secrets.token_urlsafe(32))'"
+    )
 JWT_ALGORITHM = "HS256"
 
 
-async def get_current_user(authorization: str = Header(...)) -> dict[str, Any]:
-    """
-    FastAPI dependency that extracts and validates the Bearer JWT from the
-    Authorization header. Returns a dict with user info from the database.
-
-    Raises:
-        HTTPException 401 on missing/invalid/expired token or unknown user.
-    """
-    if not authorization.startswith("Bearer "):
+async def get_current_user(authorization: str = Header(...)) -> dict[str, object]:
+    if not authorization or " " not in authorization:
         raise HTTPException(status_code=401, detail="Invalid authorization header format")
 
-    token = authorization[len("Bearer "):]
+    scheme, _, token = authorization.partition(" ")
+    if scheme.lower() != "bearer" or not token:
+        raise HTTPException(status_code=401, detail="Invalid authorization header format")
 
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
@@ -37,7 +33,7 @@ async def get_current_user(authorization: str = Header(...)) -> dict[str, Any]:
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token payload")
 
-    with get_cursor() as cur:
+    with DatabaseEngine.get_cursor() as cur:
         cur.execute(
             "SELECT id, email, name, picture_url FROM users WHERE id = %s",
             (user_id,),

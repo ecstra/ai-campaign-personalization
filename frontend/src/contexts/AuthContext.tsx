@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react"
-import { get, post } from "@/lib/api"
+import { get, post, setOnUnauthorized } from "@/lib/api"
 import {
     type User,
     getStoredToken,
@@ -24,13 +24,12 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(getStoredUser)
     const [token, setToken] = useState<string | null>(getStoredToken)
-    const [isLoading, setIsLoading] = useState(true)
+    const [isLoading, setIsLoading] = useState(() => !!getStoredToken())
 
     // Validate stored token on mount
     useEffect(() => {
         const storedToken = getStoredToken()
         if (!storedToken) {
-            setIsLoading(false)
             return
         }
 
@@ -79,6 +78,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setToken(null)
         setUser(null)
     }, [])
+
+    useEffect(() => {
+        setOnUnauthorized(logout)
+    }, [logout])
 
     return (
         <AuthContext.Provider
