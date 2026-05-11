@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
+import ReactMarkdown from "react-markdown"
 import { get, del } from "@/lib/api"
 import { parseApiError } from "@/lib/errors"
 import { formatSize, formatDate } from "@/lib/utils"
@@ -151,11 +152,15 @@ export default function DocumentDetail() {
                         {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-4 w-full rounded-full" />)}
                     </div>
                 ) : doc ? (
-                    <article
-                        className="bg-card border rounded-lg p-8 text-[14px] leading-relaxed whitespace-pre-wrap font-mono "
-                    >
-                        {doc.brief}
-                    </article>
+                    /(^#+\s|\*\*.*?\*\*|__.*?__|\[.+?\]\(.+?\)|\n[*-]\s|\n\d+\.\s|```|^>\s)/m.test(doc.brief) ? (
+                        <article className="bg-card border rounded-lg p-8 prose prose-m3 max-w-none break-words">
+                            <ReactMarkdown>{doc.brief}</ReactMarkdown>
+                        </article>
+                    ) : (
+                        <article className="bg-card border rounded-lg p-8 text-[14px] leading-relaxed whitespace-pre-wrap font-mono">
+                            {doc.brief}
+                        </article>
+                    )
                 ) : null}
             </div>
 

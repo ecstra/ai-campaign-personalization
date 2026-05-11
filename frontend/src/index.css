@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
@@ -405,4 +406,66 @@
   background: var(--foreground) !important;
   color: var(--background) !important;
   border: none !important;
+}
+
+/* ───────────────────────────────────────────────────────────────────
+   MARKDOWN TYPOGRAPHY — Material 3
+   ─────────────────────────────────────────────────────────────────── */
+
+@layer components {
+  .prose-m3 {
+    --tw-prose-body: var(--foreground) !important;
+    --tw-prose-headings: var(--foreground) !important;
+    --tw-prose-lead: var(--muted-foreground) !important;
+    --tw-prose-links: var(--primary) !important;
+    --tw-prose-bold: var(--foreground) !important;
+    --tw-prose-counters: var(--muted-foreground) !important;
+    --tw-prose-bullets: var(--muted-foreground) !important;
+    --tw-prose-hr: var(--border) !important;
+    --tw-prose-quotes: var(--foreground) !important;
+    --tw-prose-quote-borders: var(--border) !important;
+    --tw-prose-captions: var(--muted-foreground) !important;
+    --tw-prose-code: var(--foreground) !important;
+    --tw-prose-pre-code: var(--foreground) !important;
+    --tw-prose-pre-bg: var(--muted) !important;
+    --tw-prose-th-borders: var(--border) !important;
+    --tw-prose-td-borders: var(--border) !important;
+  }
+
+  /* Tighten Markdown Spacing */
+  .prose-m3 p,
+  .prose-m3 ul,
+  .prose-m3 ol,
+  .prose-m3 pre {
+    margin-top: 0.75em !important;
+    margin-bottom: 0.75em !important;
+    line-height: 1.6 !important;
+  }
+
+  .prose-m3 li {
+    margin-top: 0.25em !important;
+    margin-bottom: 0.25em !important;
+  }
+
+  .prose-m3 li > p {
+    margin-top: 0.25em !important;
+    margin-bottom: 0.25em !important;
+  }
+
+  .prose-m3 h1,
+  .prose-m3 h2,
+  .prose-m3 h3,
+  .prose-m3 h4 {
+    margin-top: 1.5em !important;
+    margin-bottom: 0.5em !important;
+    line-height: 1.3 !important;
+  }
+
+  .prose-m3 > :first-child {
+    margin-top: 0 !important;
+  }
+
+  .prose-m3 > :last-child {
+    margin-bottom: 0 !important;
+  }
 }
