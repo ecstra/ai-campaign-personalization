@@ -19,6 +19,7 @@ const badgeVariants = cva(
         ghost:
           "bg-muted/50 text-muted-foreground",
         link: "text-primary underline-offset-4",
+        custom: "",
       },
     },
     defaultVariants: {
@@ -40,7 +41,7 @@ function Badge({
     <Comp
       data-slot="badge"
       data-variant={variant}
-      className={cn(badgeVariants({ variant }), className)}
+      className={cn(badgeVariants({ variant }), className, "leading-none")}
       {...props}
     />
   )

@@ -5,7 +5,7 @@ from contextlib import contextmanager
 from typing import Any, Generator
 
 import psycopg2
-from psycopg2 import pool
+from psycopg2 import pool, extensions
 from psycopg2.extras import RealDictCursor
 
 logger = logging.getLogger(__name__)
@@ -29,7 +29,12 @@ class DatabaseEngine:
         if not db_uri:
             raise ValueError("DATABASE_URI environment variable is not set")
 
-        cls._pg_pool = pool.ThreadedConnectionPool(_POOL_MIN, _POOL_MAX, db_uri)
+        dsn = extensions.parse_dsn(db_uri)
+        dsn["keepalives"] = "1"
+        dsn["keepalives_idle"] = "60"
+        dsn["keepalives_interval"] = "10"
+        dsn["keepalives_count"] = "5"
+        cls._pg_pool = pool.ThreadedConnectionPool(_POOL_MIN, _POOL_MAX, **dsn)
 
     @classmethod
     def close_pool(cls) -> None:
@@ -43,24 +48,54 @@ class DatabaseEngine:
         cls._pg_pool = None
 
     @classmethod
+    def _validate_conn(cls, conn) -> bool:
+        """Check if a pool connection is still alive."""
+        try:
+            with conn.cursor() as cur:
+                cur.execute("SELECT 1")
+            return True
+        except Exception:
+            return False
+
+    @classmethod
     @contextmanager
     def get_connection(cls) -> Generator[Any, None, None]:
         """
         Context manager for database connections using the pool.
-        Connections are returned to the pool after use, not closed.
+        Validates connections on checkout and discards dead ones.
+        Healthy connections are returned to the pool; dead ones are closed permanently.
         """
         if cls._pg_pool is None:
             raise RuntimeError("Connection pool not initialized. Call init_pool() first.")
 
         conn = None
+        ok = False
+        for attempt in range(3):
+            try:
+                conn = cls._pg_pool.getconn()
+                if not cls._validate_conn(conn):
+                    logger.warning("Pool connection is dead; discarding and retrying (attempt %d)", attempt + 1)
+                    cls._pg_pool.putconn(conn, close=True)
+                    conn = None
+                    continue
+                break
+            except Exception:
+                if conn:
+                    cls._pg_pool.putconn(conn, close=True)
+                    conn = None
+                if attempt == 2:
+                    raise
+        else:
+            raise RuntimeError("Could not obtain a healthy database connection after 3 attempts")
+
         try:
-            conn = cls._pg_pool.getconn()
             yield conn
-        except psycopg2.Error:
+            ok = True
+        except Exception:
             raise
         finally:
             if conn:
-                cls._pg_pool.putconn(conn)
+                cls._pg_pool.putconn(conn, close=not ok)
 
     @classmethod
     @contextmanager
@@ -79,7 +114,10 @@ class DatabaseEngine:
                 if commit:
                     conn.commit()
             except Exception:
-                conn.rollback()
+                try:
+                    conn.rollback()
+                except Exception:
+                    logger.debug("Rollback failed — connection already closed")
                 raise
             finally:
                 cur.close()

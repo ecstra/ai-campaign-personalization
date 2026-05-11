@@ -44,7 +44,7 @@ export default function CampaignDetail() {
 
     // Edit state
     const [editing, setEditing] = useState(false)
-    const [editForm, setEditForm] = useState({ name: "", sender_name: "", goal: "", follow_up_delay_minutes: 0, max_follow_ups: 0, scheduled_start_at: "" })
+    const [editForm, setEditForm] = useState({ name: "", sender_name: "", goal: "", follow_up_delay_minutes: 0, max_follow_ups: 0 })
 
     // Leads table state
     const [searchQuery, setSearchQuery] = useState("")
@@ -97,7 +97,6 @@ export default function CampaignDetail() {
         setEditForm({
             name: campaign.name, sender_name: campaign.sender_name, goal: campaign.goal || "",
             follow_up_delay_minutes: campaign.follow_up_delay_minutes, max_follow_ups: campaign.max_follow_ups,
-            scheduled_start_at: "",
         })
         setEditing(true)
     }
@@ -171,9 +170,9 @@ export default function CampaignDetail() {
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <span>
-                                                <Button variant={canStart ? "default" : "outline"} onClick={handleToggleStatus} disabled={toggling || (!canStart && !canStop)} className="gap-1.5 rounded-full h-10 px-5 shadow-sm text-[14px] inline-flex items-center">
-                                                    <span className="material-symbols-rounded text-[18px]">{canStop ? "pause" : "play_arrow"}</span>
-                                                    <span>{canStop ? (toggling ? "Pausing..." : "Pause") : (toggling ? "Starting..." : "Start")}</span>
+                                                <Button variant={canStart ? "default" : "outline"} onClick={handleToggleStatus} disabled={toggling || (!canStart && !canStop)} className="gap-1 rounded-full h-10 px-5 shadow-sm text-[14px]">
+                                                    <span className="material-symbols-rounded text-[18px] -ml-0.5">{canStop ? "pause" : "play_arrow"}</span>
+                                                    <span className="leading-none">{canStop ? (toggling ? "Pausing..." : "Pause") : (toggling ? "Starting..." : "Start")}</span>
                                                 </Button>
                                             </span>
                                         </TooltipTrigger>
@@ -189,7 +188,7 @@ export default function CampaignDetail() {
                                     <Button variant="outline" onClick={() => setShowAddLead(true)} className="gap-2 rounded-full h-10 px-5 shadow-sm text-[14px]"><span className="material-symbols-rounded text-[18px]">person_add</span> Add Lead</Button>
                                 </>
                             )}
-                            <Button variant="ghost" size="icon" onClick={() => setShowDelete(true)} className="text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full h-10 w-10"><span className="material-symbols-rounded text-[20px]">delete</span></Button>
+                            <Button variant="ghost" size="icon" onClick={() => setShowDelete(true)} className="text-muted-foreground hover:text-destructive-hover-foreground hover:bg-destructive-hover rounded-full h-10 w-10"><span className="material-symbols-rounded text-[20px]">delete</span></Button>
                         </div>
                     )}
                 </div>
@@ -198,7 +197,7 @@ export default function CampaignDetail() {
 
                 {/* ── Rate-limit banner ───────────────────────────────── */}
                 {!loading && isRateLimited && stats?.rate_limit_resets_at && (
-                    <Alert variant="destructive" className="rounded-[24px] bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300 border-none p-6">
+                    <Alert variant="destructive" className="rounded-lg bg-destructive-alert text-destructive-alert-foreground border-none p-6">
                         <span className="material-symbols-rounded text-[20px] mr-3">warning</span>
                         <AlertTitle className="text-[15px] font-semibold">Sending paused — hourly quota reached</AlertTitle>
                         <AlertDescription className="text-[13px]">
@@ -208,11 +207,12 @@ export default function CampaignDetail() {
                     </Alert>
                 )}
 
-                {/* ── Goal (no card, just text) ───────────────────────── */}
+                {/* ── Goal ────────────────────────────────────────────── */}
                 {!loading && !editing && campaign?.goal && (
-                    <div>
-                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1">Goal</p>
-                        <p className="text-[13px] leading-relaxed text-foreground/80">{campaign.goal}</p>
+                    <div className="bg-card border rounded-lg p-6 space-y-3 shadow-sm">
+                        <h2 className="text-[15px] font-semibold">Campaign goal</h2>
+                        <div className="border-t" />
+                        <p className="text-[14px] leading-relaxed text-foreground/80">{campaign.goal}</p>
                     </div>
                 )}
 

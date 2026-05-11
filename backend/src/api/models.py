@@ -9,7 +9,6 @@ class CampaignCreate(BaseModel):
     goal: str = Field(min_length=1)
     follow_up_delay_minutes: int = Field(default=2880, ge=1)
     max_follow_ups: int = Field(default=3, ge=0, le=10)
-    scheduled_start_at: Optional[datetime] = None
 
 class AttachedDocument(BaseModel):
     id: str
@@ -29,7 +28,6 @@ class CampaignResponse(BaseModel):
     follow_up_delay_minutes: int
     max_follow_ups: int
     status: str
-    scheduled_start_at: Optional[datetime] = None
     documents: List[AttachedDocument] = []
     created_at: datetime
     updated_at: datetime
@@ -80,7 +78,6 @@ class CampaignUpdate(BaseModel):
     goal: Optional[str] = Field(default=None, min_length=1)
     follow_up_delay_minutes: Optional[int] = Field(default=None, ge=1)
     max_follow_ups: Optional[int] = Field(default=None, ge=0, le=10)
-    scheduled_start_at: Optional[datetime] = None
 
 class LeadUpdate(BaseModel):
     email: Optional[EmailStr] = None

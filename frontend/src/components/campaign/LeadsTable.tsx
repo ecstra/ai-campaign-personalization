@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
@@ -26,6 +26,7 @@ export default function LeadsTable({
     selectedLeads, setSelectedLeads, bulkDeleting, onBulkDelete
 }: LeadsTableProps) {
     const navigate = useNavigate()
+    const [confirmingDelete, setConfirmingDelete] = useState(false)
 
     const filteredLeads = useMemo(() => {
         if (!searchQuery.trim()) return leads
@@ -73,37 +74,53 @@ export default function LeadsTable({
             )}
 
             {selectedLeads.size > 0 && (
-                <div className="flex items-center gap-4 bg-muted/30 border rounded-full px-5 py-3 shadow-sm">
-                    <span className="text-[14px] font-medium">{selectedLeads.size} selected</span>
-                    <Button variant="destructive" onClick={onBulkDelete} disabled={bulkDeleting} className="gap-2 h-9 text-[13px] rounded-full px-4">
-                        <span className="material-symbols-rounded text-[18px]">delete</span>{bulkDeleting ? "Deleting..." : "Delete"}
-                    </Button>
-                    <Button variant="ghost" onClick={() => setSelectedLeads(new Set())} className="h-9 text-[13px] rounded-full px-4">Clear</Button>
+                <div className="flex items-center gap-2 bg-muted/30 border rounded-full px-5 py-3 shadow-sm">
+                    <span className="text-[14px] font-medium leading-none">
+                        {confirmingDelete ? `Delete ${selectedLeads.size} lead(s)?` : `${selectedLeads.size} selected`}
+                    </span>
+                    {confirmingDelete ? (
+                        <>
+                            <Button variant="destructive" onClick={() => { onBulkDelete(); setConfirmingDelete(false) }} disabled={bulkDeleting} className="h-9 text-[13px] rounded-full px-4">
+                                {bulkDeleting ? "Deleting..." : "Confirm"}
+                            </Button>
+                            <Button variant="ghost" onClick={() => setConfirmingDelete(false)} className="h-9 text-[13px] rounded-full px-4">Cancel</Button>
+                        </>
+                    ) : (
+                        <>
+                            <Button variant="ghost" size="icon" onClick={() => setConfirmingDelete(true)} className="h-9 w-9 rounded-full text-muted-foreground hover:text-destructive-hover-foreground hover:bg-destructive-hover">
+                                <span className="material-symbols-rounded text-[18px]">delete</span>
+                            </Button>
+                            <Button variant="ghost" onClick={() => setSelectedLeads(new Set())} className="h-9 text-[13px] rounded-full px-4">Clear</Button>
+                        </>
+                    )}
                 </div>
             )}
 
             {loading ? (
-                <Skeleton className="h-48 rounded-[24px]" />
+                <Skeleton className="h-48 rounded-lg" />
             ) : filteredLeads.length === 0 ? (
-                <div className="text-center py-12 border border-dashed rounded-[24px]">
+                <div className="text-center py-12 border border-dashed rounded-lg">
                     <p className="text-muted-foreground text-[13px]">
                         {leads.length === 0 ? "No leads yet. Add leads manually or import from CSV." : "No leads match your search."}
                     </p>
                 </div>
             ) : (
-                <div className="border rounded-[24px] overflow-hidden max-h-[50vh] shadow-sm bg-card">
-                    <Table>
-                        <TableHeader className="sticky top-0 bg-muted/60 backdrop-blur-md z-10">
+                <div className="border rounded-lg overflow-y-auto max-h-[50vh] shadow-sm bg-card">
+                    <Table containerClassName="rounded-lg">
+                        <TableHeader className="bg-muted">
                             <TableRow>
                                 <TableHead className="w-10">
-                                    <label className="flex items-center justify-center cursor-pointer">
+                                    <label className="flex items-center justify-center cursor-pointer" onClick={e => e.stopPropagation()}>
                                         <input 
                                             type="checkbox" 
                                             checked={allFilteredSelected} 
                                             onChange={toggleSelectAll} 
                                             aria-label={allFilteredSelected ? "Deselect all visible leads" : "Select all visible leads"} 
-                                            className="h-[18px] w-[18px] rounded-[4px] border-[2px] border-muted-foreground bg-background accent-primary cursor-pointer transition-colors" 
+                                            className="sr-only" 
                                         />
+                                        <span className={`h-[18px] w-[18px] rounded-[5px] border-2 flex items-center justify-center transition-colors ${allFilteredSelected ? 'bg-primary border-primary' : 'border-muted-foreground'}`}>
+                                            {allFilteredSelected && <span className="material-symbols-rounded !text-[12px] leading-none text-primary-foreground">check</span>}
+                                        </span>
                                     </label>
                                 </TableHead>
                                 <TableHead className="text-[13px] font-semibold py-4">Name</TableHead>
@@ -119,13 +136,16 @@ export default function LeadsTable({
                                 return (
                                     <TableRow key={lead.id} tabIndex={0} role="button" className="cursor-pointer group hover:bg-muted/60" onClick={() => navigate(`/campaigns/${campaignId}/leads/${lead.id}`)} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigate(`/campaigns/${campaignId}/leads/${lead.id}`) } }}>
                                         <TableCell onClick={e => e.stopPropagation()}>
-                                            <label className="flex items-center justify-center cursor-pointer" onClick={e => e.stopPropagation()}>
+                                            <label className="flex items-center justify-center cursor-pointer">
                                                 <input 
                                                     type="checkbox" 
                                                     checked={selectedLeads.has(lead.id)} 
                                                     onChange={() => toggleSelectLead(lead.id)} 
-                                                    className="h-[18px] w-[18px] rounded-[4px] border-[2px] border-muted-foreground bg-background accent-primary cursor-pointer transition-colors" 
+                                                    className="sr-only" 
                                                 />
+                                                <span className={`h-[18px] w-[18px] rounded-[5px] border-2 flex items-center justify-center transition-colors ${selectedLeads.has(lead.id) ? 'bg-primary border-primary' : 'border-muted-foreground'}`}>
+                                                    {selectedLeads.has(lead.id) && <span className="material-symbols-rounded !text-[12px] leading-none text-primary-foreground">check</span>}
+                                                </span>
                                             </label>
                                         </TableCell>
                                         <TableCell className="py-4">

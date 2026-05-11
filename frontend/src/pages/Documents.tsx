@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
+import ConfirmDialog from "@/components/ConfirmDialog"
 
 
 type DocumentSummary = {
@@ -59,13 +60,16 @@ export default function Documents() {
     const [isDragging, setIsDragging] = useState(false)
     const [uploads, setUploads] = useState<UploadTask[]>([])
     const [searchQuery, setSearchQuery] = useState("")
+    const [deleteTarget, setDeleteTarget] = useState<DocumentSummary | null>(null)
+    const [deleting, setDeleting] = useState(false)
 
     const fileInputRef = useRef<HTMLInputElement>(null)
     const pollingIntervals = useRef<Record<string, ReturnType<typeof setInterval>>>({})
+    const fetchedTasks = useRef<Set<string>>(new Set())
 
-    const fetchDocs = async () => {
+    const fetchDocs = async (showLoading = true) => {
         try {
-            setLoading(true)
+            if (showLoading) setLoading(true)
             const data = await get<DocumentSummary[]>("/documents")
             setDocs(data)
             setError(null)
@@ -98,7 +102,10 @@ export default function Documents() {
                 if (status.status === "success") {
                     clearInterval(interval)
                     delete pollingIntervals.current[localId]
-                    fetchDocs()
+                    if (!fetchedTasks.current.has(taskId)) {
+                        fetchedTasks.current.add(taskId)
+                        fetchDocs(false)
+                    }
                     setTimeout(() => {
                         setUploads(prev => prev.filter(u => u.id !== localId))
                     }, 3000)
@@ -273,13 +280,21 @@ export default function Documents() {
     const handleDelete = async (doc: DocumentSummary, e: React.MouseEvent) => {
         e.preventDefault()
         e.stopPropagation()
-        if (!confirm(`Delete "${doc.name}"? Any campaign using it will lose the attachment.`)) return
+        setDeleteTarget(doc)
+    }
+
+    const confirmDelete = async () => {
+        if (!deleteTarget) return
+        setDeleting(true)
         try {
-            await del(`/documents/${doc.id}`)
+            await del(`/documents/${deleteTarget.id}`)
             toast.success("Document deleted")
+            setDeleteTarget(null)
             await fetchDocs()
         } catch (err) {
             toast.error(parseApiError(err))
+        } finally {
+            setDeleting(false)
         }
     }
 
@@ -313,7 +328,7 @@ export default function Documents() {
                     onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
                     onDragLeave={() => setIsDragging(false)}
                     onDrop={handleDrop}
-                    className={`block border-2 border-dashed rounded-[24px] p-8 text-center transition-colors cursor-pointer ${
+                    className={`block border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${
                         isDragging
                             ? "border-primary bg-primary/5"
                             : "border-muted-foreground/25 hover:border-muted-foreground/50"
@@ -336,7 +351,7 @@ export default function Documents() {
                 />
 
                 {error && (
-                    <Alert variant="destructive" className="rounded-[24px] bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300 border-none p-5">
+                    <Alert variant="destructive" className="rounded-lg bg-destructive-alert text-destructive-alert-foreground border-none p-5">
                         <span className="material-symbols-rounded text-[20px] mr-3">error</span>
                         <AlertDescription className="text-[14px]">{error}</AlertDescription>
                     </Alert>
@@ -350,12 +365,12 @@ export default function Documents() {
                         </p>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {uploads.map(task => (
-                                <div key={task.id} className="bg-card border rounded-[24px] p-5 space-y-3 shadow-sm relative overflow-hidden">
+                                <div key={task.id} className="bg-card border rounded-lg p-5 space-y-3 shadow-sm relative overflow-hidden">
                                     <div className="flex items-start justify-between gap-3 relative z-10">
                                         <div className="flex items-center gap-4 min-w-0">
                                             <div className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 ${
-                                                task.status === "success" ? "bg-emerald-500/10 text-emerald-600" :
-                                                task.status === "error" ? "bg-red-500/10 text-red-600" :
+                                                task.status === "success" ? "bg-success/10 text-success-foreground" :
+                                                task.status === "error" ? "bg-destructive-container-foreground/10 text-destructive-container-foreground" :
                                                 "bg-primary/10 text-primary"
                                             }`}>
                                                 {task.status === "success" ? <span className="material-symbols-rounded text-[20px]">check_circle</span> :
@@ -364,7 +379,7 @@ export default function Documents() {
                                             </div>
                                             <div className="min-w-0">
                                                 <p className="text-[13px] font-medium truncate">{task.name}</p>
-                                                <p className={`text-[11px] ${task.status === "error" ? "text-red-500" : "text-muted-foreground"}`}>
+                                                <p className={`text-[11px] ${task.status === "error" ? "text-destructive-hover-foreground" : "text-muted-foreground"}`}>
                                                     {task.status === "uploading" ? `Uploading... ${task.progress}%` :
                                                      task.status === "parsing" ? `Parsing via LLM... ${task.progress}%` :
                                                      task.status === "summarizing" ? `Summarizing... ${task.progress}%` :
@@ -385,8 +400,8 @@ export default function Documents() {
                                         value={task.progress} 
                                         className="h-1.5" 
                                         indicatorClassName={
-                                            task.status === "success" ? "bg-emerald-500" :
-                                            task.status === "error" ? "bg-red-500" :
+                                            task.status === "success" ? "bg-success" :
+                                            task.status === "error" ? "bg-destructive-container-foreground" :
                                             "bg-primary transition-all duration-500 ease-out"
                                         }
                                     />
@@ -415,10 +430,10 @@ export default function Documents() {
 
                     {loading ? (
                         <div className="space-y-3">
-                            {[1, 2, 3].map(i => <Skeleton key={i} className="h-20 w-full rounded-[24px]" />)}
+                            {[1, 2, 3].map(i => <Skeleton key={i} className="h-20 w-full rounded-lg" />)}
                         </div>
                     ) : filteredDocs.length === 0 ? (
-                        <div className="text-center py-16 border border-dashed rounded-[24px]">
+                        <div className="text-center py-16 border border-dashed rounded-lg">
                             <span className="material-symbols-rounded text-[40px] mx-auto mb-3 text-muted-foreground/40">description</span>
                             <p className="text-[14px] text-muted-foreground">
                                 {docs.length === 0 ? "No documents yet" : "No documents match your search"}
@@ -430,7 +445,7 @@ export default function Documents() {
                                 <Link
                                     key={doc.id}
                                     to={`/documents/${doc.id}`}
-                                    className="group bg-card border rounded-[24px] p-5 flex items-center gap-4 transition-colors duration-150 hover:shadow-sm hover:border-primary/30"
+                                    className="group bg-card border rounded-lg p-5 flex items-center gap-4 transition-colors duration-150 hover:shadow-sm hover:border-primary/30"
                                 >
                                     <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                                         <span className="material-symbols-rounded text-primary text-[20px]">description</span>
@@ -448,7 +463,7 @@ export default function Documents() {
                                         size="icon"
                                         variant="ghost"
                                         onClick={(e) => handleDelete(doc, e)}
-                                        className="h-10 w-10 rounded-full text-muted-foreground hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20"
+                                        className="h-10 w-10 rounded-full text-muted-foreground hover:bg-destructive-hover hover:text-destructive-hover-foreground"
                                         aria-label={`Delete ${doc.name}`}
                                     >
                                         <span className="material-symbols-rounded text-[20px]">delete</span>
@@ -460,6 +475,15 @@ export default function Documents() {
                 </div>
 
             </div>
+
+            <ConfirmDialog
+                open={!!deleteTarget}
+                onClose={() => !deleting && setDeleteTarget(null)}
+                onConfirm={confirmDelete}
+                title="Delete Document"
+                description={`Delete "${deleteTarget?.name}"? Any campaign using it will lose the attachment.`}
+                loading={deleting}
+            />
         </div>
     )
 }

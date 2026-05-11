@@ -10,7 +10,6 @@ interface EditFormValues {
     goal: string
     follow_up_delay_minutes: number
     max_follow_ups: number
-    scheduled_start_at: string
 }
 
 interface CampaignEditFormProps {
@@ -37,11 +36,8 @@ export default function CampaignEditForm({ editForm, setEditForm, saving, onSave
         onSave()
     }
 
-    const fieldClass = (key: keyof typeof errors) =>
-        `h-9 text-sm ${errors[key] ? "border-destructive" : ""}`
-
     return (
-        <div className="bg-card border rounded-[24px] p-6 space-y-5 shadow-sm">
+        <div className="bg-card border rounded-lg p-6 space-y-5 shadow-sm">
             <div className="flex items-center justify-between">
                 <h2 className="text-[18px] font-semibold">Edit Campaign</h2>
                 <div className="flex items-center gap-3">
@@ -55,33 +51,28 @@ export default function CampaignEditForm({ editForm, setEditForm, saving, onSave
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                    <label className="text-[13px] font-medium text-muted-foreground">Name</label>
-                    <Input value={editForm.name} onChange={e => { setEditForm({ ...editForm, name: e.target.value }); setErrors(prev => ({ ...prev, name: undefined })) }} className={`h-11 text-[14px] rounded-[24px] ${errors.name ? "border-destructive" : ""}`} />
-                    {errors.name && <p className="text-[12px] text-destructive">{errors.name}</p>}
+                    <label className="text-[13px] font-medium text-muted-foreground pl-2">Name</label>
+                    <Input value={editForm.name} onChange={e => { setEditForm({ ...editForm, name: e.target.value }); setErrors(prev => ({ ...prev, name: undefined })) }} className={`h-11 text-[14px] rounded-lg px-4 ${errors.name ? "border-destructive" : ""}`} />
+                    {errors.name && <p className="text-[12px] text-destructive pl-2">{errors.name}</p>}
                 </div>
                 <div className="space-y-1.5">
-                    <label className="text-[13px] font-medium text-muted-foreground">Sender Name</label>
-                    <Input value={editForm.sender_name} onChange={e => { setEditForm({ ...editForm, sender_name: e.target.value }); setErrors(prev => ({ ...prev, sender_name: undefined })) }} className={`h-11 text-[14px] rounded-[24px] ${errors.sender_name ? "border-destructive" : ""}`} />
-                    {errors.sender_name && <p className="text-[12px] text-destructive">{errors.sender_name}</p>}
+                    <label className="text-[13px] font-medium text-muted-foreground pl-2">Sender Name</label>
+                    <Input value={editForm.sender_name} onChange={e => { setEditForm({ ...editForm, sender_name: e.target.value }); setErrors(prev => ({ ...prev, sender_name: undefined })) }} className={`h-11 text-[14px] rounded-lg px-4 ${errors.sender_name ? "border-destructive" : ""}`} />
+                    {errors.sender_name && <p className="text-[12px] text-destructive pl-2">{errors.sender_name}</p>}
                 </div>
                 <div className="space-y-1.5">
-                    <label className="text-[13px] font-medium text-muted-foreground">Follow-up Delay (minutes)</label>
-                    <Input type="number" value={editForm.follow_up_delay_minutes} onChange={e => setEditForm({ ...editForm, follow_up_delay_minutes: parseInt(e.target.value) || 0 })} className="h-11 text-[14px] rounded-[24px]" />
+                    <label className="text-[13px] font-medium text-muted-foreground pl-2">Follow-up Delay (minutes)</label>
+                    <Input type="number" value={editForm.follow_up_delay_minutes} onChange={e => setEditForm({ ...editForm, follow_up_delay_minutes: parseInt(e.target.value) || 0 })} className="h-11 text-[14px] rounded-lg px-4 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                 </div>
                 <div className="space-y-1.5">
-                    <label className="text-[13px] font-medium text-muted-foreground">Max Follow-ups</label>
-                    <Input type="number" value={editForm.max_follow_ups} onChange={e => setEditForm({ ...editForm, max_follow_ups: parseInt(e.target.value) || 0 })} className="h-11 text-[14px] rounded-[24px]" />
+                    <label className="text-[13px] font-medium text-muted-foreground pl-2">Max Follow-ups</label>
+                    <Input type="number" value={editForm.max_follow_ups} onChange={e => setEditForm({ ...editForm, max_follow_ups: parseInt(e.target.value) || 0 })} className="h-11 text-[14px] rounded-lg px-4 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                 </div>
             </div>
             <div className="space-y-1.5">
-                <label className="text-[13px] font-medium text-muted-foreground">Goal</label>
-                <Textarea value={editForm.goal} onChange={e => { setEditForm({ ...editForm, goal: e.target.value }); setErrors(prev => ({ ...prev, goal: undefined })) }} className={`text-[14px] p-4 rounded-[20px] min-h-[100px] resize-none ${errors.goal ? "border-destructive" : ""}`} />
-                {errors.goal && <p className="text-[12px] text-destructive">{errors.goal}</p>}
-            </div>
-            <div className="space-y-1.5">
-                <label className="text-[13px] font-medium text-muted-foreground">Scheduled Start (optional)</label>
-                <Input type="datetime-local" value={editForm.scheduled_start_at} onChange={e => setEditForm({ ...editForm, scheduled_start_at: e.target.value })} className="h-11 text-[14px] rounded-[24px]" />
-                <p className="text-[12px] text-muted-foreground">Leave empty to start manually</p>
+                <label className="text-[13px] font-medium text-muted-foreground pl-2">Goal</label>
+                <Textarea value={editForm.goal} onChange={e => { setEditForm({ ...editForm, goal: e.target.value }); setErrors(prev => ({ ...prev, goal: undefined })) }} className={`text-[14px] p-4 rounded-sm min-h-[100px] resize-none ${errors.goal ? "border-destructive" : ""}`} />
+                {errors.goal && <p className="text-[12px] text-destructive pl-2">{errors.goal}</p>}
             </div>
         </div>
     )

@@ -246,7 +246,7 @@ export default function ImportCSVModal({ open, onClose, onSuccess, campaignId }:
 
                 <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
                     {/* Requirements hint */}
-                    <div className="text-sm bg-muted p-4 rounded-[20px] space-y-2 shrink-0">
+                    <div className="text-sm bg-muted p-4 rounded-sm space-y-2 shrink-0">
                         <div className="flex items-start justify-between gap-3">
                             <div className="space-y-2 min-w-0">
                                 <div>
@@ -280,7 +280,7 @@ export default function ImportCSVModal({ open, onClose, onSuccess, campaignId }:
                     </div>
 
                     <div
-                        className={`border-2 border-dashed rounded-[20px] p-6 text-center transition-colors shrink-0 ${isDragging
+                        className={`border-2 border-dashed rounded-sm p-6 text-center transition-colors shrink-0 ${isDragging
                             ? "border-primary bg-primary/5"
                             : "border-muted-foreground/25 hover:border-muted-foreground/50"
                             }`}
@@ -305,7 +305,7 @@ export default function ImportCSVModal({ open, onClose, onSuccess, campaignId }:
 
                     {/* Missing headers warning */}
                     {missingHeaders.length > 0 && (
-                        <div className="flex items-start gap-2 text-destructive bg-destructive/10 p-4 rounded-[20px] shrink-0">
+                        <div className="flex items-start gap-2 text-destructive bg-destructive/10 p-4 rounded-sm shrink-0">
                             <span className="material-symbols-rounded text-[20px]">error</span>
                             <div className="text-[14px]">
                                 <p className="font-medium">Missing required columns:</p>
@@ -339,7 +339,7 @@ export default function ImportCSVModal({ open, onClose, onSuccess, campaignId }:
                                             <TableRow key={i} className={!lead.valid ? "bg-destructive/5" : ""}>
                                                 <TableCell>
                                                     {lead.valid ? (
-                                                        <span className="material-symbols-rounded text-[18px] text-green-600">check_circle</span>
+                                                        <span className="material-symbols-rounded text-[18px] text-success-foreground">check_circle</span>
                                                     ) : (
                                                         <span className="material-symbols-rounded text-[18px] text-destructive">error</span>
                                                     )}
@@ -371,7 +371,7 @@ export default function ImportCSVModal({ open, onClose, onSuccess, campaignId }:
                     {/* Summary */}
                     {parsedLeads.length > 0 && (
                         <div className="flex gap-4 text-sm">
-                            <span className="text-green-600">{validCount} valid</span>
+                            <span className="text-success-foreground">{validCount} valid</span>
                             {invalidCount > 0 && (
                                 <span className="text-destructive">{invalidCount} invalid (will be skipped)</span>
                             )}

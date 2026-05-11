@@ -8,6 +8,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import ErrorPage from "./ErrorPage"
+import ConfirmDialog from "@/components/ConfirmDialog"
 
 type DocumentDetail = {
     id: string
@@ -28,6 +29,8 @@ export default function DocumentDetail() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [copied, setCopied] = useState(false)
+    const [showDelete, setShowDelete] = useState(false)
+    const [deleting, setDeleting] = useState(false)
 
     useBreadcrumbs(
         doc
@@ -66,15 +69,22 @@ export default function DocumentDetail() {
         }
     }
 
-    const handleDelete = async () => {
+    const handleDelete = () => {
         if (!doc) return
-        if (!confirm(`Delete "${doc.name}"? Any campaign using it will lose the attachment.`)) return
+        setShowDelete(true)
+    }
+
+    const confirmDelete = async () => {
+        if (!doc) return
+        setDeleting(true)
         try {
             await del(`/documents/${doc.id}`)
             toast.success("Document deleted")
             navigate("/documents")
         } catch (err) {
             toast.error(parseApiError(err))
+        } finally {
+            setDeleting(false)
         }
     }
 
@@ -120,7 +130,7 @@ export default function DocumentDetail() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={handleDelete}
-                                className="rounded-full h-10 w-10 text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                className="rounded-full h-10 w-10 text-muted-foreground hover:text-destructive-hover-foreground hover:bg-destructive-hover"
                             >
                                 <span className="material-symbols-rounded text-[20px]">delete</span>
                             </Button>
@@ -130,7 +140,7 @@ export default function DocumentDetail() {
 
                 {/* Context note */}
                 {doc && (
-                    <p className="text-[13px] text-muted-foreground leading-relaxed bg-muted/30 border rounded-[24px] px-5 py-4">
+                    <p className="text-[13px] text-muted-foreground leading-relaxed bg-muted/30 border rounded-lg px-5 py-4">
                         This is the brief the LLM consults when personalizing every email for campaigns that attach this document. The original file was discarded after parsing — to update the brief, re-upload the source document.
                     </p>
                 )}
@@ -142,12 +152,21 @@ export default function DocumentDetail() {
                     </div>
                 ) : doc ? (
                     <article
-                        className="bg-card border rounded-[24px] p-8 text-[14px] leading-relaxed whitespace-pre-wrap font-mono shadow-sm"
+                        className="bg-card border rounded-lg p-8 text-[14px] leading-relaxed whitespace-pre-wrap font-mono shadow-sm"
                     >
                         {doc.brief}
                     </article>
                 ) : null}
             </div>
+
+            <ConfirmDialog
+                open={showDelete}
+                onClose={() => !deleting && setShowDelete(false)}
+                onConfirm={confirmDelete}
+                title="Delete Document"
+                description={`Delete "${doc?.name}"? Any campaign using it will lose the attachment.`}
+                loading={deleting}
+            />
         </div>
     )
 }

@@ -189,9 +189,6 @@ async def update_campaign(
         if update.max_follow_ups is not None:
             updates.append("max_follow_ups = %s")
             params.append(update.max_follow_ups)
-        if update.scheduled_start_at is not None:
-            updates.append("scheduled_start_at = %s")
-            params.append(update.scheduled_start_at if update.scheduled_start_at else None)
 
         if not updates:
             raise HTTPException(status_code=400, detail="No fields to update")

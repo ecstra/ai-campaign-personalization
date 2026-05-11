@@ -11,7 +11,7 @@ interface CampaignOverviewProps {
 
 export default function CampaignOverview({ campaign, stats, leads, loading }: CampaignOverviewProps) {
     if (loading) {
-        return <Skeleton className="h-40 rounded-[24px]" />
+        return <Skeleton className="h-40 rounded-lg" />
     }
 
     if (!campaign || !stats) {
@@ -28,7 +28,7 @@ export default function CampaignOverview({ campaign, stats, leads, loading }: Ca
     const notesPercent = leads.length > 0 ? Math.round((leadsWithNotes / leads.length) * 100) : 0
 
     return (
-        <div className="bg-card border rounded-[24px] overflow-hidden shadow-sm">
+        <div className="bg-card border rounded-lg overflow-hidden shadow-sm">
             {/* Stat row: single container, divided columns */}
             <div className="grid grid-cols-3 sm:grid-cols-6 divide-x">
                 {[
@@ -54,7 +54,7 @@ export default function CampaignOverview({ campaign, stats, leads, loading }: Ca
                         <span>{hasLeads ? `${campaignProgress}%` : "No leads"}</span>
                     </div>
                     <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                        <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${campaignProgress}%` }} />
+                        <div className="h-full rounded-full bg-success transition-all" style={{ width: `${campaignProgress}%` }} />
                     </div>
                 </div>
                 <div className="space-y-1">
@@ -63,7 +63,7 @@ export default function CampaignOverview({ campaign, stats, leads, loading }: Ca
                         <span>{isCompleted ? "Done" : `${stats.emails_in_window}/${stats.rate_limit}`}</span>
                     </div>
                     <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                        <div className={`h-full rounded-full transition-all ${isCompleted ? "bg-muted-foreground/30" : isRateLimited ? "bg-red-500" : rateLimitProgress > 80 ? "bg-yellow-500" : "bg-emerald-500"}`} style={{ width: `${isCompleted ? 100 : rateLimitProgress}%` }} />
+                        <div className={`h-full rounded-full transition-all ${isCompleted ? "bg-muted-foreground/30" : isRateLimited ? "bg-destructive-alert-foreground" : rateLimitProgress > 80 ? "bg-warning" : "bg-success"}`} style={{ width: `${isCompleted ? 100 : rateLimitProgress}%` }} />
                     </div>
                 </div>
             </div>
@@ -73,9 +73,9 @@ export default function CampaignOverview({ campaign, stats, leads, loading }: Ca
                 <div className="border-t px-4 py-2 flex items-center gap-3 text-[11px]">
                     <span className="text-muted-foreground">{leadsWithNotes}/{leads.length} leads have notes</span>
                     <div className="h-1 bg-muted rounded-full flex-1 max-w-24 overflow-hidden">
-                        <div className={`h-full rounded-full ${notesPercent >= 50 ? "bg-emerald-500" : "bg-yellow-500"}`} style={{ width: `${notesPercent}%` }} />
+                        <div className={`h-full rounded-full ${notesPercent >= 50 ? "bg-success" : "bg-warning"}`} style={{ width: `${notesPercent}%` }} />
                     </div>
-                    {notesPercent < 50 && <span className="text-yellow-600">Add notes for better personalization</span>}
+                    {notesPercent < 50 && <span className="text-warning-foreground">Add notes for better personalization</span>}
                 </div>
             )}
         </div>

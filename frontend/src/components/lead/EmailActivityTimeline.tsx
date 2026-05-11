@@ -37,14 +37,14 @@ export default function EmailActivityTimeline({
     if (loading) {
         return (
             <div className="space-y-3">
-                {[1, 2, 3].map(i => <Skeleton key={i} className="h-20 rounded-[24px]" />)}
+                {[1, 2, 3].map(i => <Skeleton key={i} className="h-20 rounded-lg" />)}
             </div>
         )
     }
 
     if (activity.length === 0) {
         return (
-            <div className="text-center py-12 border border-dashed rounded-[24px]">
+            <div className="text-center py-12 border border-dashed rounded-lg">
                 <p className="text-[14px] text-muted-foreground">No emails sent yet</p>
             </div>
         )
@@ -58,25 +58,25 @@ export default function EmailActivityTimeline({
                 {activity.map(email => {
                     const isExpanded = expandedIds.has(email.id)
                     const s = getEmailStatus(email.status)
-                    const dotColor = email.status === "sent" ? "bg-emerald-500"
-                        : email.status === "received" ? "bg-blue-500"
-                        : email.status === "failed" ? "bg-red-500"
-                        : "bg-yellow-500"
+                    const dotColor = email.status === "sent" ? "bg-success"
+                        : email.status === "received" ? "bg-info"
+                        : email.status === "failed" ? "bg-destructive-container-foreground"
+                        : "bg-warning"
 
                     return (
                         <div key={email.id} className="relative">
                             <div className={`absolute -left-6 top-4 w-3.5 h-3.5 rounded-full border-2 border-background ${dotColor} ring-2 ring-background`} />
 
                             <div
-                                className={`bg-card border rounded-[24px] p-5 cursor-pointer transition-colors hover:bg-accent/50 ${isExpanded ? "bg-accent/30" : ""}`}
+                                className={`bg-card border rounded-lg p-5 cursor-pointer transition-colors hover:bg-accent/50 ${isExpanded ? "bg-accent/30" : ""}`}
                                 onClick={() => toggleExpand(email.id)}
                             >
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="flex items-center gap-3 min-w-0">
-                                        {email.status === "sent" ? <span className="material-symbols-rounded text-emerald-600 text-[18px] flex-shrink-0">send</span>
-                                            : email.status === "received" ? <span className="material-symbols-rounded text-blue-600 text-[18px] flex-shrink-0">reply</span>
-                                            : email.status === "failed" ? <span className="material-symbols-rounded text-red-600 text-[18px] flex-shrink-0">error</span>
-                                            : <span className="material-symbols-rounded text-yellow-600 text-[18px] flex-shrink-0">schedule</span>}
+                                        {email.status === "sent" ? <span className="material-symbols-rounded text-success-foreground flex-shrink-0" style={{ fontSize: '18px', transform: 'rotate(-45deg) translateX(8%)' }}>send</span>
+                                            : email.status === "received" ? <span className="material-symbols-rounded text-info-foreground text-[18px] flex-shrink-0">reply</span>
+                                            : email.status === "failed" ? <span className="material-symbols-rounded text-destructive-container-foreground text-[18px] flex-shrink-0">error</span>
+                                            : <span className="material-symbols-rounded text-warning-foreground text-[18px] flex-shrink-0">schedule</span>}
                                         <span className="font-semibold text-[15px]">
                                             {email.status === "received" || email.sequence_number <= 0
                                                 ? "Reply Received"
