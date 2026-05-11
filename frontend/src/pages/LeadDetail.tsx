@@ -13,18 +13,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Textarea } from "@/components/ui/textarea"
-import {
-    Building2,
-    Briefcase,
-    CheckCircle2,
-    AlertCircle,
-    Trash2,
-    Hash,
-    CalendarClock,
-    Pencil,
-    Check,
-    X
-} from "lucide-react"
+
 import DeleteLeadModal from "@/components/DeleteLeadModal"
 
 function formatDate(dateString: string | null) {
@@ -153,9 +142,9 @@ export default function LeadDetail() {
         return (
             <div className="p-6">
                 <div className="w-full">
-                    <Alert variant="destructive">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>{error}</AlertDescription>
+                    <Alert variant="destructive" className="rounded-[24px] bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300 border-none p-5">
+                        <span className="material-symbols-rounded text-[20px] mr-3">error</span>
+                        <AlertDescription className="text-[14px]">{error}</AlertDescription>
                     </Alert>
                 </div>
             </div>
@@ -184,7 +173,7 @@ export default function LeadDetail() {
                                         {lead.first_name} {lead.last_name}
                                     </h1>
                                     {leadStatus && (
-                                        <Badge variant={leadStatus.variant} className={leadStatus.className}>
+                                        <Badge variant={leadStatus.variant} className={`${leadStatus.className} text-[12px] px-3 py-1 rounded-full`}>
                                             {leadStatus.label}
                                         </Badge>
                                     )}
@@ -196,14 +185,14 @@ export default function LeadDetail() {
                         )}
                     </div>
                     {!loading && lead && (
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-2">
                             {!isTerminal && (
-                                <Button variant="outline" size="sm" onClick={startEditingLead} className="gap-1.5">
-                                    <Pencil size={13} /> Edit
+                                <Button variant="outline" onClick={startEditingLead} className="gap-2 rounded-full h-10 px-5 shadow-sm text-[14px]">
+                                    <span className="material-symbols-rounded text-[18px]">edit</span> Edit
                                 </Button>
                             )}
-                            <Button variant="ghost" size="icon" onClick={() => setShowDeleteModal(true)} className="text-muted-foreground hover:text-destructive">
-                                <Trash2 size={14} />
+                            <Button variant="ghost" size="icon" onClick={() => setShowDeleteModal(true)} className="text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full h-10 w-10">
+                                <span className="material-symbols-rounded text-[20px]">delete</span>
                             </Button>
                         </div>
                     )}
@@ -211,38 +200,38 @@ export default function LeadDetail() {
 
                 {/* ── Edit Panel ────────────────────────────────────── */}
                 {editingLead && (
-                    <div className="bg-card border rounded-xl p-5 space-y-4">
+                    <div className="bg-card border rounded-[24px] p-6 space-y-5 shadow-sm">
                         <div className="flex items-center justify-between">
-                            <h2 className="text-sm font-semibold">Edit Lead</h2>
-                            <div className="flex items-center gap-2">
-                                <Button size="sm" onClick={handleSaveLead} disabled={savingLead} className="gap-1.5">
-                                    <Check size={14} /> {savingLead ? "Saving..." : "Save"}
+                            <h2 className="text-[18px] font-semibold">Edit Lead</h2>
+                            <div className="flex items-center gap-3">
+                                <Button onClick={handleSaveLead} disabled={savingLead} className="gap-2 rounded-full h-10 px-5 shadow-sm text-[14px]">
+                                    <span className="material-symbols-rounded text-[18px]">check</span> {savingLead ? "Saving..." : "Save"}
                                 </Button>
-                                <Button size="sm" variant="ghost" onClick={() => setEditingLead(false)} className="gap-1.5">
-                                    <X size={14} /> Cancel
+                                <Button variant="ghost" onClick={() => setEditingLead(false)} className="gap-2 rounded-full h-10 px-5 text-[14px]">
+                                    <span className="material-symbols-rounded text-[18px]">close</span> Cancel
                                 </Button>
                             </div>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-1.5">
-                                <label className="text-[12px] font-medium text-muted-foreground">First Name</label>
-                                <Input value={leadForm.first_name} onChange={e => setLeadForm({ ...leadForm, first_name: e.target.value })} className="h-9 text-sm" />
+                                <label className="text-[13px] font-medium text-muted-foreground">First Name</label>
+                                <Input value={leadForm.first_name} onChange={e => setLeadForm({ ...leadForm, first_name: e.target.value })} className="h-11 text-[14px] rounded-[24px]" />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-[12px] font-medium text-muted-foreground">Last Name</label>
-                                <Input value={leadForm.last_name} onChange={e => setLeadForm({ ...leadForm, last_name: e.target.value })} className="h-9 text-sm" />
+                                <label className="text-[13px] font-medium text-muted-foreground">Last Name</label>
+                                <Input value={leadForm.last_name} onChange={e => setLeadForm({ ...leadForm, last_name: e.target.value })} className="h-11 text-[14px] rounded-[24px]" />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-[12px] font-medium text-muted-foreground">Email</label>
-                                <Input value={leadForm.email} onChange={e => setLeadForm({ ...leadForm, email: e.target.value })} className="h-9 text-sm" />
+                                <label className="text-[13px] font-medium text-muted-foreground">Email</label>
+                                <Input value={leadForm.email} onChange={e => setLeadForm({ ...leadForm, email: e.target.value })} className="h-11 text-[14px] rounded-[24px]" />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-[12px] font-medium text-muted-foreground">Company</label>
-                                <Input value={leadForm.company} onChange={e => setLeadForm({ ...leadForm, company: e.target.value })} className="h-9 text-sm" />
+                                <label className="text-[13px] font-medium text-muted-foreground">Company</label>
+                                <Input value={leadForm.company} onChange={e => setLeadForm({ ...leadForm, company: e.target.value })} className="h-11 text-[14px] rounded-[24px]" />
                             </div>
                             <div className="sm:col-span-2 space-y-1.5">
-                                <label className="text-[12px] font-medium text-muted-foreground">Title</label>
-                                <Input value={leadForm.title} onChange={e => setLeadForm({ ...leadForm, title: e.target.value })} className="h-9 text-sm" />
+                                <label className="text-[13px] font-medium text-muted-foreground">Title</label>
+                                <Input value={leadForm.title} onChange={e => setLeadForm({ ...leadForm, title: e.target.value })} className="h-11 text-[14px] rounded-[24px]" />
                             </div>
                         </div>
                     </div>
@@ -250,38 +239,38 @@ export default function LeadDetail() {
 
                 {/* ── Info Grid ─────────────────────────────────────── */}
                 {loading ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-16 rounded-xl" />)}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-20 rounded-[24px]" />)}
                     </div>
                 ) : lead && (
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        <div className="bg-card border rounded-xl p-3.5">
-                            <div className="flex items-center gap-1.5 text-muted-foreground mb-1.5">
-                                <Building2 size={12} />
-                                <span className="text-[11px] font-medium uppercase tracking-wide">Company</span>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div className="bg-card border rounded-[24px] p-5 shadow-sm">
+                            <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                                <span className="material-symbols-rounded text-[16px]">domain</span>
+                                <span className="text-[12px] font-semibold uppercase tracking-wider">Company</span>
                             </div>
-                            <p className="text-[14px] font-medium truncate">{lead.company || "—"}</p>
+                            <p className="text-[15px] font-medium truncate">{lead.company || "—"}</p>
                         </div>
-                        <div className="bg-card border rounded-xl p-3.5">
-                            <div className="flex items-center gap-1.5 text-muted-foreground mb-1.5">
-                                <Briefcase size={12} />
-                                <span className="text-[11px] font-medium uppercase tracking-wide">Title</span>
+                        <div className="bg-card border rounded-[24px] p-5 shadow-sm">
+                            <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                                <span className="material-symbols-rounded text-[16px]">work</span>
+                                <span className="text-[12px] font-semibold uppercase tracking-wider">Title</span>
                             </div>
-                            <p className="text-[14px] font-medium truncate">{lead.title || "—"}</p>
+                            <p className="text-[15px] font-medium truncate">{lead.title || "—"}</p>
                         </div>
-                        <div className="bg-card border rounded-xl p-3.5">
-                            <div className="flex items-center gap-1.5 text-muted-foreground mb-1.5">
-                                <Hash size={12} />
-                                <span className="text-[11px] font-medium uppercase tracking-wide">Sequence</span>
+                        <div className="bg-card border rounded-[24px] p-5 shadow-sm">
+                            <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                                <span className="material-symbols-rounded text-[16px]">tag</span>
+                                <span className="text-[12px] font-semibold uppercase tracking-wider">Sequence</span>
                             </div>
-                            <p className="text-[14px] font-medium">{lead.current_sequence} / {lead.max_follow_ups}</p>
+                            <p className="text-[15px] font-medium">{lead.current_sequence} / {lead.max_follow_ups}</p>
                         </div>
-                        <div className="bg-card border rounded-xl p-3.5">
-                            <div className="flex items-center gap-1.5 text-muted-foreground mb-1.5">
-                                <CalendarClock size={12} />
-                                <span className="text-[11px] font-medium uppercase tracking-wide">Next Email</span>
+                        <div className="bg-card border rounded-[24px] p-5 shadow-sm">
+                            <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                                <span className="material-symbols-rounded text-[16px]">event_available</span>
+                                <span className="text-[12px] font-semibold uppercase tracking-wider">Next Email</span>
                             </div>
-                            <p className="text-[13px] font-medium">
+                            <p className="text-[14px] font-medium">
                                 {isTerminal ? "—" : formatDate(lead.next_email_at)}
                             </p>
                         </div>
@@ -290,24 +279,24 @@ export default function LeadDetail() {
 
                 {/* ── Notes ─────────────────────────────────────────── */}
                 {loading ? (
-                    <Skeleton className="h-[140px] rounded-xl" />
+                    <Skeleton className="h-[160px] rounded-[24px]" />
                 ) : lead && (
-                    <div className="bg-card border rounded-xl p-5 space-y-3">
-                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Notes</p>
+                    <div className="bg-card border rounded-[24px] p-6 space-y-4 shadow-sm">
+                        <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">Notes</p>
                         <Textarea
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
                             placeholder="Add notes about this lead..."
-                            className="min-h-[80px] text-[14px] resize-none"
+                            className="min-h-[100px] text-[14px] p-4 rounded-[20px] resize-none"
                             disabled={loading || saving}
                         />
-                        <div className="flex items-center gap-2">
-                            <Button size="sm" onClick={handleSaveNotes} disabled={saving || loading}>
+                        <div className="flex items-center gap-3">
+                            <Button onClick={handleSaveNotes} disabled={saving || loading} className="rounded-full h-10 px-5 shadow-sm text-[14px]">
                                 {saving ? "Saving..." : "Save Notes"}
                             </Button>
                             {!lead.has_replied && (
-                                <Button variant="outline" size="sm" onClick={handleMarkAsReplied} disabled={marking || loading} className="gap-1.5">
-                                    <CheckCircle2 size={13} />
+                                <Button variant="outline" onClick={handleMarkAsReplied} disabled={marking || loading} className="gap-2 rounded-full h-10 px-5 shadow-sm text-[14px]">
+                                    <span className="material-symbols-rounded text-[18px]">check_circle</span>
                                     {marking ? "Marking..." : "Mark as Replied"}
                                 </Button>
                             )}

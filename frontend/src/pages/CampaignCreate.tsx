@@ -9,9 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import {
-    Info, Mail, Timer, Target,
-} from "lucide-react"
+
 
 type FieldErrors = {
     name?: string
@@ -45,9 +43,9 @@ function SectionCard({
     children: React.ReactNode
 }) {
     return (
-        <div className="bg-card border rounded-xl p-5 space-y-4">
-            <div className="flex items-start gap-3">
-                <div className="h-7 w-7 rounded-md bg-muted flex items-center justify-center text-muted-foreground shrink-0 mt-0.5">
+        <div className="bg-card border rounded-[24px] p-6 space-y-4 shadow-sm">
+            <div className="flex items-start gap-4">
+                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0 mt-0.5">
                     {icon}
                 </div>
                 <div className="min-w-0">
@@ -192,8 +190,8 @@ export default function CampaignCreate() {
             <div className="max-w-5xl mx-auto space-y-5">
                 {/* Header */}
                 <div>
-                    <h1 className="text-2xl font-semibold tracking-tight">New campaign</h1>
-                    <p className="text-muted-foreground text-[13px] mt-1">
+                    <h1 className="text-[28px] font-bold tracking-tight">New campaign</h1>
+                    <p className="text-muted-foreground text-[14px] mt-1">
                         Configure the outreach. Add leads after it's created.
                     </p>
                 </div>
@@ -203,7 +201,7 @@ export default function CampaignCreate() {
                     <div className="space-y-5 min-w-0">
                         {/* Basics */}
                         <SectionCard
-                            icon={<Mail size={14} />}
+                            icon={<span className="material-symbols-rounded text-[18px]">mail</span>}
                             title="Basics"
                             description="Name is internal. Sender name appears in the 'From' field of every email."
                         >
@@ -217,9 +215,9 @@ export default function CampaignCreate() {
                                         placeholder="Q1 Outreach"
                                         aria-invalid={!!fieldErrors.name}
                                         aria-describedby={fieldErrors.name ? "name-error" : undefined}
-                                        className={`h-9 text-[13px] ${fieldErrors.name ? "border-destructive" : ""}`}
+                                        className={`h-11 text-[14px] rounded-[24px] ${fieldErrors.name ? "border-destructive" : ""}`}
                                     />
-                                    {fieldErrors.name && <p id="name-error" className="text-[11px] text-destructive">{fieldErrors.name}</p>}
+                                    {fieldErrors.name && <p id="name-error" className="text-[12px] text-destructive">{fieldErrors.name}</p>}
                                 </div>
                                 <div className="space-y-1.5">
                                     <Label htmlFor="sender_name" className="text-[12px]">Sender name</Label>
@@ -230,16 +228,16 @@ export default function CampaignCreate() {
                                         placeholder="John Doe"
                                         aria-invalid={!!fieldErrors.sender_name}
                                         aria-describedby={fieldErrors.sender_name ? "sender_name-error" : undefined}
-                                        className={`h-9 text-[13px] ${fieldErrors.sender_name ? "border-destructive" : ""}`}
+                                        className={`h-11 text-[14px] rounded-[24px] ${fieldErrors.sender_name ? "border-destructive" : ""}`}
                                     />
-                                    {fieldErrors.sender_name && <p id="sender_name-error" className="text-[11px] text-destructive">{fieldErrors.sender_name}</p>}
+                                    {fieldErrors.sender_name && <p id="sender_name-error" className="text-[12px] text-destructive">{fieldErrors.sender_name}</p>}
                                 </div>
                             </div>
                         </SectionCard>
 
                         {/* Sequence */}
                         <SectionCard
-                            icon={<Timer size={14} />}
+                            icon={<span className="material-symbols-rounded text-[18px]">timer</span>}
                             title="Sequence"
                             description="How long to wait between follow-ups, and how many to send before stopping."
                         >
@@ -251,27 +249,27 @@ export default function CampaignCreate() {
                                             type="number" min={0} max={30} placeholder="0"
                                             value={delayDays || ""}
                                             onChange={e => handleIntFromEvent(e, setDelayDays, n => validateDelay(n, delayHours, delayMinutes))}
-                                            className={`h-9 text-[13px] pr-12 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${fieldErrors.delay_days ? "border-destructive" : ""}`}
+                                            className={`h-11 text-[14px] pr-12 rounded-[24px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${fieldErrors.delay_days ? "border-destructive" : ""}`}
                                         />
-                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground">Day</span>
+                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] text-muted-foreground">Day</span>
                                     </div>
                                     <div className="relative">
                                         <Input
                                             type="number" min={0} max={23} placeholder="0"
                                             value={delayHours || ""}
                                             onChange={e => handleIntFromEvent(e, setDelayHours, n => validateDelay(delayDays, n, delayMinutes))}
-                                            className={`h-9 text-[13px] pr-12 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${fieldErrors.delay_hours ? "border-destructive" : ""}`}
+                                            className={`h-11 text-[14px] pr-12 rounded-[24px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${fieldErrors.delay_hours ? "border-destructive" : ""}`}
                                         />
-                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground">Hr</span>
+                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] text-muted-foreground">Hr</span>
                                     </div>
                                     <div className="relative">
                                         <Input
                                             type="number" min={0} max={59} placeholder="0"
                                             value={delayMinutes || ""}
                                             onChange={e => handleIntFromEvent(e, setDelayMinutes, n => validateDelay(delayDays, delayHours, n))}
-                                            className={`h-9 text-[13px] pr-12 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${fieldErrors.delay_minutes ? "border-destructive" : ""}`}
+                                            className={`h-11 text-[14px] pr-12 rounded-[24px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${fieldErrors.delay_minutes ? "border-destructive" : ""}`}
                                         />
-                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground">Min</span>
+                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] text-muted-foreground">Min</span>
                                     </div>
                                 </div>
                                 {fieldErrors.delay_total && (
@@ -292,19 +290,19 @@ export default function CampaignCreate() {
                                     }}
                                     aria-invalid={!!fieldErrors.max_follow_ups}
                                     aria-describedby={fieldErrors.max_follow_ups ? "max_follow_ups-error" : undefined}
-                                    className={`h-9 text-[13px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${fieldErrors.max_follow_ups ? "border-destructive" : ""}`}
+                                    className={`h-11 text-[14px] rounded-[24px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${fieldErrors.max_follow_ups ? "border-destructive" : ""}`}
                                 />
                                 {fieldErrors.max_follow_ups ? (
-                                    <p id="max_follow_ups-error" className="text-[11px] text-destructive">{fieldErrors.max_follow_ups}</p>
+                                    <p id="max_follow_ups-error" className="text-[12px] text-destructive">{fieldErrors.max_follow_ups}</p>
                                 ) : (
-                                    <p className="text-[11px] text-muted-foreground">Between 1 and 10.</p>
+                                    <p className="text-[12px] text-muted-foreground">Between 1 and 10.</p>
                                 )}
                             </div>
                         </SectionCard>
 
                         {/* Goal */}
                         <SectionCard
-                            icon={<Target size={14} />}
+                            icon={<span className="material-symbols-rounded text-[18px]">track_changes</span>}
                             title="Campaign goal"
                             description="Everything the LLM uses to personalize each email. Specifics beat templates."
                         >
@@ -315,11 +313,11 @@ export default function CampaignCreate() {
                                 aria-invalid={!!fieldErrors.goal}
                                 aria-describedby={fieldErrors.goal ? "goal-error" : undefined}
                                 placeholder={`We help [who] solve [their problem] by [your solution].\n\nProof points:\n- …\n- …\n\nGoal: get them to [specific action, e.g. book a 20-min call].`}
-                                className="min-h-[220px] text-[13px] leading-relaxed font-mono"
+                                className="min-h-[220px] text-[14px] p-4 rounded-[20px] leading-relaxed font-mono"
                             />
-                            {fieldErrors.goal && <p id="goal-error" className="text-[11px] text-destructive">{fieldErrors.goal}</p>}
-                            <p className="text-[11px] text-muted-foreground flex items-start gap-1.5">
-                                <Info size={11} className="mt-0.5 shrink-0" />
+                            {fieldErrors.goal && <p id="goal-error" className="text-[12px] text-destructive">{fieldErrors.goal}</p>}
+                            <p className="text-[12px] text-muted-foreground flex items-start gap-2">
+                                <span className="material-symbols-rounded text-[14px] mt-0.5 shrink-0">info</span>
                                 Include proof points, audience description, and the exact action you want. The quality of this text drives the quality of every email.
                             </p>
                         </SectionCard>
@@ -327,11 +325,11 @@ export default function CampaignCreate() {
 
                     {/* RIGHT: live summary */}
                     <aside className="lg:sticky lg:top-6 lg:self-start space-y-5">
-                        <div className="bg-card border rounded-xl p-5 space-y-3">
+                        <div className="bg-card border rounded-[24px] p-6 space-y-4 shadow-sm">
                             <div>
-                                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Summary</p>
+                                <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">Summary</p>
                             </div>
-                            <dl className="space-y-2.5 text-[13px]">
+                            <dl className="space-y-3 text-[14px]">
                                 <div className="flex justify-between gap-3">
                                     <dt className="text-muted-foreground">Name</dt>
                                     <dd className="font-medium truncate max-w-[60%] text-right">{form.name || "—"}</dd>
@@ -351,12 +349,12 @@ export default function CampaignCreate() {
                             </dl>
                         </div>
 
-                        <div className="bg-muted/40 border rounded-xl p-4 space-y-1.5">
-                            <div className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                                <Info size={11} />
+                        <div className="bg-muted/40 border rounded-[24px] p-5 space-y-2">
+                            <div className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                <span className="material-symbols-rounded text-[14px]">info</span>
                                 Next steps
                             </div>
-                            <p className="text-[12px] text-muted-foreground leading-relaxed">
+                            <p className="text-[13px] text-muted-foreground leading-relaxed">
                                 After creating, you'll land on the campaign page. Add leads (manually or via CSV) and start the campaign.
                             </p>
                         </div>
@@ -366,7 +364,7 @@ export default function CampaignCreate() {
                                 type="submit"
                                 size="lg"
                                 disabled={loading || hasFieldErrors || hasEmptyFields}
-                                className="w-full h-10 text-[14px]"
+                                className="w-full h-12 rounded-full text-[15px] font-medium"
                             >
                                 {loading ? "Creating..." : "Create campaign"}
                             </Button>
@@ -375,7 +373,7 @@ export default function CampaignCreate() {
                                 variant="ghost"
                                 size="lg"
                                 onClick={() => navigate("/")}
-                                className="w-full h-10 text-[14px]"
+                                className="w-full h-12 rounded-full text-[15px] font-medium"
                             >
                                 Cancel
                             </Button>

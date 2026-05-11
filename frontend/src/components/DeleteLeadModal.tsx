@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { del } from "@/lib/api"
-import { AlertTriangle } from "lucide-react"
+
 
 type DeleteLeadModalProps = {
     open: boolean
@@ -56,7 +56,7 @@ export default function DeleteLeadModal({
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2 text-destructive">
-                        <AlertTriangle size={20} />
+                        <span className="material-symbols-rounded text-[28px]">warning</span>
                         Delete Lead
                     </DialogTitle>
                     <DialogDescription>
@@ -71,13 +71,14 @@ export default function DeleteLeadModal({
                 )}
 
                 <DialogFooter>
-                    <Button variant="outline" onClick={handleClose} disabled={deleting}>
+                    <Button variant="outline" onClick={handleClose} disabled={deleting} className="rounded-full h-10 px-5">
                         Cancel
                     </Button>
                     <Button
                         variant="destructive"
                         onClick={handleDelete}
                         disabled={deleting}
+                        className="rounded-full h-10 px-5"
                     >
                         {deleting ? "Deleting..." : "Delete Lead"}
                     </Button>

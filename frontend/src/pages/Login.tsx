@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Navigate } from "react-router-dom"
 import { useAuth } from "@/contexts/AuthContext"
 import { Button } from "@/components/ui/button"
-import { Send } from "lucide-react"
+
 
 export default function Login() {
     const { isAuthenticated, isLoading, login } = useAuth()
@@ -40,17 +40,17 @@ export default function Login() {
             <div className="relative z-10 w-full max-w-sm mx-6">
                 {/* Logo */}
                 <div className="flex items-center justify-center gap-3 mb-10">
-                    <div className="rounded-xl bg-primary p-2.5 shadow-md">
-                        <Send className="h-5 w-5 text-primary-foreground" />
+                    <div className="rounded-full bg-primary p-2.5 shadow-md flex items-center justify-center">
+                        <span className="material-symbols-rounded text-[20px] text-primary-foreground">send</span>
                     </div>
-                    <span className="text-xl font-semibold tracking-tight">Outreach</span>
+                    <span className="text-[22px] font-bold tracking-tight">Outreach</span>
                 </div>
 
                 {/* Card */}
-                <div className="bg-card border rounded-xl p-8 shadow-lg">
+                <div className="bg-card border rounded-[24px] p-8 shadow-lg">
                     <div className="text-center mb-8">
-                        <h1 className="text-3xl mb-2">Welcome back</h1>
-                        <p className="text-sm text-muted-foreground leading-relaxed">
+                        <h1 className="text-[28px] font-bold tracking-tight mb-2">Welcome back</h1>
+                        <p className="text-[14px] text-muted-foreground leading-relaxed">
                             Sign in with your Google account to manage<br />
                             your email campaigns.
                         </p>
@@ -59,7 +59,7 @@ export default function Login() {
                     <Button
                         onClick={handleLogin}
                         disabled={loginLoading}
-                        className="w-full h-11 text-[14px] font-medium"
+                        className="w-full h-12 rounded-full text-[15px] font-medium"
                         variant="outline"
                     >
                         <svg className="mr-2.5 h-4 w-4" viewBox="0 0 24 24">

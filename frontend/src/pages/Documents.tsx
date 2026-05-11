@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
-import { FileText, Upload, Trash2, ArrowUpRight, AlertCircle, CheckCircle2, XCircle, Loader2, Search } from "lucide-react"
+
 
 type DocumentSummary = {
     id: string
@@ -301,8 +301,8 @@ export default function Documents() {
         <div className="p-6">
             <div className="max-w-5xl mx-auto space-y-5">
                 <div>
-                    <h1 className="text-2xl font-semibold tracking-tight">Documents</h1>
-                    <p className="text-muted-foreground text-[13px] mt-1">
+                    <h1 className="text-[28px] font-bold tracking-tight">Documents</h1>
+                    <p className="text-muted-foreground text-[14px] mt-1">
                         Upload briefs, decks, and datasheets once. Attach them to any campaign to personalize emails with real product facts.
                     </p>
                 </div>
@@ -313,15 +313,15 @@ export default function Documents() {
                     onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
                     onDragLeave={() => setIsDragging(false)}
                     onDrop={handleDrop}
-                    className={`block border-2 border-dashed rounded-xl p-6 text-center transition-colors cursor-pointer ${
+                    className={`block border-2 border-dashed rounded-[24px] p-8 text-center transition-colors cursor-pointer ${
                         isDragging
                             ? "border-primary bg-primary/5"
                             : "border-muted-foreground/25 hover:border-muted-foreground/50"
                     }`}
                 >
-                    <Upload size={22} className={`mx-auto mb-2 ${isDragging ? "text-primary" : "text-muted-foreground"}`} />
-                    <p className="text-[13px] text-muted-foreground">Drag &amp; drop or click to upload</p>
-                    <p className="text-[11px] text-muted-foreground/70 mt-1">
+                    <span className={`material-symbols-rounded text-[32px] mx-auto mb-3 ${isDragging ? "text-primary" : "text-muted-foreground"}`}>upload</span>
+                    <p className="text-[14px] font-medium text-foreground">Drag &amp; drop or click to upload</p>
+                    <p className="text-[12px] text-muted-foreground/70 mt-1">
                         PDF, DOCX, PPTX, TXT, MD · Max {MAX_MB} MB
                     </p>
                 </label>
@@ -336,9 +336,9 @@ export default function Documents() {
                 />
 
                 {error && (
-                    <Alert variant="destructive">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>{error}</AlertDescription>
+                    <Alert variant="destructive" className="rounded-[24px] bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300 border-none p-5">
+                        <span className="material-symbols-rounded text-[20px] mr-3">error</span>
+                        <AlertDescription className="text-[14px]">{error}</AlertDescription>
                     </Alert>
                 )}
 
@@ -348,19 +348,19 @@ export default function Documents() {
                         <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-2">
                             Uploading & Processing ({uploads.length})
                         </p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {uploads.map(task => (
-                                <div key={task.id} className="bg-card border rounded-xl p-4 space-y-3 shadow-sm relative overflow-hidden">
+                                <div key={task.id} className="bg-card border rounded-[24px] p-5 space-y-3 shadow-sm relative overflow-hidden">
                                     <div className="flex items-start justify-between gap-3 relative z-10">
-                                        <div className="flex items-center gap-3 min-w-0">
-                                            <div className={`h-8 w-8 rounded-md flex items-center justify-center shrink-0 ${
+                                        <div className="flex items-center gap-4 min-w-0">
+                                            <div className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 ${
                                                 task.status === "success" ? "bg-emerald-500/10 text-emerald-600" :
                                                 task.status === "error" ? "bg-red-500/10 text-red-600" :
                                                 "bg-primary/10 text-primary"
                                             }`}>
-                                                {task.status === "success" ? <CheckCircle2 size={16} /> :
-                                                 task.status === "error" ? <XCircle size={16} /> :
-                                                 <Loader2 size={16} className="animate-spin" />}
+                                                {task.status === "success" ? <span className="material-symbols-rounded text-[20px]">check_circle</span> :
+                                                 task.status === "error" ? <span className="material-symbols-rounded text-[20px]">cancel</span> :
+                                                 <span className="material-symbols-rounded text-[20px] animate-spin">progress_activity</span>}
                                             </div>
                                             <div className="min-w-0">
                                                 <p className="text-[13px] font-medium truncate">{task.name}</p>
@@ -376,8 +376,8 @@ export default function Documents() {
                                             </div>
                                         </div>
                                         {(task.status === "success" || task.status === "error") && (
-                                            <Button variant="ghost" size="icon-sm" onClick={() => removeTask(task.id)} className="h-6 w-6 text-muted-foreground hover:bg-muted">
-                                                <XCircle size={14} />
+                                            <Button variant="ghost" size="icon" onClick={() => removeTask(task.id)} className="h-8 w-8 rounded-full text-muted-foreground hover:bg-muted">
+                                                <span className="material-symbols-rounded text-[18px]">cancel</span>
                                             </Button>
                                         )}
                                     </div>
@@ -398,60 +398,60 @@ export default function Documents() {
 
                 {/* Library list */}
                 <div>
-                    <div className="flex items-center justify-between mb-3 mt-2">
-                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    <div className="flex items-center justify-between mb-4 mt-4">
+                        <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
                             Your library ({filteredDocs.length})
                         </p>
                         <div className="relative w-64">
-                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
+                            <span className="material-symbols-rounded absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-[20px]">search</span>
                             <Input 
                                 placeholder="Search documents..." 
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="pl-8 h-8 text-[13px]" 
+                                className="pl-12 h-11 text-[14px] rounded-full bg-card" 
                             />
                         </div>
                     </div>
 
                     {loading ? (
-                        <div className="space-y-2">
-                            {[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}
+                        <div className="space-y-3">
+                            {[1, 2, 3].map(i => <Skeleton key={i} className="h-20 w-full rounded-[24px]" />)}
                         </div>
                     ) : filteredDocs.length === 0 ? (
-                        <div className="text-center py-12 border border-dashed rounded-xl">
-                            <FileText size={22} className="mx-auto mb-2 text-muted-foreground/60" />
-                            <p className="text-[13px] text-muted-foreground">
+                        <div className="text-center py-16 border border-dashed rounded-[24px]">
+                            <span className="material-symbols-rounded text-[40px] mx-auto mb-3 text-muted-foreground/40">description</span>
+                            <p className="text-[14px] text-muted-foreground">
                                 {docs.length === 0 ? "No documents yet" : "No documents match your search"}
                             </p>
                         </div>
                     ) : (
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                             {filteredDocs.map(doc => (
                                 <Link
                                     key={doc.id}
                                     to={`/documents/${doc.id}`}
-                                    className="group bg-card border rounded-xl p-4 flex items-center gap-3 transition-colors hover:bg-accent/30 hover:border-primary/30"
+                                    className="group bg-card border rounded-[24px] p-5 flex items-center gap-4 transition-colors duration-150 hover:shadow-sm hover:border-primary/30"
                                 >
-                                    <div className="h-9 w-9 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
-                                        <FileText size={16} className="text-primary" />
+                                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                        <span className="material-symbols-rounded text-primary text-[20px]">description</span>
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <p className="text-[13px] font-medium truncate flex items-center gap-1.5 group-hover:text-primary transition-colors">
+                                        <p className="text-[15px] font-semibold truncate flex items-center gap-1.5 group-hover:text-primary transition-colors">
                                             {doc.name}
-                                            <ArrowUpRight size={11} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                                            <span className="material-symbols-rounded text-[14px] opacity-0 group-hover:opacity-100 transition-opacity">arrow_outward</span>
                                         </p>
-                                        <p className="text-[11px] text-muted-foreground">
+                                        <p className="text-[13px] text-muted-foreground mt-0.5">
                                             {formatSize(doc.size_bytes)} · Uploaded {formatDate(doc.created_at)}
                                         </p>
                                     </div>
                                     <Button
-                                        size="sm"
+                                        size="icon"
                                         variant="ghost"
                                         onClick={(e) => handleDelete(doc, e)}
-                                        className="text-muted-foreground hover:text-destructive"
+                                        className="h-10 w-10 rounded-full text-muted-foreground hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20"
                                         aria-label={`Delete ${doc.name}`}
                                     >
-                                        <Trash2 size={13} />
+                                        <span className="material-symbols-rounded text-[20px]">delete</span>
                                     </Button>
                                 </Link>
                             ))}

@@ -7,7 +7,6 @@ import { useBreadcrumbs } from "@/contexts/BreadcrumbContext"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { FileText, Trash2, Copy, Check } from "lucide-react"
 import ErrorPage from "./ErrorPage"
 
 type DocumentDetail = {
@@ -96,35 +95,34 @@ export default function DocumentDetail() {
                 {/* Header */}
                 {loading ? (
                     <div className="space-y-2">
-                        <Skeleton className="h-8 w-64" />
-                        <Skeleton className="h-4 w-48" />
+                        <Skeleton className="h-8 w-64 rounded-full" />
+                        <Skeleton className="h-4 w-48 rounded-full" />
                     </div>
                 ) : doc ? (
                     <div className="flex items-start justify-between gap-4">
-                        <div className="flex items-start gap-3 min-w-0">
-                            <div className="h-10 w-10 rounded-md bg-primary/10 flex items-center justify-center shrink-0 mt-1">
-                                <FileText size={18} className="text-primary" />
+                        <div className="flex items-start gap-4 min-w-0">
+                            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-1">
+                                <span className="material-symbols-rounded text-[24px] text-primary">description</span>
                             </div>
                             <div className="min-w-0">
-                                <h1 className="text-2xl font-semibold tracking-tight truncate">{doc.name}</h1>
-                                <p className="text-muted-foreground text-[13px] mt-1">
+                                <h1 className="text-[28px] font-bold tracking-tight truncate">{doc.name}</h1>
+                                <p className="text-muted-foreground text-[14px] mt-1">
                                     {formatSize(doc.size_bytes)} · {doc.word_count} words · Uploaded {formatDate(doc.created_at)}
                                 </p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                            <Button size="sm" variant="outline" onClick={handleCopy} className="gap-1.5">
-                                {copied ? <Check size={13} /> : <Copy size={13} />}
+                        <div className="flex items-center gap-3 shrink-0">
+                            <Button variant="outline" onClick={handleCopy} className="gap-2 rounded-full h-10 px-5 shadow-sm text-[14px] hover:bg-muted/80">
+                                <span className="material-symbols-rounded text-[18px]">{copied ? "check" : "content_copy"}</span>
                                 {copied ? "Copied" : "Copy"}
                             </Button>
                             <Button
-                                size="sm"
-                                variant="outline"
+                                variant="ghost"
+                                size="icon"
                                 onClick={handleDelete}
-                                className="gap-1.5 text-destructive hover:text-destructive"
+                                className="rounded-full h-10 w-10 text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
                             >
-                                <Trash2 size={13} />
-                                Delete
+                                <span className="material-symbols-rounded text-[20px]">delete</span>
                             </Button>
                         </div>
                     </div>
@@ -132,7 +130,7 @@ export default function DocumentDetail() {
 
                 {/* Context note */}
                 {doc && (
-                    <p className="text-[12px] text-muted-foreground leading-relaxed bg-muted/30 border rounded-md px-3 py-2">
+                    <p className="text-[13px] text-muted-foreground leading-relaxed bg-muted/30 border rounded-[24px] px-5 py-4">
                         This is the brief the LLM consults when personalizing every email for campaigns that attach this document. The original file was discarded after parsing — to update the brief, re-upload the source document.
                     </p>
                 )}
@@ -140,11 +138,11 @@ export default function DocumentDetail() {
                 {/* Brief */}
                 {loading ? (
                     <div className="space-y-2">
-                        {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-4 w-full" />)}
+                        {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-4 w-full rounded-full" />)}
                     </div>
                 ) : doc ? (
                     <article
-                        className="bg-card border rounded-xl p-6 text-[13px] leading-relaxed whitespace-pre-wrap font-mono"
+                        className="bg-card border rounded-[24px] p-8 text-[14px] leading-relaxed whitespace-pre-wrap font-mono shadow-sm"
                     >
                         {doc.brief}
                     </article>

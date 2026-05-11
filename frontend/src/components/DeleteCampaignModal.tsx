@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { del } from "@/lib/api"
-import { AlertTriangle } from "lucide-react"
+
 
 type DeleteCampaignModalProps = {
     open: boolean
@@ -62,7 +62,7 @@ export default function DeleteCampaignModal({
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2 text-destructive">
-                        <AlertTriangle size={20} />
+                        <span className="material-symbols-rounded text-[28px]">warning</span>
                         Delete Campaign
                     </DialogTitle>
                     <DialogDescription>
@@ -93,13 +93,14 @@ export default function DeleteCampaignModal({
                 </div>
 
                 <DialogFooter>
-                    <Button variant="outline" onClick={handleClose} disabled={deleting}>
+                    <Button variant="outline" onClick={handleClose} disabled={deleting} className="rounded-full h-10 px-5">
                         Cancel
                     </Button>
                     <Button
                         variant="destructive"
                         onClick={handleDelete}
                         disabled={!isValid || deleting}
+                        className="rounded-full h-10 px-5"
                     >
                         {deleting ? "Deleting..." : "Delete Campaign"}
                     </Button>

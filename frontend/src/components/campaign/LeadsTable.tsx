@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Search, Trash2, ArrowUpRight } from "lucide-react"
+
 import type { Lead } from "@/lib/types"
 import { getLeadStatus } from "@/lib/status"
 
@@ -59,41 +59,41 @@ export default function LeadsTable({
     }
 
     return (
-        <div className="space-y-3">
+        <div className="space-y-4">
             <div className="flex items-center justify-between">
-                <h2 className="text-[15px] font-semibold">Leads</h2>
-                {!loading && <span className="text-[12px] text-muted-foreground">{filteredLeads.length} total</span>}
+                <h2 className="text-[20px] font-bold tracking-tight">Leads</h2>
+                {!loading && <span className="text-[13px] text-muted-foreground">{filteredLeads.length} total</span>}
             </div>
 
             {!loading && (
                 <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
-                    <Input placeholder="Search leads..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 h-8 text-[13px]" />
+                    <span className="material-symbols-rounded absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-[20px]">search</span>
+                    <Input placeholder="Search leads..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-12 h-12 text-[14px] rounded-full bg-card" />
                 </div>
             )}
 
             {selectedLeads.size > 0 && (
-                <div className="flex items-center gap-3 bg-muted/50 border rounded-lg px-3 py-2">
-                    <span className="text-[13px] font-medium">{selectedLeads.size} selected</span>
-                    <Button variant="destructive" size="sm" onClick={onBulkDelete} disabled={bulkDeleting} className="gap-1.5 h-7 text-[12px]">
-                        <Trash2 size={12} />{bulkDeleting ? "Deleting..." : "Delete"}
+                <div className="flex items-center gap-4 bg-muted/30 border rounded-full px-5 py-3 shadow-sm">
+                    <span className="text-[14px] font-medium">{selectedLeads.size} selected</span>
+                    <Button variant="destructive" onClick={onBulkDelete} disabled={bulkDeleting} className="gap-2 h-9 text-[13px] rounded-full px-4">
+                        <span className="material-symbols-rounded text-[18px]">delete</span>{bulkDeleting ? "Deleting..." : "Delete"}
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => setSelectedLeads(new Set())} className="h-7 text-[12px]">Clear</Button>
+                    <Button variant="ghost" onClick={() => setSelectedLeads(new Set())} className="h-9 text-[13px] rounded-full px-4">Clear</Button>
                 </div>
             )}
 
             {loading ? (
-                <Skeleton className="h-48 rounded-xl" />
+                <Skeleton className="h-48 rounded-[24px]" />
             ) : filteredLeads.length === 0 ? (
-                <div className="text-center py-12 border border-dashed rounded-xl">
+                <div className="text-center py-12 border border-dashed rounded-[24px]">
                     <p className="text-muted-foreground text-[13px]">
                         {leads.length === 0 ? "No leads yet. Add leads manually or import from CSV." : "No leads match your search."}
                     </p>
                 </div>
             ) : (
-                <div className="border rounded-xl overflow-auto max-h-[50vh]">
+                <div className="border rounded-[24px] overflow-hidden max-h-[50vh] shadow-sm bg-card">
                     <Table>
-                        <TableHeader className="sticky top-0 bg-card z-10">
+                        <TableHeader className="sticky top-0 bg-muted/60 backdrop-blur-md z-10">
                             <TableRow>
                                 <TableHead className="w-10">
                                     <label className="flex items-center justify-center cursor-pointer">
@@ -102,42 +102,42 @@ export default function LeadsTable({
                                             checked={allFilteredSelected} 
                                             onChange={toggleSelectAll} 
                                             aria-label={allFilteredSelected ? "Deselect all visible leads" : "Select all visible leads"} 
-                                            className="h-4 w-4 rounded border-input bg-background accent-primary cursor-pointer transition-colors" 
+                                            className="h-[18px] w-[18px] rounded-[4px] border-[2px] border-muted-foreground bg-background accent-primary cursor-pointer transition-colors" 
                                         />
                                     </label>
                                 </TableHead>
-                                <TableHead className="text-[12px]">Name</TableHead>
-                                <TableHead className="text-[12px]">Email</TableHead>
-                                <TableHead className="text-[12px]">Company</TableHead>
-                                <TableHead className="text-[12px]">Status</TableHead>
-                                <TableHead className="text-[12px]">Seq</TableHead>
+                                <TableHead className="text-[13px] font-semibold py-4">Name</TableHead>
+                                <TableHead className="text-[13px] font-semibold py-4">Email</TableHead>
+                                <TableHead className="text-[13px] font-semibold py-4">Company</TableHead>
+                                <TableHead className="text-[13px] font-semibold py-4">Status</TableHead>
+                                <TableHead className="text-[13px] font-semibold py-4">Seq</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {filteredLeads.map(lead => {
                                 const s = getLeadStatus(lead.status)
                                 return (
-                                    <TableRow key={lead.id} tabIndex={0} role="button" className="cursor-pointer group hover:bg-muted/40" onClick={() => navigate(`/campaigns/${campaignId}/leads/${lead.id}`)} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigate(`/campaigns/${campaignId}/leads/${lead.id}`) } }}>
+                                    <TableRow key={lead.id} tabIndex={0} role="button" className="cursor-pointer group hover:bg-muted/60" onClick={() => navigate(`/campaigns/${campaignId}/leads/${lead.id}`)} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigate(`/campaigns/${campaignId}/leads/${lead.id}`) } }}>
                                         <TableCell onClick={e => e.stopPropagation()}>
                                             <label className="flex items-center justify-center cursor-pointer" onClick={e => e.stopPropagation()}>
                                                 <input 
                                                     type="checkbox" 
                                                     checked={selectedLeads.has(lead.id)} 
                                                     onChange={() => toggleSelectLead(lead.id)} 
-                                                    className="h-4 w-4 rounded border-input bg-background accent-primary cursor-pointer transition-colors" 
+                                                    className="h-[18px] w-[18px] rounded-[4px] border-[2px] border-muted-foreground bg-background accent-primary cursor-pointer transition-colors" 
                                                 />
                                             </label>
                                         </TableCell>
-                                        <TableCell>
-                                            <span className="inline-flex items-center gap-1.5 font-medium text-[13px] group-hover:text-primary transition-colors">
+                                        <TableCell className="py-4">
+                                            <span className="inline-flex items-center gap-1.5 font-medium text-[14px] group-hover:text-primary transition-colors">
                                                 {lead.first_name} {lead.last_name}
-                                                <ArrowUpRight size={11} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                <span className="material-symbols-rounded text-[14px] opacity-0 group-hover:opacity-100 transition-opacity">arrow_outward</span>
                                             </span>
                                         </TableCell>
-                                        <TableCell className="text-[13px] text-muted-foreground max-w-[200px]"><span className="truncate block" title={lead.email}>{lead.email}</span></TableCell>
-                                        <TableCell className="text-[13px]">{lead.company || "—"}</TableCell>
-                                        <TableCell><Badge variant={s.variant} className={`${s.className} text-[10px]`}>{s.label}</Badge></TableCell>
-                                        <TableCell className="text-[13px] text-muted-foreground">{lead.current_sequence}</TableCell>
+                                        <TableCell className="text-[14px] text-muted-foreground max-w-[200px] py-4"><span className="truncate block" title={lead.email}>{lead.email}</span></TableCell>
+                                        <TableCell className="text-[14px] py-4">{lead.company || "—"}</TableCell>
+                                        <TableCell className="py-4"><Badge variant={s.variant} className={`${s.className} text-[11px] px-3 py-1 rounded-full`}>{s.label}</Badge></TableCell>
+                                        <TableCell className="text-[14px] text-muted-foreground py-4">{lead.current_sequence}</TableCell>
                                     </TableRow>
                                 )
                             })}

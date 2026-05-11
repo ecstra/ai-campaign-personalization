@@ -122,8 +122,8 @@ export default function AddLeadModal({
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="first_name">First Name *</Label>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="first_name" className="text-[13px] font-medium text-muted-foreground">First Name *</Label>
                             <Input
                                 id="first_name"
                                 value={form.first_name}
@@ -131,14 +131,14 @@ export default function AddLeadModal({
                                 placeholder="John"
                                 aria-invalid={!!fieldErrors.first_name}
                                 aria-describedby={fieldErrors.first_name ? "first_name-error" : undefined}
-                                className={fieldErrors.first_name ? "border-destructive" : ""}
+                                className={`h-11 text-[14px] rounded-[24px] ${fieldErrors.first_name ? "border-destructive" : ""}`}
                             />
                             {fieldErrors.first_name && (
-                                <p id="first_name-error" className="text-xs text-destructive">{fieldErrors.first_name}</p>
+                                <p id="first_name-error" className="text-[12px] text-destructive">{fieldErrors.first_name}</p>
                             )}
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="last_name">Last Name *</Label>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="last_name" className="text-[13px] font-medium text-muted-foreground">Last Name *</Label>
                             <Input
                                 id="last_name"
                                 value={form.last_name}
@@ -146,16 +146,16 @@ export default function AddLeadModal({
                                 placeholder="Doe"
                                 aria-invalid={!!fieldErrors.last_name}
                                 aria-describedby={fieldErrors.last_name ? "last_name-error" : undefined}
-                                className={fieldErrors.last_name ? "border-destructive" : ""}
+                                className={`h-11 text-[14px] rounded-[24px] ${fieldErrors.last_name ? "border-destructive" : ""}`}
                             />
                             {fieldErrors.last_name && (
-                                <p id="last_name-error" className="text-xs text-destructive">{fieldErrors.last_name}</p>
+                                <p id="last_name-error" className="text-[12px] text-destructive">{fieldErrors.last_name}</p>
                             )}
                         </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="email">Email *</Label>
+                    <div className="space-y-1.5">
+                        <Label htmlFor="email" className="text-[13px] font-medium text-muted-foreground">Email *</Label>
                         <Input
                             id="email"
                             type="email"
@@ -164,50 +164,52 @@ export default function AddLeadModal({
                             placeholder="john@company.com"
                             aria-invalid={!!fieldErrors.email}
                             aria-describedby={fieldErrors.email ? "email-error" : undefined}
-                            className={fieldErrors.email ? "border-destructive" : ""}
+                            className={`h-11 text-[14px] rounded-[24px] ${fieldErrors.email ? "border-destructive" : ""}`}
                         />
                         {fieldErrors.email && (
-                            <p id="email-error" className="text-xs text-destructive">{fieldErrors.email}</p>
+                            <p id="email-error" className="text-[12px] text-destructive">{fieldErrors.email}</p>
                         )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="company">Company</Label>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="company" className="text-[13px] font-medium text-muted-foreground">Company</Label>
                             <Input
                                 id="company"
                                 value={form.company}
                                 onChange={handleInputChange}
                                 placeholder="Acme Inc"
+                                className="h-11 text-[14px] rounded-[24px]"
                             />
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="title">Title</Label>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="title" className="text-[13px] font-medium text-muted-foreground">Title</Label>
                             <Input
                                 id="title"
                                 value={form.title}
                                 onChange={handleInputChange}
                                 placeholder="CTO"
+                                className="h-11 text-[14px] rounded-[24px]"
                             />
                         </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="notes">Notes (for personalization)</Label>
+                    <div className="space-y-1.5">
+                        <Label htmlFor="notes" className="text-[13px] font-medium text-muted-foreground">Notes (for personalization)</Label>
                         <Textarea
                             id="notes"
                             value={form.notes}
                             onChange={handleInputChange}
-                            className="min-h-[60px]"
+                            className="text-[14px] p-4 rounded-[20px] min-h-[100px] resize-none"
                             placeholder="Met at conference, interested in AI..."
                         />
                     </div>
 
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={resetAndClose}>
+                        <Button type="button" variant="outline" onClick={resetAndClose} className="rounded-full h-10 px-5">
                             Cancel
                         </Button>
-                        <Button type="submit" disabled={loading || hasFieldErrors || hasEmptyFields}>
+                        <Button type="submit" disabled={loading || hasFieldErrors || hasEmptyFields} className="rounded-full h-10 px-5">
                             {loading ? "Adding..." : "Add Lead"}
                         </Button>
                     </DialogFooter>

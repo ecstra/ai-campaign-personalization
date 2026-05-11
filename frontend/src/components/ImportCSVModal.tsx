@@ -25,7 +25,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { Upload, AlertCircle, CheckCircle2, Download } from "lucide-react"
+
 
 type Props = {
     open: boolean
@@ -246,14 +246,14 @@ export default function ImportCSVModal({ open, onClose, onSuccess, campaignId }:
 
                 <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
                     {/* Requirements hint */}
-                    <div className="text-sm bg-muted p-3 rounded-lg space-y-2 shrink-0">
+                    <div className="text-sm bg-muted p-4 rounded-[20px] space-y-2 shrink-0">
                         <div className="flex items-start justify-between gap-3">
                             <div className="space-y-2 min-w-0">
                                 <div>
                                     <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Required</p>
                                     <div className="flex flex-wrap gap-1">
                                         {REQUIRED_HEADERS.map(col => (
-                                            <span key={col} className="px-2 py-0.5 text-xs bg-background border rounded-sm">{col}</span>
+                                            <span key={col} className="px-2.5 py-1 text-xs bg-background border rounded-full">{col}</span>
                                         ))}
                                     </div>
                                 </div>
@@ -261,7 +261,7 @@ export default function ImportCSVModal({ open, onClose, onSuccess, campaignId }:
                                     <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Optional</p>
                                     <div className="flex flex-wrap gap-1">
                                         {OPTIONAL_HEADERS.map(col => (
-                                            <span key={col} className="px-2 py-0.5 text-xs bg-background border rounded-sm">{col}</span>
+                                            <span key={col} className="px-2.5 py-1 text-xs bg-background border rounded-full">{col}</span>
                                         ))}
                                     </div>
                                 </div>
@@ -271,17 +271,16 @@ export default function ImportCSVModal({ open, onClose, onSuccess, campaignId }:
                                 size="sm"
                                 variant="outline"
                                 onClick={downloadTemplateCSV}
-                                className="shrink-0 gap-1.5 h-8 text-xs"
+                                className="shrink-0 gap-1.5 h-8 text-xs rounded-full items-center"
                             >
-                                <Download size={12} />
-                                Template
+                                <span className="material-symbols-rounded text-[14px]">download</span>
+                                <span className="translate-y-[0.5px]">Template</span>
                             </Button>
                         </div>
                     </div>
 
-                    {/* File input with drag and drop */}
                     <div
-                        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors shrink-0 ${isDragging
+                        className={`border-2 border-dashed rounded-[20px] p-6 text-center transition-colors shrink-0 ${isDragging
                             ? "border-primary bg-primary/5"
                             : "border-muted-foreground/25 hover:border-muted-foreground/50"
                             }`}
@@ -297,8 +296,8 @@ export default function ImportCSVModal({ open, onClose, onSuccess, campaignId }:
                             id="csv-upload"
                         />
                         <label htmlFor="csv-upload" className="cursor-pointer">
-                            <Upload className={`mx-auto mb-2 transition-colors ${isDragging ? "text-primary" : "text-muted-foreground"}`} size={32} />
-                            <p className="text-sm text-muted-foreground">
+                            <span className={`material-symbols-rounded text-[40px] mx-auto mb-2 transition-colors ${isDragging ? "text-primary" : "text-muted-foreground"}`}>upload</span>
+                            <p className="text-[14px] text-muted-foreground">
                                 {fileName ? fileName : "Drag & drop CSV file or click to upload"}
                             </p>
                         </label>
@@ -306,9 +305,9 @@ export default function ImportCSVModal({ open, onClose, onSuccess, campaignId }:
 
                     {/* Missing headers warning */}
                     {missingHeaders.length > 0 && (
-                        <div className="flex items-start gap-2 text-destructive bg-destructive/10 p-3 rounded-lg shrink-0">
-                            <AlertCircle size={16} className="mt-0.5" />
-                            <div className="text-sm">
+                        <div className="flex items-start gap-2 text-destructive bg-destructive/10 p-4 rounded-[20px] shrink-0">
+                            <span className="material-symbols-rounded text-[20px]">error</span>
+                            <div className="text-[14px]">
                                 <p className="font-medium">Missing required columns:</p>
                                 <p>{missingHeaders.join(", ")}</p>
                             </div>
@@ -340,9 +339,9 @@ export default function ImportCSVModal({ open, onClose, onSuccess, campaignId }:
                                             <TableRow key={i} className={!lead.valid ? "bg-destructive/5" : ""}>
                                                 <TableCell>
                                                     {lead.valid ? (
-                                                        <CheckCircle2 size={14} className="text-green-600" />
+                                                        <span className="material-symbols-rounded text-[18px] text-green-600">check_circle</span>
                                                     ) : (
-                                                        <AlertCircle size={14} className="text-destructive" />
+                                                        <span className="material-symbols-rounded text-[18px] text-destructive">error</span>
                                                     )}
                                                 </TableCell>
                                                 <TableCell className={!lead.email ? "text-destructive" : ""}>
@@ -385,12 +384,13 @@ export default function ImportCSVModal({ open, onClose, onSuccess, campaignId }:
                 </div>
 
                 <DialogFooter>
-                    <Button type="button" variant="outline" onClick={handleClose}>
+                    <Button type="button" variant="outline" onClick={handleClose} className="rounded-full h-10 px-5">
                         Cancel
                     </Button>
                     <Button
                         onClick={handleSubmit}
                         disabled={loading || validCount === 0}
+                        className="rounded-full h-10 px-5"
                     >
                         {loading ? "Importing..." : `Import ${validCount} Leads`}
                     </Button>

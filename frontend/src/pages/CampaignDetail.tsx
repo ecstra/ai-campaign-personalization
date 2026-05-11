@@ -15,10 +15,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip"
-import {
-    Upload, UserPlus, Play, Pause, Trash2,
-    Pencil, Copy, AlertTriangle,
-} from "lucide-react"
+
 import AddLeadModal from "@/components/AddLeadModal"
 import ImportCSVModal from "@/components/ImportCSVModal"
 import DeleteCampaignModal from "@/components/DeleteCampaignModal"
@@ -159,11 +156,11 @@ export default function CampaignDetail() {
                             <><Skeleton className="h-8 w-64 mb-2" /><Skeleton className="h-4 w-48" /></>
                         ) : (
                             <>
-                                <div className="flex items-center gap-3 mb-0.5">
-                                    <h1 className="text-2xl font-semibold tracking-tight truncate">{campaign?.name}</h1>
-                                    {campaignStatus && <Badge variant={campaignStatus.variant} className={campaignStatus.className}>{campaignStatus.label}</Badge>}
+                                <div className="flex items-center gap-3 mb-1">
+                                    <h1 className="text-[28px] font-bold tracking-tight truncate">{campaign?.name}</h1>
+                                    {campaignStatus && <Badge variant={campaignStatus.variant} className={`${campaignStatus.className} text-[12px] px-3 py-1 rounded-full`}>{campaignStatus.label}</Badge>}
                                 </div>
-                                <p className="text-[13px] text-muted-foreground">{campaign?.sender_name} &middot; {campaign?.sender_email}</p>
+                                <p className="text-[14px] text-muted-foreground">{campaign?.sender_name} &middot; {campaign?.sender_email}</p>
                             </>
                         )}
                     </div>
@@ -174,9 +171,9 @@ export default function CampaignDetail() {
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <span>
-                                                <Button variant={canStart ? "default" : "outline"} size="sm" onClick={handleToggleStatus} disabled={toggling || (!canStart && !canStop)} className="gap-1.5">
-                                                    {canStop ? <Pause size={14} /> : <Play size={14} />}
-                                                    {canStop ? (toggling ? "Pausing..." : "Pause") : (toggling ? "Starting..." : "Start")}
+                                                <Button variant={canStart ? "default" : "outline"} onClick={handleToggleStatus} disabled={toggling || (!canStart && !canStop)} className="gap-1.5 rounded-full h-10 px-5 shadow-sm text-[14px] inline-flex items-center">
+                                                    <span className="material-symbols-rounded text-[18px]">{canStop ? "pause" : "play_arrow"}</span>
+                                                    <span>{canStop ? (toggling ? "Pausing..." : "Pause") : (toggling ? "Starting..." : "Start")}</span>
                                                 </Button>
                                             </span>
                                         </TooltipTrigger>
@@ -184,15 +181,15 @@ export default function CampaignDetail() {
                                     </Tooltip>
                                 </TooltipProvider>
                             )}
-                            <Button variant="outline" size="sm" onClick={handleDuplicate} className="gap-1.5"><Copy size={14} /> Duplicate</Button>
-                            {canEdit && <Button variant="outline" size="sm" onClick={startEditing} className="gap-1.5"><Pencil size={14} /> Edit</Button>}
+                            <Button variant="outline" onClick={handleDuplicate} className="gap-2 rounded-full h-10 px-5 shadow-sm text-[14px]"><span className="material-symbols-rounded text-[18px]">content_copy</span> Duplicate</Button>
+                            {canEdit && <Button variant="outline" onClick={startEditing} className="gap-2 rounded-full h-10 px-5 shadow-sm text-[14px]"><span className="material-symbols-rounded text-[18px]">edit</span> Edit</Button>}
                             {!isCompleted && (
                                 <>
-                                    <Button variant="outline" size="sm" onClick={() => setShowImportCSV(true)} className="gap-1.5"><Upload size={14} /> Import</Button>
-                                    <Button variant="outline" size="sm" onClick={() => setShowAddLead(true)} className="gap-1.5"><UserPlus size={14} /> Add Lead</Button>
+                                    <Button variant="outline" onClick={() => setShowImportCSV(true)} className="gap-2 rounded-full h-10 px-5 shadow-sm text-[14px]"><span className="material-symbols-rounded text-[18px]">upload</span> Import</Button>
+                                    <Button variant="outline" onClick={() => setShowAddLead(true)} className="gap-2 rounded-full h-10 px-5 shadow-sm text-[14px]"><span className="material-symbols-rounded text-[18px]">person_add</span> Add Lead</Button>
                                 </>
                             )}
-                            <Button variant="ghost" size="icon" onClick={() => setShowDelete(true)} className="text-muted-foreground hover:text-destructive"><Trash2 size={14} /></Button>
+                            <Button variant="ghost" size="icon" onClick={() => setShowDelete(true)} className="text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full h-10 w-10"><span className="material-symbols-rounded text-[20px]">delete</span></Button>
                         </div>
                     )}
                 </div>
@@ -201,10 +198,10 @@ export default function CampaignDetail() {
 
                 {/* ── Rate-limit banner ───────────────────────────────── */}
                 {!loading && isRateLimited && stats?.rate_limit_resets_at && (
-                    <Alert variant="destructive">
-                        <AlertTriangle />
-                        <AlertTitle>Sending paused — hourly quota reached</AlertTitle>
-                        <AlertDescription>
+                    <Alert variant="destructive" className="rounded-[24px] bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300 border-none p-6">
+                        <span className="material-symbols-rounded text-[20px] mr-3">warning</span>
+                        <AlertTitle className="text-[15px] font-semibold">Sending paused — hourly quota reached</AlertTitle>
+                        <AlertDescription className="text-[13px]">
                             {stats.rate_limit} emails sent in the last {stats.rate_limit_window_minutes} minutes. Sending resumes at{" "}
                             {new Date(stats.rate_limit_resets_at).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}.
                         </AlertDescription>
