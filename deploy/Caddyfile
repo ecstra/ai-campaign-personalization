@@ -1,0 +1,27 @@
+# Caddy site config for the AI Campaign app (single-box EC2 deploy).
+# Serves the built frontend (frontend/dist) and reverse-proxies the API
+# and webhook routes to the uvicorn backend on 127.0.0.1:8000.
+#
+# Install:
+#   sudo cp deploy/Caddyfile /etc/caddy/Caddyfile
+#   sudo systemctl reload caddy
+#
+# Caddy provisions and renews HTTPS for the domain below automatically
+# (ports 80 + 443 must be open in the security group).
+
+ai.automa-labs.com {
+    encode gzip
+    root * /home/ubuntu/ai-campaign-personalization/frontend/dist
+
+    # API + webhooks -> FastAPI backend
+    @backend path /api/* /webhooks/*
+    handle @backend {
+        reverse_proxy 127.0.0.1:8000
+    }
+
+    # Everything else -> SPA (client-side routing fallback)
+    handle {
+        try_files {path} /index.html
+        file_server
+    }
+}
