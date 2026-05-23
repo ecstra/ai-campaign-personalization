@@ -7,61 +7,64 @@
 
 /* ───────────────────────────────────────────────────────────────────
    THEME TOKENS — Light mode
-   Every color, shadow, and radius used by the app flows through
-   these variables.  Change values here to re-theme the entire UI.
+
+   M3 tonal palette shared with the crowd_flow project. Surfaces are
+   pinkish-tinted whites (#fbf4fc, #f0e5f3), brand is a medium purple
+   (#8270e0), interaction states use opacity rather than shade swaps.
+   No shadows anywhere — M3 leans on surface contrast, not elevation.
    ─────────────────────────────────────────────────────────────────── */
 
 :root {
 
   /* ── Surfaces ────────────────────────────────────────── */
-  --background: #fefbff;          /* main page background */
-  --foreground: #1c1b1d;          /* primary text color */
-  --card: #f8f1f6;                /* card / section backgrounds */
-  --card-foreground: #1c1b1d;     /* text inside cards */
-  --popover: #f8f1f6;             /* dropdown, tooltip, popover bg */
-  --popover-foreground: #1c1b1d;  /* text inside popovers */
+  --background: #fbf4fc;
+  --foreground: #1c1b1d;
+  --card: #f0e5f3;
+  --card-foreground: #1c1b1d;
+  --popover: #f0e5f3;
+  --popover-foreground: #1c1b1d;
 
   /* ── Brand / Primary ─────────────────────────────────── */
-  --primary: #7050d9;             /* buttons, links, accents */
-  --primary-foreground: #ffffff;  /* text on primary backgrounds */
-  --ring: #7050d9;                /* focus ring color */
+  --primary: #8270e0;
+  --primary-foreground: #ffffff;
+  --ring: #8270e0;
 
   /* ── Secondary / Surface variants ────────────────────── */
-  --secondary: #e8def8;           /* M3 Secondary Container */
-  --secondary-foreground: #1d192b;/* M3 On Secondary Container */
-  --muted: #e5dfe2;               /* M3 Surface Container Highest */
-  --muted-foreground: #49454f;    /* M3 On Surface Variant */
-  --accent: #e5dfe2;              /* M3 Surface Container Highest */
-  --accent-foreground: #1c1b1d;   /* M3 On Surface */
+  --secondary: #e8def8;
+  --secondary-foreground: #1d192b;
+  --muted: #dccee3;
+  --muted-foreground: #49454f;
+  --accent: #dccee3;
+  --accent-foreground: #1c1b1d;
 
   /* ── Borders & Inputs ────────────────────────────────── */
-  --border: #cac4d0;              /* M3 Outline Variant */
-  --input: #cac4d0;               /* M3 Outline Variant */
+  --border: #d7cadc;
+  --input: #d7cadc;
 
-  /* ── Destructive / Error (legacy shadcn) ─────────────── */
-  --destructive: #b3261e;         /* M3 Error */
+  /* ── Destructive / Error — aligned with --red palette ── */
+  --destructive: #b91c1c;
 
   /* ── Sidebar ─────────────────────────────────────────── */
-  --sidebar: #f2ecee;
+  --sidebar: #ebdfed;
   --sidebar-foreground: #1c1b1d;
-  --sidebar-primary: #7050d9;
+  --sidebar-primary: #8270e0;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #e5dfe2;
+  --sidebar-accent: #dccee3;
   --sidebar-accent-foreground: #1c1b1d;
-  --sidebar-border: #cac4d0;
-  --sidebar-ring: #7050d9;
+  --sidebar-border: #d7cadc;
+  --sidebar-ring: #8270e0;
 
-  /* ── Chart palette (unused, kept for shadcn compat) ──── */
-  --chart-1: #7050d9;
+  /* ── Chart palette (kept for shadcn compat) ──────────── */
+  --chart-1: #8270e0;
   --chart-2: #34d399;
   --chart-3: #fbbf24;
   --chart-4: #f87171;
   --chart-5: #60a5fa;
 
-  /* ── Global radius ───────────────────────────────────── */
-  --radius: 24px;                 /* base rounding used by cards, modals */
+  /* Global radius — M3 cards are 16px. */
+  --radius: 16px;
 
-  /* ── Shadows (None for M3) ────────────── */
+  /* ── Shadows (None — M3 uses surface contrast, not elevation) ── */
   --shadow-2xs: none;
   --shadow-xs:  none;
   --shadow-sm:  none;
@@ -71,45 +74,68 @@
   --shadow-xl:  none;
   --shadow-2xl: none;
 
-  /* ── Destructive system ────────────────────────────────
-     destructive-container  → Delete modals, destructive buttons
-     destructive-alert      → Error alert banners
-     destructive-hover      → Ghost delete icon hover states
-     ────────────────────────────────────────────────────── */
-  --destructive-container: #f9dedc;
-  --destructive-container-foreground: #410e0b;
-  --destructive-container-hover: #f2b8b5;
-  --destructive-alert: #f9dedc;
-  --destructive-alert-foreground: #410e0b;
-  --destructive-hover: #f9dedc;
-  --destructive-hover-foreground: #b3261e;
+  /* ── Destructive system — chip-pattern aligned with --red ──
+        Container / alert / hover panels use the pastel-red bg + deep-red
+        on-container text so destructive surfaces read as a "red chip". */
+  --destructive-container: var(--red);
+  --destructive-container-foreground: var(--red-foreground);
+  --destructive-container-hover: #ffc4bf;
+  --destructive-alert: var(--red);
+  --destructive-alert-foreground: var(--red-foreground);
+  --destructive-hover: var(--red);
+  --destructive-hover-foreground: var(--red-foreground);
 
-  /* ── Semantic status colors ────────────────────────────
-     Used by progress bars, status dots, email activity
-     timeline icons, document upload task badges.
-     ────────────────────────────────────────────────────── */
-  --success: #10b981;             /* progress bar fill, status dot */
-  --success-foreground: #047857;  /* status icon, success text */
-  --warning: #f59e0b;             /* progress bar warning, status dot */
-  --warning-foreground: #b45309;  /* status icon, warning text */
-  --info: #3b82f6;                /* info status dot */
-  --info-foreground: #1d4ed8;     /* info status icon */
+  /* ── Semantic status colors ──────────────────────────── */
+  --success: #10b981;
+  --success-foreground: #047857;
+  --warning: #f59e0b;
+  --warning-foreground: #d97706;
+  --info: #3b82f6;
+  --info-foreground: #1d4ed8;
 
-  /* ── Status badge backgrounds ──────────────────────────
-     Used by <Badge> for campaign/lead/email statuses
-     (Active, Pending, Processing, Replied, Failed, etc.)
-     ────────────────────────────────────────────────────── */
-  --badge-emerald: #c4eed0;
-  --badge-amber:   #f9e3ba;
-  --badge-orange:  #ffdf99;
-  --badge-sky:     #c3e7ff;
-  --badge-red:     #f9dedc;
-  --badge-slate:   #e0e2ec;
+  /* ── Status families — canonical 10-family M3 tonal palette ──
+        Each family is a pair: container bg (pastel, tone ~92) +
+        on-container fg (saturated, tone ~32). Hues spread far enough
+        apart that red, orange, amber and yellow all read distinctly. */
+  --red:               #ffd9d6;
+  --red-foreground:    #b91c1c;
+  --orange:            #ffd9bd;
+  --orange-foreground: #b45309;
+  --amber:             #ffe3a0;
+  --amber-foreground:  #92660e;
+  --yellow:            #fff18a;
+  --yellow-foreground: #7d5c00;
+  --green:             #c7eecc;
+  --green-foreground:  #1f7a3d;
+  --emerald:           #b5ebd5;
+  --emerald-foreground:#00755a;
+  --blue:              #dce2ff;
+  --blue-foreground:   #2945b5;
+  --sky:               #bee3f4;
+  --sky-foreground:    #005f82;
+  --purple:            #e0d3f0;
+  --purple-foreground: #8270e0;
+  --slate:             #dee0e8;
+  --slate-foreground:  #52555f;
+
+  /* ── Icon families — standalone text / stripes / 1px borders ──
+        Decoupled from --X-foreground so these can sit at a more vivid
+        tone for legibility at small sizes on the pinkish page surface. */
+  --icon-red:     #d62828;
+  --icon-orange:  #d6650a;
+  --icon-amber:   #c08a0e;
+  --icon-yellow:  #e0b800;
+  --icon-green:   #2c8f44;
+  --icon-emerald: #008f6a;
+  --icon-blue:    #3957d4;
+  --icon-sky:     #0a8db8;
+  --icon-purple:  var(--purple-foreground);
+  --icon-slate:   #62656f;
 
   /* ── Overlay (dialog / sheet backdrop) ───────────────── */
   --overlay: rgba(0, 0, 0, 0.8);
 
-  /* ── Material brand reference colors ───────────────────── */
+  /* ── Material brand reference colors (Google logo SVG) ── */
   --material-blue: #4285F4;
   --material-green: #34A853;
   --material-yellow: #FBBC05;
@@ -118,23 +144,24 @@
   /* ── Login page decorative gradient ──────────────────── */
   --login-gradient: radial-gradient(circle at 30% 20%, oklch(0.52 0.12 30 / 0.04), transparent 50%),
                     radial-gradient(circle at 70% 80%, oklch(0.52 0.12 30 / 0.03), transparent 50%);
-
 }
 
 /* ───────────────────────────────────────────────────────────────────
    THEME TOKENS — Dark mode
-   Mirrors :root with dark-appropriate values.
+
+   Warm dark surfaces, brand shifts to a lighter purple (#a68fff) with a
+   near-black-purple text colour on primary backgrounds (#381e72).
    ─────────────────────────────────────────────────────────────────── */
 
 .dark {
 
   /* ── Surfaces ────────────────────────────────────────── */
-  --background: #141314;
-  --foreground: #e6e1e3;
-  --card: #1c1b1d;
-  --card-foreground: #e6e1e3;
-  --popover: #1c1b1d;
-  --popover-foreground: #e6e1e3;
+  --background: #15121d;
+  --foreground: #e6e1e9;
+  --card: #1f1a28;
+  --card-foreground: #e6e1e9;
+  --popover: #1f1a28;
+  --popover-foreground: #e6e1e9;
 
   /* ── Brand / Primary ─────────────────────────────────── */
   --primary: #a68fff;
@@ -144,36 +171,36 @@
   /* ── Secondary / Surface variants ────────────────────── */
   --secondary: #4a4458;
   --secondary-foreground: #e8def8;
-  --muted: #36343b;
+  --muted: #36303f;
   --muted-foreground: #cac4d0;
-  --accent: #36343b;
-  --accent-foreground: #e6e1e3;
+  --accent: #36303f;
+  --accent-foreground: #e6e1e9;
 
   /* ── Borders & Inputs ────────────────────────────────── */
-  --border: #49454f;
-  --input: #49454f;
+  --border: #3f3946;
+  --input: #3f3946;
 
-  /* ── Destructive / Error (legacy shadcn) ─────────────── */
-  --destructive: #f2b8b5;
+  /* ── Destructive — aligned with --red palette ────────── */
+  --destructive: var(--red);
 
   /* ── Sidebar ─────────────────────────────────────────── */
-  --sidebar: #211f21;
-  --sidebar-foreground: #e6e1e3;
+  --sidebar: #221d2c;
+  --sidebar-foreground: #e6e1e9;
   --sidebar-primary: #a68fff;
   --sidebar-primary-foreground: #381e72;
-  --sidebar-accent: #36343b;
-  --sidebar-accent-foreground: #e6e1e3;
-  --sidebar-border: #49454f;
+  --sidebar-accent: #36303f;
+  --sidebar-accent-foreground: #e6e1e9;
+  --sidebar-border: #3f3946;
   --sidebar-ring: #a68fff;
 
-  /* ── Chart palette (unused, kept for shadcn compat) ──── */
+  /* ── Chart palette ───────────────────────────────────── */
   --chart-1: #a68fff;
   --chart-2: #34d399;
   --chart-3: #fbbf24;
   --chart-4: #f87171;
   --chart-5: #60a5fa;
 
-  /* ── Shadows (None for M3) ──────────────────── */
+  /* ── Shadows ─────────────────────────────────────────── */
   --shadow-2xs: none;
   --shadow-xs:  none;
   --shadow-sm:  none;
@@ -183,14 +210,14 @@
   --shadow-xl:  none;
   --shadow-2xl: none;
 
-  /* ── Destructive system ──────────────────────────────── */
-  --destructive-container: #8c1d18;
-  --destructive-container-foreground: #f9dedc;
-  --destructive-container-hover: #b3261e;
-  --destructive-alert: #8c1d18;
-  --destructive-alert-foreground: #f9dedc;
-  --destructive-hover: rgba(242, 184, 181, 0.2);
-  --destructive-hover-foreground: #f2b8b5;
+  /* ── Destructive system — chip-pattern aligned with --red ── */
+  --destructive-container: var(--red);
+  --destructive-container-foreground: var(--red-foreground);
+  --destructive-container-hover: #d57070;
+  --destructive-alert: var(--red);
+  --destructive-alert-foreground: var(--red-foreground);
+  --destructive-hover: var(--red);
+  --destructive-hover-foreground: var(--red-foreground);
 
   /* ── Semantic status colors ──────────────────────────── */
   --success: #10b981;
@@ -200,27 +227,47 @@
   --info: #3b82f6;
   --info-foreground: #93c5fd;
 
-  /* ── Status badge backgrounds ────────────────────────── */
-  --badge-emerald: #0f5223;
-  --badge-amber:   #5b4200;
-  --badge-orange:  #633b00;
-  --badge-sky:     #004a77;
-  --badge-red:     #8c1d18;
-  --badge-slate:   #44474f;
+  /* ── Status families — dark mirror of the light palette ── */
+  --red:               #e58585;
+  --red-foreground:    #5c1414;
+  --orange:            #f0b47a;
+  --orange-foreground: #5c2500;
+  --amber:             #eac270;
+  --amber-foreground:  #5c3800;
+  --yellow:            #f2da54;
+  --yellow-foreground: #3d2f00;
+  --green:             #93d7a5;
+  --green-foreground:  #11431f;
+  --emerald:           #82d3b9;
+  --emerald-foreground:#003c2d;
+  --blue:              #a6b5e6;
+  --blue-foreground:   #1a2c6b;
+  --sky:               #82c2d8;
+  --sky-foreground:    #093f55;
+  --purple:            #a68fff;
+  --purple-foreground: #381e72;
+  --slate:             #b0b3c0;
+  --slate-foreground:  #34373f;
 
-  /* ── Overlay (dialog / sheet backdrop) ───────────────── */
+  /* ── Icon families — dark (bright side of the pair) ───── */
+  --icon-red:     var(--red);
+  --icon-orange:  var(--orange);
+  --icon-amber:   var(--amber);
+  --icon-yellow:  var(--yellow);
+  --icon-green:   var(--green);
+  --icon-emerald: var(--emerald);
+  --icon-blue:    #9eb5f7;
+  --icon-sky:     var(--sky);
+  --icon-purple:  #c4afff;
+  --icon-slate:   var(--slate);
+
+  /* ── Overlay ─────────────────────────────────────────── */
   --overlay: rgba(0, 0, 0, 0.8);
-
-  /* ── Login page decorative gradient ──────────────────── */
-  --login-gradient: radial-gradient(circle at 30% 20%, oklch(0.52 0.12 30 / 0.04), transparent 50%),
-                    radial-gradient(circle at 70% 80%, oklch(0.52 0.12 30 / 0.03), transparent 50%);
-
 }
 
 /* ───────────────────────────────────────────────────────────────────
    TAILWIND THEME REGISTRATION
    Maps CSS variables to Tailwind utility classes.
-   e.g.  --color-primary  →  bg-primary, text-primary, etc.
    ─────────────────────────────────────────────────────────────────── */
 
 @theme inline {
@@ -269,16 +316,42 @@
   --color-warning-foreground: var(--warning-foreground);
   --color-info: var(--info);
   --color-info-foreground: var(--info-foreground);
-  --color-badge-emerald: var(--badge-emerald);
-  --color-badge-amber: var(--badge-amber);
-  --color-badge-orange: var(--badge-orange);
-  --color-badge-sky: var(--badge-sky);
-  --color-badge-red: var(--badge-red);
-  --color-badge-slate: var(--badge-slate);
+
+  --color-red: var(--red);
+  --color-red-foreground: var(--red-foreground);
+  --color-orange: var(--orange);
+  --color-orange-foreground: var(--orange-foreground);
+  --color-amber: var(--amber);
+  --color-amber-foreground: var(--amber-foreground);
+  --color-yellow: var(--yellow);
+  --color-yellow-foreground: var(--yellow-foreground);
+  --color-green: var(--green);
+  --color-green-foreground: var(--green-foreground);
+  --color-emerald: var(--emerald);
+  --color-emerald-foreground: var(--emerald-foreground);
+  --color-blue: var(--blue);
+  --color-blue-foreground: var(--blue-foreground);
+  --color-sky: var(--sky);
+  --color-sky-foreground: var(--sky-foreground);
+  --color-purple: var(--purple);
+  --color-purple-foreground: var(--purple-foreground);
+  --color-slate: var(--slate);
+  --color-slate-foreground: var(--slate-foreground);
+
+  --color-icon-red: var(--icon-red);
+  --color-icon-orange: var(--icon-orange);
+  --color-icon-amber: var(--icon-amber);
+  --color-icon-yellow: var(--icon-yellow);
+  --color-icon-green: var(--icon-green);
+  --color-icon-emerald: var(--icon-emerald);
+  --color-icon-blue: var(--icon-blue);
+  --color-icon-sky: var(--icon-sky);
+  --color-icon-purple: var(--icon-purple);
+  --color-icon-slate: var(--icon-slate);
 
   --color-overlay: var(--overlay);
 
-  /* ── Material brand colors (SVG logo) ──────────────────── */
+  /* ── Material brand colors (Google logo SVG) ─────────── */
   --color-material-blue: var(--material-blue);
   --color-material-green: var(--material-green);
   --color-material-yellow: var(--material-yellow);
@@ -291,8 +364,6 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
 
   /* ── Responsive breakpoints (unified at 1170px) ──────── */
   --breakpoint-sm: 1170px;
@@ -309,11 +380,98 @@
   --shadow-xl: var(--shadow-xl);
   --shadow-2xl: var(--shadow-2xl);
 
-  /* ── Typography ──────────────────────────────────────── */
-  --font-sans: 'Roboto', sans-serif;
-  --font-heading: var(--font-sans);
+  /* ── M3 typography ───────────────────────────────────────────
+        Google Sans (variable, ital + opsz 17–18 + wght 400–700) is the
+        M3 default. Display / text tokens resolve to the same family —
+        kept separate so the scale can split them later if needed.
+        ─────────────────────────────────────────────────────────── */
+  --font-sans:    'Google Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Google Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-text:    'Google Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono:    'Roboto Mono', ui-monospace, "JetBrains Mono", monospace;
+  --font-heading: var(--font-display);
 
-  /* ── Animation ───────────────────────────────────────── */
+  /* M3 type scale — sizes / line-heights / weights from the spec.
+     Tailwind v4 picks these up so e.g. `text-display-l`, `text-title-m`,
+     `text-label-s` work as utilities. */
+  --text-hero:        96px;
+  --text-hero--line-height: 1;
+  --text-hero--font-weight: 475;
+
+  --text-display-xl:  88px;
+  --text-display-xl--line-height: 96px;
+  --text-display-xl--font-weight: 475;
+
+  --text-display-l:   57px;
+  --text-display-l--line-height: 64px;
+  --text-display-l--font-weight: 475;
+
+  --text-display-m:   45px;
+  --text-display-m--line-height: 52px;
+  --text-display-m--font-weight: 475;
+
+  --text-display-s:   36px;
+  --text-display-s--line-height: 44px;
+  --text-display-s--font-weight: 475;
+
+  --text-headline-l:  32px;
+  --text-headline-l--line-height: 40px;
+  --text-headline-l--font-weight: 475;
+
+  --text-headline-m:  28px;
+  --text-headline-m--line-height: 36px;
+  --text-headline-m--font-weight: 475;
+
+  --text-headline-s:  24px;
+  --text-headline-s--line-height: 32px;
+  --text-headline-s--font-weight: 475;
+
+  --text-title-l:     22px;
+  --text-title-l--line-height: 30px;
+  --text-title-l--font-weight: 400;
+
+  --text-title-m:     16px;
+  --text-title-m--line-height: 24px;
+  --text-title-m--font-weight: 500;
+
+  --text-title-s:     14px;
+  --text-title-s--line-height: 20px;
+  --text-title-s--font-weight: 500;
+
+  --text-label-l:     14px;
+  --text-label-l--line-height: 20px;
+  --text-label-l--font-weight: 500;
+
+  --text-label-m:     12px;
+  --text-label-m--line-height: 16px;
+  --text-label-m--font-weight: 500;
+  --text-label-m--letter-spacing: 0.1px;
+
+  --text-label-s:     11px;
+  --text-label-s--line-height: 16px;
+  --text-label-s--font-weight: 500;
+  --text-label-s--letter-spacing: 0.1px;
+
+  --text-body-l:      16px;
+  --text-body-l--line-height: 24px;
+  --text-body-l--font-weight: 400;
+
+  --text-body-m:      14px;
+  --text-body-m--line-height: 20px;
+  --text-body-m--font-weight: 400;
+
+  --text-body-s:      12px;
+  --text-body-s--line-height: 16px;
+  --text-body-s--font-weight: 400;
+  --text-body-s--letter-spacing: 0.1px;
+
+  --text-code-l:      16px;
+  --text-code-l--line-height: 24px;
+
+  --text-code-m:      14px;
+  --text-code-m--line-height: 20px;
+
+  /* ── Progress bar animation (login + auth callback) ──── */
   @keyframes progress-indeterminate {
     0%   { transform: translateX(-100%); }
     50%  { transform: translateX(0%); }
@@ -335,14 +493,31 @@
     @apply bg-primary/20 text-foreground;
   }
 
+  html, body, #root {
+    height: 100%;
+    margin: 0;
+  }
+
   html {
     @apply font-sans;
+    font-family: var(--font-text);
+    font-optical-sizing: auto;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   body {
-    @apply bg-background text-foreground text-[14px];
+    @apply bg-background text-foreground;
+    font-family: var(--font-text);
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 400;
+  }
+
+  /* M3 display family for proper headings. */
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    font-weight: 475;
   }
 
   button, [role="button"], .cursor-pointer {
@@ -353,15 +528,31 @@
     user-select: none;
     -webkit-user-select: none;
     line-height: 1;
+    font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
   }
 
+  /* Form controls don't inherit font-family reliably across browsers — pin
+     them (and placeholders) to the app font so inputs aren't system-default. */
+  input, textarea, select, button {
+    font-family: var(--font-text);
+  }
+
+  ::placeholder {
+    font-family: var(--font-text);
+  }
+
+  /* Single subtle focus ring. */
   :focus-visible {
-    @apply outline-none ring-4 ring-primary/40 border-primary;
+    @apply outline-none ring-2 ring-primary/30;
+  }
+
+  .dark hr {
+    border-color: var(--border) !important;
   }
 }
 
 /* ───────────────────────────────────────────────────────────────────
-   CUSTOM SCROLLBAR — Material 3
+   CUSTOM SCROLLBAR — Material 3 (4px)
    ─────────────────────────────────────────────────────────────────── */
 
 ::-webkit-scrollbar {
@@ -401,15 +592,20 @@
    ─────────────────────────────────────────────────────────────────── */
 
 [data-sonner-toast] {
-  border-radius: 9999px !important;
+  border-radius: 24px !important;
   box-shadow: none !important;
-  background: var(--foreground) !important;
-  color: var(--background) !important;
   border: none !important;
 }
 
+/* Tonal toast colours — adapt automatically via the :root (light) / .dark
+   (dark) palette, matching the M3 status families. */
+[data-sonner-toast][data-type="success"] { background: var(--emerald) !important; color: var(--emerald-foreground) !important; }
+[data-sonner-toast][data-type="error"]   { background: var(--red) !important;     color: var(--red-foreground) !important; }
+[data-sonner-toast][data-type="warning"] { background: var(--amber) !important;    color: var(--amber-foreground) !important; }
+[data-sonner-toast][data-type="info"]    { background: var(--blue) !important;     color: var(--blue-foreground) !important; }
+
 /* ───────────────────────────────────────────────────────────────────
-   MARKDOWN TYPOGRAPHY — Material 3
+   MARKDOWN TYPOGRAPHY — Material 3 (.prose-m3 on react-markdown output)
    ─────────────────────────────────────────────────────────────────── */
 
 @layer components {
@@ -432,7 +628,7 @@
     --tw-prose-td-borders: var(--border) !important;
   }
 
-  /* Tighten Markdown Spacing */
+  /* Tighten Markdown spacing */
   .prose-m3 p,
   .prose-m3 ul,
   .prose-m3 ol,

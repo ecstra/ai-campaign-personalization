@@ -116,7 +116,7 @@ export default function DocumentDetail() {
                                 <span className="material-symbols-rounded text-[24px] text-primary">description</span>
                             </div>
                             <div className="min-w-0">
-                                <h1 className="text-[28px] font-bold tracking-tight truncate">{doc.name}</h1>
+                                <h1 className="text-headline-m font-bold tracking-tight truncate">{doc.name}</h1>
                                 <p className="text-muted-foreground text-[14px] mt-1">
                                     {formatSize(doc.size_bytes)} · {doc.word_count} words · Uploaded {formatDate(doc.created_at)}
                                 </p>
@@ -131,7 +131,7 @@ export default function DocumentDetail() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={handleDelete}
-                                className="rounded-full h-10 w-10 text-muted-foreground hover:text-destructive-hover-foreground hover:bg-destructive-hover"
+                                className="rounded-full h-10 w-10 text-muted-foreground hover:text-destructive-hover-foreground! hover:bg-destructive-hover!"
                             >
                                 <span className="material-symbols-rounded text-[20px]">delete</span>
                             </Button>
@@ -141,7 +141,7 @@ export default function DocumentDetail() {
 
                 {/* Context note */}
                 {doc && (
-                    <p className="text-[13px] text-muted-foreground leading-relaxed bg-muted/30 border rounded-lg px-5 py-4">
+                    <p className="text-[13px] text-muted-foreground leading-relaxed bg-muted/30 border rounded-2xl px-5 py-4">
                         This is the brief the LLM consults when personalizing every email for campaigns that attach this document. The original file was discarded after parsing — to update the brief, re-upload the source document.
                     </p>
                 )}
@@ -153,11 +153,11 @@ export default function DocumentDetail() {
                     </div>
                 ) : doc ? (
                     /(^#+\s|\*\*.*?\*\*|__.*?__|\[.+?\]\(.+?\)|\n[*-]\s|\n\d+\.\s|```|^>\s)/m.test(doc.brief) ? (
-                        <article className="bg-card border rounded-lg p-8 prose prose-m3 max-w-none break-words">
+                        <article className="bg-card border rounded-2xl p-8 prose prose-m3 max-w-none break-words">
                             <ReactMarkdown>{doc.brief}</ReactMarkdown>
                         </article>
                     ) : (
-                        <article className="bg-card border rounded-lg p-8 text-[14px] leading-relaxed whitespace-pre-wrap font-mono">
+                        <article className="bg-card border rounded-2xl p-8 text-[14px] leading-relaxed whitespace-pre-wrap font-mono">
                             {doc.brief}
                         </article>
                     )

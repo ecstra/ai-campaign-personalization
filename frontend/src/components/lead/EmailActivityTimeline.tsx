@@ -37,15 +37,15 @@ export default function EmailActivityTimeline({
     if (loading) {
         return (
             <div className="space-y-3">
-                {[1, 2, 3].map(i => <Skeleton key={i} className="h-20 rounded-lg" />)}
+                {[1, 2, 3].map(i => <Skeleton key={i} className="h-20 rounded-2xl" />)}
             </div>
         )
     }
 
     if (activity.length === 0) {
         return (
-            <div className="text-center py-12 border border-dashed rounded-lg">
-                <p className="text-[14px] text-muted-foreground">No emails sent yet</p>
+            <div className="text-center py-12 border border-dashed rounded-2xl">
+                <p className="text-body-m text-muted-foreground">No emails sent yet</p>
             </div>
         )
     }
@@ -68,7 +68,7 @@ export default function EmailActivityTimeline({
                             <div className={`absolute -left-6 top-4 w-3.5 h-3.5 rounded-full border-2 border-background ${dotColor} ring-2 ring-background`} />
 
                             <div
-                                className={`bg-card border rounded-lg p-5 cursor-pointer transition-colors hover:bg-accent/50 ${isExpanded ? "bg-accent/30" : ""}`}
+                                className={`bg-card border border-border rounded-2xl p-5 cursor-pointer transition-colors hover:bg-accent/50 ${isExpanded ? "bg-accent/30" : ""}`}
                                 onClick={() => toggleExpand(email.id)}
                             >
                                 <div className="flex items-start justify-between gap-3">
@@ -77,12 +77,12 @@ export default function EmailActivityTimeline({
                                             : email.status === "received" ? <span className="material-symbols-rounded text-info-foreground text-[18px] flex-shrink-0">reply</span>
                                             : email.status === "failed" ? <span className="material-symbols-rounded text-destructive-container-foreground text-[18px] flex-shrink-0">error</span>
                                             : <span className="material-symbols-rounded text-warning-foreground text-[18px] flex-shrink-0">schedule</span>}
-                                        <span className="font-semibold text-[15px]">
+                                        <span className="text-title-m">
                                             {email.status === "received" || email.sequence_number <= 0
                                                 ? "Reply Received"
                                                 : `Email #${email.sequence_number}`}
                                         </span>
-                                        <span className="text-[11px] text-muted-foreground hidden sm:inline">
+                                        <span className="text-body-s text-muted-foreground hidden sm:inline">
                                             {formatDate(email.sent_at || email.created_at)}
                                         </span>
                                     </div>
@@ -92,7 +92,7 @@ export default function EmailActivityTimeline({
                                     </div>
                                 </div>
 
-                                <p className={`text-[14px] mt-3 ${isExpanded ? "" : "line-clamp-1"} text-muted-foreground`}>
+                                <p className={`text-body-m mt-3 ${isExpanded ? "" : "line-clamp-1"} text-muted-foreground`}>
                                     {email.subject}
                                 </p>
 
@@ -104,7 +104,7 @@ export default function EmailActivityTimeline({
                                     <div className="overflow-hidden">
                                         <div className="pt-4 border-t">
                                         <div
-                                            className="text-[14px] leading-relaxed [&>p]:mb-3 [&>p:last-child]:mb-0"
+                                            className="text-body-m leading-relaxed [&>p]:mb-3 [&>p:last-child]:mb-0"
                                             dangerouslySetInnerHTML={{
                                                 __html: email.status === "failed"
                                                     ? "We couldn't send this email. Please check if the email address is valid."

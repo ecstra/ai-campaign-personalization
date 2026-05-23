@@ -11,7 +11,7 @@ interface CampaignOverviewProps {
 
 export default function CampaignOverview({ campaign, stats, leads, loading }: CampaignOverviewProps) {
     if (loading) {
-        return <Skeleton className="h-40 rounded-lg" />
+        return <Skeleton className="h-40 rounded-2xl" />
     }
 
     if (!campaign || !stats) {
@@ -28,7 +28,7 @@ export default function CampaignOverview({ campaign, stats, leads, loading }: Ca
     const notesPercent = leads.length > 0 ? Math.round((leadsWithNotes / leads.length) * 100) : 0
 
     return (
-        <div className="bg-card border rounded-lg overflow-hidden ">
+        <div className="bg-card border border-border rounded-2xl overflow-hidden ">
             {/* Stat row: single container, divided columns */}
             <div className="grid grid-cols-3 sm:grid-cols-6 divide-x">
                 {[

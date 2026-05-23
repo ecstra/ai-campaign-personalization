@@ -62,8 +62,8 @@ export default function LeadsTable({
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between">
-                <h2 className="text-[20px] font-bold tracking-tight">Leads</h2>
-                {!loading && <span className="text-[13px] text-muted-foreground">{filteredLeads.length} total</span>}
+                <h2 className="text-title-l">Leads</h2>
+                {!loading && <span className="text-body-s text-muted-foreground">{filteredLeads.length} total</span>}
             </div>
 
             {!loading && (
@@ -74,8 +74,8 @@ export default function LeadsTable({
             )}
 
             {selectedLeads.size > 0 && (
-                <div className="flex items-center gap-2 bg-muted/30 border rounded-full px-5 py-3 ">
-                    <span className="text-[14px] font-medium leading-none">
+                <div className="flex items-center gap-2 bg-muted/30 border border-border rounded-full px-5 py-3 ">
+                    <span className="text-body-m font-medium leading-none">
                         {confirmingDelete ? `Delete ${selectedLeads.size} lead(s)?` : `${selectedLeads.size} selected`}
                     </span>
                     {confirmingDelete ? (
@@ -87,7 +87,7 @@ export default function LeadsTable({
                         </>
                     ) : (
                         <>
-                            <Button variant="ghost" size="icon" onClick={() => setConfirmingDelete(true)} className="h-9 w-9 rounded-full text-muted-foreground hover:text-destructive-hover-foreground hover:bg-destructive-hover">
+                            <Button variant="ghost" size="icon" onClick={() => setConfirmingDelete(true)} className="h-9 w-9 rounded-full text-muted-foreground hover:bg-destructive-hover! hover:text-destructive-hover-foreground! transition-colors">
                                 <span className="material-symbols-rounded text-[18px]">delete</span>
                             </Button>
                             <Button variant="ghost" onClick={() => setSelectedLeads(new Set())} className="h-9 text-[13px] rounded-full px-4">Clear</Button>
@@ -97,16 +97,16 @@ export default function LeadsTable({
             )}
 
             {loading ? (
-                <Skeleton className="h-48 rounded-lg" />
+                <Skeleton className="h-48 rounded-2xl" />
             ) : filteredLeads.length === 0 ? (
-                <div className="text-center py-12 border border-dashed rounded-lg">
-                    <p className="text-muted-foreground text-[13px]">
+                <div className="text-center py-12 border border-dashed rounded-2xl">
+                    <p className="text-muted-foreground text-body-s">
                         {leads.length === 0 ? "No leads yet. Add leads manually or import from CSV." : "No leads match your search."}
                     </p>
                 </div>
             ) : (
-                <div className="border rounded-lg overflow-y-auto max-h-[50vh]  bg-card">
-                    <Table containerClassName="rounded-lg">
+                <div className="border border-border rounded-2xl overflow-y-auto max-h-[50vh]  bg-card">
+                    <Table containerClassName="rounded-2xl">
                         <TableHeader className="bg-muted">
                             <TableRow>
                                 <TableHead className="w-10">
@@ -134,7 +134,7 @@ export default function LeadsTable({
                             {filteredLeads.map(lead => {
                                 const s = getLeadStatus(lead.status)
                                 return (
-                                    <TableRow key={lead.id} tabIndex={0} role="button" className="cursor-pointer group hover:bg-muted/60" onClick={() => navigate(`/campaigns/${campaignId}/leads/${lead.id}`)} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigate(`/campaigns/${campaignId}/leads/${lead.id}`) } }}>
+                                    <TableRow key={lead.id} tabIndex={0} role="button" className="cursor-pointer group hover:bg-muted/40" onClick={() => navigate(`/campaigns/${campaignId}/leads/${lead.id}`)} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigate(`/campaigns/${campaignId}/leads/${lead.id}`) } }}>
                                         <TableCell onClick={e => e.stopPropagation()}>
                                             <label className="flex items-center justify-center cursor-pointer">
                                                 <input 
@@ -149,15 +149,15 @@ export default function LeadsTable({
                                             </label>
                                         </TableCell>
                                         <TableCell className="py-4">
-                                            <span className="inline-flex items-center gap-1.5 font-medium text-[14px] group-hover:text-primary transition-colors">
+                                            <span className="inline-flex items-center gap-1.5 font-medium text-body-m group-hover:text-primary transition-colors">
                                                 {lead.first_name} {lead.last_name}
                                                 <span className="material-symbols-rounded text-[14px] opacity-0 group-hover:opacity-100 transition-opacity">arrow_outward</span>
                                             </span>
                                         </TableCell>
-                                        <TableCell className="text-[14px] text-muted-foreground max-w-[200px] py-4"><span className="truncate block" title={lead.email}>{lead.email}</span></TableCell>
-                                        <TableCell className="text-[14px] py-4">{lead.company || "—"}</TableCell>
+                                        <TableCell className="text-body-m text-muted-foreground max-w-[200px] py-4"><span className="truncate block" title={lead.email}>{lead.email}</span></TableCell>
+                                        <TableCell className="text-body-m py-4">{lead.company || "—"}</TableCell>
                                         <TableCell className="py-4"><Badge variant={s.variant} className={`${s.className} text-[11px] px-3 py-1 rounded-full`}>{s.label}</Badge></TableCell>
-                                        <TableCell className="text-[14px] text-muted-foreground py-4">{lead.current_sequence}</TableCell>
+                                        <TableCell className="text-body-m text-muted-foreground py-4">{lead.current_sequence}</TableCell>
                                     </TableRow>
                                 )
                             })}

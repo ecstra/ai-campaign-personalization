@@ -43,7 +43,7 @@ function SectionCard({
     children: React.ReactNode
 }) {
     return (
-        <div className="bg-card border rounded-lg p-6 space-y-5 ">
+        <div className="bg-card border rounded-2xl p-6 space-y-5 ">
             <div className="flex items-center gap-4">
                 <div className="size-11 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
                     <span className="material-symbols-rounded text-[22px]">{icon}</span>
@@ -189,7 +189,7 @@ export default function CampaignCreate() {
             <div className="max-w-5xl mx-auto space-y-6">
                 {/* Header */}
                 <div>
-                    <h1 className="text-[28px] font-bold tracking-tight">New campaign</h1>
+                    <h1 className="text-headline-m font-bold tracking-tight">New campaign</h1>
                     <p className="text-muted-foreground text-[14px] mt-1">
                         Configure the outreach. Add leads after it's created.
                     </p>
@@ -214,7 +214,7 @@ export default function CampaignCreate() {
                                         placeholder="Q1 Outreach"
                                         aria-invalid={!!fieldErrors.name}
                                         aria-describedby={fieldErrors.name ? "name-error" : undefined}
-                                        className={`h-11 text-[14px] rounded-lg px-4 ${fieldErrors.name ? "border-destructive" : ""}`}
+                                        className={`h-11 text-[14px] rounded-full px-4 ${fieldErrors.name ? "border-destructive" : ""}`}
                                     />
                                     {fieldErrors.name && <p id="name-error" className="text-[12px] text-destructive pl-2">{fieldErrors.name}</p>}
                                 </div>
@@ -227,7 +227,7 @@ export default function CampaignCreate() {
                                         placeholder="John Doe"
                                         aria-invalid={!!fieldErrors.sender_name}
                                         aria-describedby={fieldErrors.sender_name ? "sender_name-error" : undefined}
-                                        className={`h-11 text-[14px] rounded-lg px-4 ${fieldErrors.sender_name ? "border-destructive" : ""}`}
+                                        className={`h-11 text-[14px] rounded-full px-4 ${fieldErrors.sender_name ? "border-destructive" : ""}`}
                                     />
                                     {fieldErrors.sender_name && <p id="sender_name-error" className="text-[12px] text-destructive pl-2">{fieldErrors.sender_name}</p>}
                                 </div>
@@ -250,7 +250,7 @@ export default function CampaignCreate() {
                                                 type="number" min={0} max={30} placeholder="0"
                                                 value={delayDays || ""}
                                                 onChange={e => handleIntFromEvent(e, setDelayDays, n => validateDelay(n, delayHours, delayMinutes))}
-                                                className={`h-11 text-[14px] rounded-lg px-4 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${fieldErrors.delay_days ? "border-destructive" : ""}`}
+                                                className={`h-11 text-[14px] rounded-full px-4 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${fieldErrors.delay_days ? "border-destructive" : ""}`}
                                             />
                                             {fieldErrors.delay_days && <p className="text-[11px] text-destructive pl-2">{fieldErrors.delay_days}</p>}
                                         </div>
@@ -260,7 +260,7 @@ export default function CampaignCreate() {
                                                 type="number" min={0} max={23} placeholder="0"
                                                 value={delayHours || ""}
                                                 onChange={e => handleIntFromEvent(e, setDelayHours, n => validateDelay(delayDays, n, delayMinutes))}
-                                                className={`h-11 text-[14px] rounded-lg px-4 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${fieldErrors.delay_hours ? "border-destructive" : ""}`}
+                                                className={`h-11 text-[14px] rounded-full px-4 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${fieldErrors.delay_hours ? "border-destructive" : ""}`}
                                             />
                                             {fieldErrors.delay_hours && <p className="text-[11px] text-destructive pl-2">{fieldErrors.delay_hours}</p>}
                                         </div>
@@ -270,7 +270,7 @@ export default function CampaignCreate() {
                                                 type="number" min={0} max={59} placeholder="0"
                                                 value={delayMinutes || ""}
                                                 onChange={e => handleIntFromEvent(e, setDelayMinutes, n => validateDelay(delayDays, delayHours, n))}
-                                                className={`h-11 text-[14px] rounded-lg px-4 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${fieldErrors.delay_minutes ? "border-destructive" : ""}`}
+                                                className={`h-11 text-[14px] rounded-full px-4 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${fieldErrors.delay_minutes ? "border-destructive" : ""}`}
                                             />
                                             {fieldErrors.delay_minutes && <p className="text-[11px] text-destructive pl-2">{fieldErrors.delay_minutes}</p>}
                                         </div>
@@ -293,7 +293,7 @@ export default function CampaignCreate() {
                                         }}
                                         aria-invalid={!!fieldErrors.max_follow_ups}
                                         aria-describedby={fieldErrors.max_follow_ups ? "max_follow_ups-error" : undefined}
-                                        className={`h-11 text-[14px] rounded-lg px-4 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${fieldErrors.max_follow_ups ? "border-destructive" : ""}`}
+                                        className={`h-11 text-[14px] rounded-full px-4 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${fieldErrors.max_follow_ups ? "border-destructive" : ""}`}
                                     />
                                     {fieldErrors.max_follow_ups ? (
                                         <p id="max_follow_ups-error" className="text-[12px] text-destructive pl-2">{fieldErrors.max_follow_ups}</p>
@@ -317,7 +317,7 @@ export default function CampaignCreate() {
                                 aria-invalid={!!fieldErrors.goal}
                                 aria-describedby={fieldErrors.goal ? "goal-error" : undefined}
                                 placeholder={`We help [who] solve [their problem] by [your solution].\n\nProof points:\n- …\n- …\n\nGoal: get them to [specific action, e.g. book a 20-min call].`}
-                                className="min-h-[220px] text-[14px] p-4 rounded-sm leading-relaxed"
+                                className="min-h-[220px] text-[14px] p-4 rounded-2xl leading-relaxed"
                             />
                             {fieldErrors.goal && <p id="goal-error" className="text-[12px] text-destructive pl-2">{fieldErrors.goal}</p>}
                             <div className="flex items-start gap-2 text-[13px] text-muted-foreground mt-3">
@@ -329,30 +329,30 @@ export default function CampaignCreate() {
 
                     {/* RIGHT: live summary */}
                     <aside className="lg:sticky lg:top-6 lg:self-start space-y-4">
-                        <div className="bg-card border rounded-lg p-5 space-y-4 ">
-                            <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">Summary</p>
-                            <dl className="space-y-4">
-                                <div className="flex justify-between gap-3">
-                                    <dt className="text-[14px] text-muted-foreground">Name</dt>
-                                    <dd className="text-[14px] font-medium truncate max-w-[60%] text-right">{form.name || "—"}</dd>
+                        <div className="bg-card border rounded-2xl p-5 space-y-4 ">
+                            <p className="text-label-m uppercase tracking-wider text-muted-foreground">Summary</p>
+                            <dl className="space-y-3">
+                                <div className="flex justify-between gap-3 items-baseline">
+                                    <dt className="text-body-m text-muted-foreground">Name</dt>
+                                    <dd className="text-body-m font-medium truncate max-w-[60%] text-right">{form.name || "—"}</dd>
                                 </div>
-                                <div className="flex justify-between gap-3">
-                                    <dt className="text-[14px] text-muted-foreground">Sender</dt>
-                                    <dd className="text-[14px] font-medium truncate max-w-[60%] text-right">{form.sender_name || "—"}</dd>
+                                <div className="flex justify-between gap-3 items-baseline">
+                                    <dt className="text-body-m text-muted-foreground">Sender</dt>
+                                    <dd className="text-body-m font-medium truncate max-w-[60%] text-right">{form.sender_name || "—"}</dd>
                                 </div>
-                                <div className="flex justify-between gap-3">
-                                    <dt className="text-[14px] text-muted-foreground">Delay</dt>
-                                    <dd className="text-[14px] font-medium">{delaySummary}</dd>
+                                <div className="flex justify-between gap-3 items-baseline">
+                                    <dt className="text-body-m text-muted-foreground">Delay</dt>
+                                    <dd className="text-body-m font-medium">{delaySummary}</dd>
                                 </div>
-                                <div className="flex justify-between gap-3">
-                                    <dt className="text-[14px] text-muted-foreground">Follow-ups</dt>
-                                    <dd className="text-[14px] font-medium">{form.max_follow_ups || 0}</dd>
+                                <div className="flex justify-between gap-3 items-baseline">
+                                    <dt className="text-body-m text-muted-foreground">Follow-ups</dt>
+                                    <dd className="text-body-m font-medium">{form.max_follow_ups || 0}</dd>
                                 </div>
                             </dl>
                         </div>
 
-                        <div className="bg-muted/40 border rounded-lg p-5 space-y-2">
-                            <div className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        <div className="bg-primary/10 border border-primary/20 rounded-2xl p-5 space-y-2">
+                            <div className="flex items-center gap-2 text-label-m uppercase tracking-wider text-primary">
                                 <span className="material-symbols-rounded text-[16px]">rocket_launch</span>
                                 Next steps
                             </div>

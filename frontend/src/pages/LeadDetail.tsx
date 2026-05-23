@@ -41,7 +41,7 @@ export default function LeadDetail() {
 
     useBreadcrumbs([
         { label: "Campaigns", href: "/" },
-        { label: lead?.campaign_name || "Campaign", href: campaignId ? `/campaigns/${campaignId}` : "/" },
+        { label: lead?.campaign_name || "Loading...", href: campaignId ? `/campaigns/${campaignId}` : "/" },
         { label: lead ? `${lead.first_name} ${lead.last_name}` : "Loading..." },
     ])
 
@@ -142,7 +142,7 @@ export default function LeadDetail() {
         return (
             <div className="p-6">
                 <div className="w-full">
-                    <Alert variant="destructive" className="rounded-lg bg-destructive-alert text-destructive-alert-foreground border-none p-5">
+                    <Alert variant="destructive" className="rounded-2xl bg-destructive-alert text-destructive-alert-foreground border-none p-5">
                         <span className="material-symbols-rounded text-[20px] mr-3">error</span>
                         <AlertDescription className="text-[14px]">{error}</AlertDescription>
                     </Alert>
@@ -159,17 +159,23 @@ export default function LeadDetail() {
             <div className="w-full space-y-6">
 
                 {/* ── Header ───────────────────────────────────────── */}
-                <div className="flex items-start justify-between">
-                    <div>
-                        {loading ? (
-                            <>
-                                <Skeleton className="h-9 w-52 mb-2" />
+                <div className="flex items-start justify-between gap-4">
+                    {loading ? (
+                        <div className="flex items-center gap-4">
+                            <Skeleton className="size-14 rounded-full" />
+                            <div>
+                                <Skeleton className="h-8 w-52 mb-2" />
                                 <Skeleton className="h-4 w-40" />
-                            </>
-                        ) : lead && (
-                            <>
-                                <div className="flex items-center gap-3 mb-1">
-                                    <h1 className="text-2xl font-semibold tracking-tight">
+                            </div>
+                        </div>
+                    ) : lead && (
+                        <div className="flex items-center gap-4 min-w-0">
+                            <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary dark:bg-primary dark:text-primary-foreground text-title-l font-medium select-none">
+                                {`${lead.first_name?.[0] ?? ""}${lead.last_name?.[0] ?? ""}`.toUpperCase() || "?"}
+                            </div>
+                            <div className="min-w-0">
+                                <div className="flex items-center gap-3 flex-wrap">
+                                    <h1 className="text-headline-m font-semibold tracking-tight truncate">
                                         {lead.first_name} {lead.last_name}
                                     </h1>
                                     {leadStatus && (
@@ -178,20 +184,21 @@ export default function LeadDetail() {
                                         </Badge>
                                     )}
                                 </div>
-                                <a href={`mailto:${lead.email}`} className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                                    {lead.email}
+                                <a href={`mailto:${lead.email}`} className="inline-flex items-center gap-1.5 text-body-m text-muted-foreground hover:text-primary transition-colors mt-1">
+                                    <span className="material-symbols-rounded text-[16px]">mail</span>
+                                    <span className="truncate">{lead.email}</span>
                                 </a>
-                            </>
-                        )}
-                    </div>
+                            </div>
+                        </div>
+                    )}
                     {!loading && lead && (
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 shrink-0">
                             {!isTerminal && (
                                 <Button variant="outline" onClick={startEditingLead} className="gap-2 rounded-full h-10 px-5  text-[14px]">
                                     <span className="material-symbols-rounded text-[18px]">edit</span> Edit
                                 </Button>
                             )}
-                            <Button variant="ghost" size="icon" onClick={() => setShowDeleteModal(true)} className="text-muted-foreground hover:text-destructive-hover-foreground hover:bg-destructive-hover rounded-full h-10 w-10">
+                            <Button variant="ghost" size="icon" onClick={() => setShowDeleteModal(true)} className="text-muted-foreground hover:text-destructive-hover-foreground! hover:bg-destructive-hover! rounded-full h-10 w-10">
                                 <span className="material-symbols-rounded text-[20px]">delete</span>
                             </Button>
                         </div>
@@ -200,9 +207,9 @@ export default function LeadDetail() {
 
                 {/* ── Edit Panel ────────────────────────────────────── */}
                 {editingLead && (
-                    <div className="bg-card border rounded-lg p-6 space-y-5 ">
+                    <div className="bg-card border border-border rounded-3xl p-6 space-y-5">
                         <div className="flex items-center justify-between">
-                            <h2 className="text-[18px] font-semibold">Edit Lead</h2>
+                            <h2 className="text-title-l font-semibold">Edit Lead</h2>
                             <div className="flex items-center gap-3">
                                 <Button onClick={handleSaveLead} disabled={savingLead} className="gap-2 rounded-full h-10 px-5  text-[14px]">
                                     <span className="material-symbols-rounded text-[18px]">check</span> {savingLead ? "Saving..." : "Save"}
@@ -215,23 +222,23 @@ export default function LeadDetail() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-1.5">
                                 <label className="text-[13px] font-medium text-muted-foreground pl-2">First Name</label>
-                                <Input value={leadForm.first_name} onChange={e => setLeadForm({ ...leadForm, first_name: e.target.value })} className="h-11 text-[14px] rounded-lg px-4" />
+                                <Input value={leadForm.first_name} onChange={e => setLeadForm({ ...leadForm, first_name: e.target.value })} className="h-11 text-[14px] rounded-full px-4" />
                             </div>
                             <div className="space-y-1.5">
                                 <label className="text-[13px] font-medium text-muted-foreground pl-2">Last Name</label>
-                                <Input value={leadForm.last_name} onChange={e => setLeadForm({ ...leadForm, last_name: e.target.value })} className="h-11 text-[14px] rounded-lg px-4" />
+                                <Input value={leadForm.last_name} onChange={e => setLeadForm({ ...leadForm, last_name: e.target.value })} className="h-11 text-[14px] rounded-full px-4" />
                             </div>
                             <div className="space-y-1.5">
                                 <label className="text-[13px] font-medium text-muted-foreground pl-2">Email</label>
-                                <Input value={leadForm.email} onChange={e => setLeadForm({ ...leadForm, email: e.target.value })} className="h-11 text-[14px] rounded-lg px-4" />
+                                <Input value={leadForm.email} onChange={e => setLeadForm({ ...leadForm, email: e.target.value })} className="h-11 text-[14px] rounded-full px-4" />
                             </div>
                             <div className="space-y-1.5">
                                 <label className="text-[13px] font-medium text-muted-foreground pl-2">Company</label>
-                                <Input value={leadForm.company} onChange={e => setLeadForm({ ...leadForm, company: e.target.value })} className="h-11 text-[14px] rounded-lg px-4" />
+                                <Input value={leadForm.company} onChange={e => setLeadForm({ ...leadForm, company: e.target.value })} className="h-11 text-[14px] rounded-full px-4" />
                             </div>
                             <div className="sm:col-span-2 space-y-1.5">
                                 <label className="text-[13px] font-medium text-muted-foreground pl-2">Title</label>
-                                <Input value={leadForm.title} onChange={e => setLeadForm({ ...leadForm, title: e.target.value })} className="h-11 text-[14px] rounded-lg px-4" />
+                                <Input value={leadForm.title} onChange={e => setLeadForm({ ...leadForm, title: e.target.value })} className="h-11 text-[14px] rounded-full px-4" />
                             </div>
                         </div>
                     </div>
@@ -240,54 +247,41 @@ export default function LeadDetail() {
                 {/* ── Info Grid ─────────────────────────────────────── */}
                 {loading ? (
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-20 rounded-lg" />)}
+                        {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-20 rounded-2xl" />)}
                     </div>
                 ) : lead && (
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        <div className="bg-card border rounded-lg p-5 ">
-                            <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                                <span className="material-symbols-rounded text-[16px]">domain</span>
-                                <span className="text-[12px] font-semibold uppercase tracking-wider">Company</span>
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                        {[
+                            { icon: "domain", label: "Company", value: lead.company || "—" },
+                            { icon: "work", label: "Title", value: lead.title || "—" },
+                            { icon: "tag", label: "Sequence", value: `${lead.current_sequence} / ${lead.max_follow_ups}` },
+                            { icon: "event_available", label: "Next Email", value: isTerminal ? "—" : formatDate(lead.next_email_at) },
+                        ].map((item) => (
+                            <div key={item.label} className="bg-muted/40 rounded-2xl p-4 flex flex-col gap-3">
+                                <span className="material-symbols-rounded text-[20px] text-primary">{item.icon}</span>
+                                <div className="min-w-0">
+                                    <p className="text-label-s uppercase tracking-wider text-muted-foreground">{item.label}</p>
+                                    <p className="text-title-s font-medium truncate mt-0.5">{item.value}</p>
+                                </div>
                             </div>
-                            <p className="text-[15px] font-medium truncate">{lead.company || "—"}</p>
-                        </div>
-                        <div className="bg-card border rounded-lg p-5 ">
-                            <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                                <span className="material-symbols-rounded text-[16px]">work</span>
-                                <span className="text-[12px] font-semibold uppercase tracking-wider">Title</span>
-                            </div>
-                            <p className="text-[15px] font-medium truncate">{lead.title || "—"}</p>
-                        </div>
-                        <div className="bg-card border rounded-lg p-5 ">
-                            <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                                <span className="material-symbols-rounded text-[16px]">tag</span>
-                                <span className="text-[12px] font-semibold uppercase tracking-wider">Sequence</span>
-                            </div>
-                            <p className="text-[15px] font-medium">{lead.current_sequence} / {lead.max_follow_ups}</p>
-                        </div>
-                        <div className="bg-card border rounded-lg p-5 ">
-                            <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                                <span className="material-symbols-rounded text-[16px]">event_available</span>
-                                <span className="text-[12px] font-semibold uppercase tracking-wider">Next Email</span>
-                            </div>
-                            <p className="text-[14px] font-medium">
-                                {isTerminal ? "—" : formatDate(lead.next_email_at)}
-                            </p>
-                        </div>
+                        ))}
                     </div>
                 )}
 
                 {/* ── Notes ─────────────────────────────────────────── */}
                 {loading ? (
-                    <Skeleton className="h-[160px] rounded-lg" />
+                    <Skeleton className="h-[160px] rounded-2xl" />
                 ) : lead && (
-                    <div className="bg-card border rounded-lg p-6 space-y-4 ">
-                        <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">Notes</p>
+                    <div className="bg-card border border-border rounded-3xl p-6 space-y-4">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                            <span className="material-symbols-rounded text-[18px]">sticky_note_2</span>
+                            <p className="text-label-m uppercase tracking-wider">Notes</p>
+                        </div>
                         <Textarea
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
                             placeholder="Add notes about this lead..."
-                            className="min-h-[100px] text-[14px] p-4 rounded-sm resize-none"
+                            className="min-h-[120px] text-[14px] p-4 rounded-2xl resize-none bg-muted/40 border-transparent"
                             disabled={loading || saving}
                         />
                         <div className="flex items-center gap-3">
@@ -306,7 +300,7 @@ export default function LeadDetail() {
 
                 {/* ── Email Activity ────────────────────────────────── */}
                 <div className="space-y-3">
-                    <h2 className="text-lg font-semibold">Email Activity</h2>
+                    <h2 className="text-title-l font-semibold">Email Activity</h2>
                     <EmailActivityTimeline
                         activity={activity}
                         loading={loading}

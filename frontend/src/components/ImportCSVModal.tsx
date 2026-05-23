@@ -250,7 +250,7 @@ export default function ImportCSVModal({ open, onClose, onSuccess, campaignId }:
                         <div className="flex items-start justify-between gap-3">
                             <div className="space-y-2 min-w-0">
                                 <div>
-                                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Required</p>
+                                    <p className="text-label-m uppercase tracking-wider text-muted-foreground mb-1">Required</p>
                                     <div className="flex flex-wrap gap-1">
                                         {REQUIRED_HEADERS.map(col => (
                                             <span key={col} className="px-2.5 py-1 text-xs bg-background border rounded-full">{col}</span>
@@ -258,7 +258,7 @@ export default function ImportCSVModal({ open, onClose, onSuccess, campaignId }:
                                     </div>
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Optional</p>
+                                    <p className="text-label-m uppercase tracking-wider text-muted-foreground mb-1">Optional</p>
                                     <div className="flex flex-wrap gap-1">
                                         {OPTIONAL_HEADERS.map(col => (
                                             <span key={col} className="px-2.5 py-1 text-xs bg-background border rounded-full">{col}</span>
@@ -316,7 +316,7 @@ export default function ImportCSVModal({ open, onClose, onSuccess, campaignId }:
 
                     {/* Preview table */}
                     {parsedLeads.length > 0 && (
-                        <div className="flex-1 flex flex-col min-h-[200px] border rounded-lg">
+                        <div className="flex-1 flex flex-col min-h-[200px] border border-border rounded-2xl">
                             <div className="flex-1 overflow-auto">
                                 <Table>
                                     <TableHeader className="sticky top-0 bg-background z-10 ">

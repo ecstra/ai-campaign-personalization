@@ -15,11 +15,11 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
 
     return (
         <Link to={`/campaigns/${campaign.id}`} className="group">
-            <div className="bg-card border rounded-lg p-6 h-full transition-colors duration-150 hover: hover:border-primary/30">
+            <div className="bg-card border border-border rounded-2xl p-6 h-full transition-all hover:border-primary">
                 <div className="flex justify-between items-start mb-3">
                     <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <h3 className="font-semibold text-[16px] truncate">{campaign.name}</h3>
-                        <span className="material-symbols-rounded text-[16px] text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">arrow_outward</span>
+                        <h3 className="font-semibold text-title-m truncate group-hover:text-primary transition-colors">{campaign.name}</h3>
+                        <span className="material-symbols-rounded text-[16px] text-muted-foreground group-hover:text-primary opacity-0 group-hover:opacity-100 transition-all flex-shrink-0">arrow_outward</span>
                     </div>
                     <Badge variant={status.variant} className={`${status.className} text-[11px] ml-2 px-3 py-1 rounded-full`}>
                         {status.label}
@@ -47,7 +47,7 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
 
 function CampaignSkeleton() {
     return (
-        <div className="bg-card border rounded-lg p-6">
+        <div className="bg-card border rounded-2xl p-6">
             <div className="flex justify-between items-start mb-3">
                 <Skeleton className="h-6 w-36 rounded-full" />
                 <Skeleton className="h-6 w-16 rounded-full" />
@@ -81,13 +81,13 @@ function CampaignContent({
 
     if (campaigns.length === 0) {
         return (
-            <div className="text-center py-20 bg-card rounded-lg border p-12">
+            <div className="text-center py-20 bg-card rounded-2xl border p-12">
                 <div className="rounded-full bg-primary/10 w-16 h-16 flex items-center justify-center mx-auto mb-4">
                     <span className="material-symbols-rounded text-[28px] text-primary">mail</span>
                 </div>
                 <p className="font-semibold text-[16px] mb-1">No campaigns yet</p>
                 <p className="text-muted-foreground text-[14px] mb-8">Create your first campaign to get started with outreach.</p>
-                <Button onClick={onCreate} className="gap-2 rounded-lg px-6 h-12 text-[15px]">
+                <Button onClick={onCreate} className="gap-2 rounded-full px-6 h-12 text-[15px]">
                     <span className="material-symbols-rounded text-[18px] -ml-0.5">add</span>
                     <span className="leading-none">Create Campaign</span>
                 </Button>
@@ -148,7 +148,7 @@ export default function Campaigns() {
         <div className="p-6 space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-[28px] font-bold tracking-tight">Campaigns</h1>
+                    <h1 className="text-headline-m font-bold tracking-tight">Campaigns</h1>
                     <p className="text-muted-foreground text-[14px] mt-1">Manage your email outreach campaigns</p>
                 </div>
                 <Button onClick={goToCreate} className="gap-1.5 rounded-full h-12 px-6 text-[15px]">
@@ -168,7 +168,7 @@ export default function Campaigns() {
             </div>
 
             {error ? (
-                <Alert variant="destructive" className="rounded-lg bg-destructive-alert text-destructive-alert-foreground border-none p-6">
+                <Alert variant="destructive" className="rounded-2xl bg-destructive-alert text-destructive-alert-foreground border-none p-6">
                     <span className="material-symbols-rounded text-[20px] mr-3">error</span>
                     <AlertDescription className="flex items-center justify-between w-full">
                         <span>{error}</span>

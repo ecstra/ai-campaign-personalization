@@ -49,17 +49,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <SidebarHeader>
                     <SidebarMenu>
                         <SidebarMenuItem>
-                            <SidebarMenuButton size="lg" asChild>
-                                <Link to="/">
-                                    <div className="flex aspect-square size-8 items-center justify-center rounded-full bg-primary/20 text-primary dark:bg-primary dark:text-primary-foreground">
-                                        <span className="material-symbols-rounded" style={{ fontSize: '16px', transform: 'rotate(-45deg) translateX(8%)' }}>send</span>
-                                    </div>
-                                    <div className="grid flex-1 text-left text-[14px] leading-tight ml-2">
-                                        <span className="truncate font-semibold">Outreach</span>
-                                        <span className="truncate text-xs text-muted-foreground">AI Mail Campaigns</span>
-                                    </div>
-                                </Link>
-                            </SidebarMenuButton>
+                            <div className="flex h-12 items-center gap-2 px-2 select-none">
+                                <div className="flex aspect-square size-8 items-center justify-center rounded-full bg-primary/20 text-primary dark:bg-primary dark:text-primary-foreground">
+                                    <span className="material-symbols-rounded" style={{ fontSize: '16px', transform: 'rotate(-45deg) translateX(8%)' }}>send</span>
+                                </div>
+                                <div className="grid flex-1 text-left leading-tight ml-2">
+                                    <span className="truncate font-semibold text-[15px]">Outreach</span>
+                                    <span className="truncate text-xs text-muted-foreground">AI Mail Campaigns</span>
+                                </div>
+                            </div>
                         </SidebarMenuItem>
                     </SidebarMenu>
                 </SidebarHeader>
@@ -118,17 +116,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                                         <span className="material-symbols-rounded ml-auto text-[20px]">unfold_more</span>
                                     </SidebarMenuButton>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent side="top" align="start" className="min-w-52">
+                                <DropdownMenuContent side="top" align="start" className="min-w-56">
                                     <div className="px-2 py-1.5">
                                         <p className="text-sm font-medium">{user?.name}</p>
                                         <p className="text-xs text-muted-foreground">{user?.email}</p>
                                     </div>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} onClick={() => setTheme(isDark ? "light" : "dark")} className="rounded-full my-1 w-full cursor-pointer hover:bg-muted-foreground/15 focus:bg-muted-foreground/15">
+                                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} onClick={() => setTheme(isDark ? "light" : "dark")} className="my-0.5 cursor-pointer">
                                         <span className="material-symbols-rounded mr-2 text-[18px]">{isDark ? "light_mode" : "dark_mode"}</span>
                                         {isDark ? "Light Mode" : "Dark Mode"}
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={logout} className="text-destructive-container-foreground hover:!text-foreground focus:!text-foreground focus:bg-destructive-hover rounded-full my-1 w-full cursor-pointer">
+                                    <DropdownMenuItem variant="destructive" onClick={logout} className="my-0.5 cursor-pointer focus:bg-destructive-hover! focus:text-destructive-hover-foreground! hover:bg-destructive-hover! hover:text-destructive-hover-foreground!">
                                         <span className="material-symbols-rounded mr-2 text-[18px]">logout</span>
                                         Sign out
                                     </DropdownMenuItem>

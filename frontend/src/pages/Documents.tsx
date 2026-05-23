@@ -164,17 +164,6 @@ export default function Documents() {
         return currentLocation.pathname !== nextLocation.pathname
     })
 
-    useEffect(() => {
-        if (blocker.state === "blocked") {
-            const leave = window.confirm("A file is still uploading. If you leave now, the upload will be cancelled. Continue?")
-            if (leave) {
-                blocker.proceed()
-            } else {
-                blocker.reset()
-            }
-        }
-    }, [blocker])
-
     // Prevent browser refresh/close ONLY if uploads are active
     useEffect(() => {
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -316,7 +305,7 @@ export default function Documents() {
         <div className="p-6">
             <div className="max-w-5xl mx-auto space-y-5">
                 <div>
-                    <h1 className="text-[28px] font-bold tracking-tight">Documents</h1>
+                    <h1 className="text-headline-m font-bold tracking-tight">Documents</h1>
                     <p className="text-muted-foreground text-[14px] mt-1">
                         Upload briefs, decks, and datasheets once. Attach them to any campaign to personalize emails with real product facts.
                     </p>
@@ -328,7 +317,7 @@ export default function Documents() {
                     onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
                     onDragLeave={() => setIsDragging(false)}
                     onDrop={handleDrop}
-                    className={`block border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${
+                    className={`block border-2 border-dashed rounded-2xl p-8 text-center transition-colors cursor-pointer ${
                         isDragging
                             ? "border-primary bg-primary/5"
                             : "border-muted-foreground/25 hover:border-muted-foreground/50"
@@ -351,7 +340,7 @@ export default function Documents() {
                 />
 
                 {error && (
-                    <Alert variant="destructive" className="rounded-lg bg-destructive-alert text-destructive-alert-foreground border-none p-5">
+                    <Alert variant="destructive" className="rounded-2xl bg-destructive-alert text-destructive-alert-foreground border-none p-5">
                         <span className="material-symbols-rounded text-[20px] mr-3">error</span>
                         <AlertDescription className="text-[14px]">{error}</AlertDescription>
                     </Alert>
@@ -360,12 +349,12 @@ export default function Documents() {
                 {/* Active Uploads */}
                 {uploads.length > 0 && (
                     <div className="space-y-3">
-                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-2">
+                        <p className="text-label-m uppercase tracking-wider text-muted-foreground mb-2">
                             Uploading & Processing ({uploads.length})
                         </p>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {uploads.map(task => (
-                                <div key={task.id} className="bg-card border rounded-lg p-5 space-y-3  relative overflow-hidden">
+                                <div key={task.id} className="bg-card border rounded-2xl p-5 space-y-3  relative overflow-hidden">
                                     <div className="flex items-start justify-between gap-3 relative z-10">
                                         <div className="flex items-center gap-4 min-w-0">
                                             <div className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 ${
@@ -414,7 +403,7 @@ export default function Documents() {
                 {/* Library list */}
                 <div>
                     <div className="flex items-center justify-between mb-4 mt-4">
-                        <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        <p className="text-label-m uppercase tracking-wider text-muted-foreground">
                             Your library ({filteredDocs.length})
                         </p>
                         <div className="relative w-64">
@@ -430,10 +419,10 @@ export default function Documents() {
 
                     {loading ? (
                         <div className="space-y-3">
-                            {[1, 2, 3].map(i => <Skeleton key={i} className="h-20 w-full rounded-lg" />)}
+                            {[1, 2, 3].map(i => <Skeleton key={i} className="h-20 w-full rounded-2xl" />)}
                         </div>
                     ) : filteredDocs.length === 0 ? (
-                        <div className="text-center py-16 border border-dashed rounded-lg">
+                        <div className="text-center py-16 border border-dashed rounded-2xl">
                             <span className="material-symbols-rounded text-[40px] mx-auto mb-3 text-muted-foreground/40">description</span>
                             <p className="text-[14px] text-muted-foreground">
                                 {docs.length === 0 ? "No documents yet" : "No documents match your search"}
@@ -445,7 +434,7 @@ export default function Documents() {
                                 <Link
                                     key={doc.id}
                                     to={`/documents/${doc.id}`}
-                                    className="group bg-card border rounded-lg p-5 flex items-center gap-4 transition-colors duration-150 hover: hover:border-primary/30"
+                                    className="group bg-card border border-border rounded-2xl p-5 flex items-center gap-4 transition-all hover:border-primary"
                                 >
                                     <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                                         <span className="material-symbols-rounded text-primary text-[20px]">description</span>
@@ -463,7 +452,7 @@ export default function Documents() {
                                         size="icon"
                                         variant="ghost"
                                         onClick={(e) => handleDelete(doc, e)}
-                                        className="h-10 w-10 rounded-full text-muted-foreground hover:bg-destructive-hover hover:text-destructive-hover-foreground"
+                                        className="h-10 w-10 rounded-full text-muted-foreground hover:bg-destructive-hover! hover:text-destructive-hover-foreground!"
                                         aria-label={`Delete ${doc.name}`}
                                     >
                                         <span className="material-symbols-rounded text-[20px]">delete</span>
@@ -483,6 +472,15 @@ export default function Documents() {
                 title="Delete Document"
                 description={`Delete "${deleteTarget?.name}"? Any campaign using it will lose the attachment.`}
                 loading={deleting}
+            />
+
+            <ConfirmDialog
+                open={blocker.state === "blocked"}
+                onClose={() => blocker.reset?.()}
+                onConfirm={() => blocker.proceed?.()}
+                title="Leave while uploading?"
+                description="A file is still uploading. If you leave now, the upload will be cancelled."
+                confirmLabel="Leave"
             />
         </div>
     )

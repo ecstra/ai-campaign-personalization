@@ -114,11 +114,11 @@ export default function AttachedDocumentsCard({
     const remainingSlots = MAX_PER_CAMPAIGN - attached.length
 
     return (
-        <div className="bg-card border rounded-lg p-6 space-y-4 ">
+        <div className="bg-card border border-border rounded-2xl p-6 space-y-4 ">
             <div className="flex items-start justify-between gap-3">
                 <div>
-                    <h2 className="text-[15px] font-semibold">Attached documents</h2>
-                    <p className="text-[13px] text-muted-foreground mt-1">
+                    <h2 className="text-title-m">Attached documents</h2>
+                    <p className="text-body-s text-muted-foreground mt-1">
                         Up to {MAX_PER_CAMPAIGN} documents from your library. The LLM uses their briefs when personalizing every email for this campaign.
                     </p>
                 </div>
@@ -133,8 +133,8 @@ export default function AttachedDocumentsCard({
             {attached.length === 0 ? (
                 <div className="text-center py-6 border border-dashed rounded-sm">
                     <span className="material-symbols-rounded text-[24px] mx-auto mb-2 text-muted-foreground/40">description</span>
-                    <p className="text-[14px] text-muted-foreground">No documents attached</p>
-                    <p className="text-[13px] text-muted-foreground/70 mt-1">
+                    <p className="text-body-m text-muted-foreground">No documents attached</p>
+                    <p className="text-body-s text-muted-foreground/70 mt-1">
                         Upload in <Link to="/documents" className="underline hover:text-foreground">Documents</Link>, then attach from here.
                     </p>
                 </div>
@@ -147,7 +147,7 @@ export default function AttachedDocumentsCard({
                             </div>
                             <Link
                                 to={`/documents/${doc.id}`}
-                                className="text-[14px] font-medium truncate flex-1 hover:text-primary transition-colors inline-flex items-center gap-1.5"
+                                className="text-body-m font-medium truncate flex-1 hover:text-primary transition-colors inline-flex items-center gap-1.5"
                             >
                                 {doc.name}
                                 <span className="material-symbols-rounded text-[14px] opacity-0 group-hover:opacity-100 transition-opacity">arrow_outward</span>
@@ -158,7 +158,7 @@ export default function AttachedDocumentsCard({
                                     variant="ghost"
                                     onClick={() => detachOne(doc.id)}
                                     disabled={detachingId === doc.id}
-                                    className="h-8 w-8 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive-hover"
+                                    className="h-8 w-8 rounded-full text-muted-foreground hover:bg-destructive-hover! hover:text-destructive-hover-foreground! transition-colors"
                                     aria-label={`Detach ${doc.name}`}
                                 >
                                     <span className="material-symbols-rounded text-[18px]">close</span>
@@ -190,7 +190,7 @@ export default function AttachedDocumentsCard({
                                 <Skeleton className="h-16 rounded-sm" />
                             </div>
                         ) : library.length === 0 ? (
-                            <Alert className="rounded-lg">
+                            <Alert className="rounded-2xl">
                                 <span className="material-symbols-rounded text-[20px] mr-3">error</span>
                                 <AlertDescription>
                                     Your library is empty. <Link to="/documents" className="underline">Upload your first document</Link>.
@@ -212,7 +212,7 @@ export default function AttachedDocumentsCard({
                                             }`}
                                         >
                                             <span className={`material-symbols-rounded text-[20px] ${isSelected ? "text-primary" : "text-muted-foreground"}`}>description</span>
-                                            <p className="text-[14px] font-medium truncate flex-1">{doc.name}</p>
+                                            <p className="text-body-m font-medium truncate flex-1">{doc.name}</p>
                                             {isSelected && <span className="material-symbols-rounded text-[20px] text-primary shrink-0">check</span>}
                                         </button>
                                     )

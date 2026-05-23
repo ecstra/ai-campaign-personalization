@@ -47,9 +47,9 @@ export default function Login() {
                 </div>
 
                 {/* Card */}
-                <div className="bg-card border rounded-lg p-8 ">
+                <div className="bg-card border rounded-2xl p-8 ">
                     <div className="text-center mb-8">
-                        <h1 className="text-[28px] font-bold tracking-tight mb-2">Welcome back</h1>
+                        <h1 className="text-headline-m font-bold tracking-tight mb-2">Welcome back</h1>
                         <p className="text-[14px] text-muted-foreground leading-relaxed">
                             Sign in with your Google account to manage<br />
                             your email campaigns.

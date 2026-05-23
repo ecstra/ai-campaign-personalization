@@ -31,18 +31,15 @@ export default function ConfirmDialog({
 }: ConfirmDialogProps) {
     return (
         <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent>
-                <DialogHeader>
-                    <div className="size-12 rounded-full bg-destructive-container flex items-center justify-center mx-auto mb-2">
-                        <span className="material-symbols-rounded text-[24px] text-destructive-container-foreground">delete_forever</span>
-                    </div>
-                    <DialogTitle className="text-center text-[20px]">{title}</DialogTitle>
-                    <DialogDescription className="text-center text-[14px]">
+            <DialogContent showCloseButton={false} className="max-w-md gap-6">
+                <DialogHeader className="gap-3">
+                    <DialogTitle>{title}</DialogTitle>
+                    <DialogDescription>
                         {description}
                     </DialogDescription>
                 </DialogHeader>
-                <DialogFooter>
-                    <Button variant="outline" onClick={onClose} disabled={loading} className="rounded-full h-10 px-5">
+                <DialogFooter className="sm:gap-2">
+                    <Button variant="ghost" onClick={onClose} disabled={loading} className="rounded-full h-10 px-5">
                         Cancel
                     </Button>
                     <Button

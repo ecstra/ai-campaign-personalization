@@ -10,12 +10,12 @@ type StatusConfig = {
 }
 
 const badgeBase = {
-    green: "bg-badge-emerald text-foreground border-transparent",
-    amber: "bg-badge-amber text-foreground border-transparent",
-    orange: "bg-badge-orange text-foreground border-transparent",
-    sky: "bg-badge-sky text-foreground border-transparent",
-    red: "bg-badge-red text-foreground border-transparent",
-    slate: "bg-badge-slate text-foreground border-transparent",
+    green: "bg-emerald text-emerald-foreground border-transparent",
+    amber: "bg-amber text-amber-foreground border-transparent",
+    orange: "bg-orange text-orange-foreground border-transparent",
+    sky: "bg-sky text-sky-foreground border-transparent",
+    red: "bg-red text-red-foreground border-transparent",
+    slate: "bg-slate text-slate-foreground border-transparent",
 }
 
 const campaignStatuses: Record<string, StatusConfig> = {

@@ -156,7 +156,7 @@ export default function CampaignDetail() {
                         ) : (
                             <>
                                 <div className="flex items-center gap-3 mb-1">
-                                    <h1 className="text-[28px] font-bold tracking-tight truncate">{campaign?.name}</h1>
+                                    <h1 className="text-headline-m font-bold tracking-tight truncate">{campaign?.name}</h1>
                                     {campaignStatus && <Badge variant={campaignStatus.variant} className={`${campaignStatus.className} text-[12px] px-3 py-1 rounded-full`}>{campaignStatus.label}</Badge>}
                                 </div>
                                 <p className="text-[14px] text-muted-foreground">{campaign?.sender_name} &middot; {campaign?.sender_email}</p>
@@ -188,7 +188,7 @@ export default function CampaignDetail() {
                                     <Button variant="outline" onClick={() => setShowAddLead(true)} className="gap-2 rounded-full h-10 px-5  text-[14px]"><span className="material-symbols-rounded text-[18px]">person_add</span> Add Lead</Button>
                                 </>
                             )}
-                            <Button variant="ghost" size="icon" onClick={() => setShowDelete(true)} className="text-muted-foreground hover:text-destructive-hover-foreground hover:bg-destructive-hover rounded-full h-10 w-10"><span className="material-symbols-rounded text-[20px]">delete</span></Button>
+                            <Button variant="ghost" size="icon" onClick={() => setShowDelete(true)} className="text-muted-foreground hover:text-destructive-hover-foreground! hover:bg-destructive-hover! rounded-full h-10 w-10"><span className="material-symbols-rounded text-[20px]">delete</span></Button>
                         </div>
                     )}
                 </div>
@@ -197,7 +197,7 @@ export default function CampaignDetail() {
 
                 {/* ── Rate-limit banner ───────────────────────────────── */}
                 {!loading && isRateLimited && stats?.rate_limit_resets_at && (
-                    <Alert variant="destructive" className="rounded-lg bg-destructive-alert text-destructive-alert-foreground border-none p-6">
+                    <Alert variant="destructive" className="rounded-2xl bg-destructive-alert text-destructive-alert-foreground border-none p-6">
                         <span className="material-symbols-rounded text-[20px] mr-3">warning</span>
                         <AlertTitle className="text-[15px] font-semibold">Sending paused — hourly quota reached</AlertTitle>
                         <AlertDescription className="text-[13px]">
@@ -209,7 +209,7 @@ export default function CampaignDetail() {
 
                 {/* ── Goal ────────────────────────────────────────────── */}
                 {!loading && !editing && campaign?.goal && (
-                    <div className="bg-card border rounded-lg p-6 space-y-3 ">
+                    <div className="bg-card border rounded-2xl p-6 space-y-3 ">
                         <h2 className="text-[15px] font-semibold">Campaign goal</h2>
                         <div className="border-t" />
                         <p className="text-[14px] leading-relaxed text-foreground/80">{campaign.goal}</p>

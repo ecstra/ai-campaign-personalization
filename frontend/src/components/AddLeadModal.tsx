@@ -131,7 +131,7 @@ export default function AddLeadModal({
                                 placeholder="John"
                                 aria-invalid={!!fieldErrors.first_name}
                                 aria-describedby={fieldErrors.first_name ? "first_name-error" : undefined}
-                                className={`h-11 text-[14px] rounded-lg px-4 ${fieldErrors.first_name ? "border-destructive" : ""}`}
+                                className={`h-11 text-[14px] rounded-full px-4 ${fieldErrors.first_name ? "border-destructive" : ""}`}
                             />
                             {fieldErrors.first_name && (
                                 <p id="first_name-error" className="text-[12px] text-destructive pl-2">{fieldErrors.first_name}</p>
@@ -146,7 +146,7 @@ export default function AddLeadModal({
                                 placeholder="Doe"
                                 aria-invalid={!!fieldErrors.last_name}
                                 aria-describedby={fieldErrors.last_name ? "last_name-error" : undefined}
-                                className={`h-11 text-[14px] rounded-lg px-4 ${fieldErrors.last_name ? "border-destructive" : ""}`}
+                                className={`h-11 text-[14px] rounded-full px-4 ${fieldErrors.last_name ? "border-destructive" : ""}`}
                             />
                             {fieldErrors.last_name && (
                                 <p id="last_name-error" className="text-[12px] text-destructive pl-2">{fieldErrors.last_name}</p>
@@ -164,7 +164,7 @@ export default function AddLeadModal({
                             placeholder="john@company.com"
                             aria-invalid={!!fieldErrors.email}
                             aria-describedby={fieldErrors.email ? "email-error" : undefined}
-                            className={`h-11 text-[14px] rounded-lg px-4 ${fieldErrors.email ? "border-destructive" : ""}`}
+                            className={`h-11 text-[14px] rounded-full px-4 ${fieldErrors.email ? "border-destructive" : ""}`}
                         />
                         {fieldErrors.email && (
                             <p id="email-error" className="text-[12px] text-destructive pl-2">{fieldErrors.email}</p>
@@ -179,7 +179,7 @@ export default function AddLeadModal({
                                 value={form.company}
                                 onChange={handleInputChange}
                                 placeholder="Acme Inc"
-                                className="h-11 text-[14px] rounded-lg px-4"
+                                className="h-11 text-[14px] rounded-full px-4"
                             />
                         </div>
                         <div className="space-y-1.5">
@@ -189,7 +189,7 @@ export default function AddLeadModal({
                                 value={form.title}
                                 onChange={handleInputChange}
                                 placeholder="CTO"
-                                className="h-11 text-[14px] rounded-lg px-4"
+                                className="h-11 text-[14px] rounded-full px-4"
                             />
                         </div>
                     </div>
@@ -200,7 +200,7 @@ export default function AddLeadModal({
                             id="notes"
                             value={form.notes}
                             onChange={handleInputChange}
-                            className="text-[14px] p-4 rounded-sm min-h-[100px] resize-none"
+                            className="text-[14px] p-4 rounded-2xl min-h-[100px] resize-none"
                             placeholder="Met at conference, interested in AI..."
                         />
                     </div>
