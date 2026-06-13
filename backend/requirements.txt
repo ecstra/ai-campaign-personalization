@@ -1,4 +1,4 @@
-moonlight-ai==0.2.7
+moonlight-ai==0.3.0
 python-dotenv==1.2.1
 fastapi[standard]==0.136.1
 psycopg2-binary==2.9.11

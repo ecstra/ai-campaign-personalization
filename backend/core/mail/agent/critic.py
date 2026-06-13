@@ -1,3 +1,4 @@
+import re
 import logging
 from pathlib import Path
 from typing import cast
@@ -23,6 +24,41 @@ class CritiqueResult(BaseModel):
         description="Named violation codes plus a short offending quote, one per line. Empty list when passed=True.",
     )
 
+# ── Deterministic pre-pass ───────────────────────────────────────────────────
+# EM_DASH and NAME_FORMALITY_MISMATCH are rule-expressible, so they are checked
+# with a regex that catches them 100% of the time regardless of the model. An
+# eval over a labeled golden set showed deepseek-v4-flash missing em-dashes ~27%
+# and "Dear [Name]" ~35% of the time, while handling the judgment-based checks
+# fine. The LLM still runs for the fuzzy patterns; the results are merged below.
+
+_EM_DASH = "—"  # — (not a hyphen "-" or en dash "–")
+_DEAR_RE = re.compile(r"\bDear\s+[A-Z]")
+
+
+def _deterministic_violations(subject: str, body: str) -> list[str]:
+    text = f"{subject}\n{body}"
+    found: list[str] = []
+    if _EM_DASH in text:
+        found.append("EM_DASH: em dash character present")
+    match = _DEAR_RE.search(text)
+    if match:
+        found.append(f'NAME_FORMALITY_MISMATCH: "{match.group(0)}"')
+    return found
+
+
+def _merge_violations(deterministic: list[str], llm: list[str]) -> list[str]:
+    """Deterministic findings are authoritative for their codes; add only the
+    LLM findings whose code is not already covered (dedup by leading code)."""
+    merged = list(deterministic)
+    seen = {v.split(":", 1)[0].strip() for v in deterministic}
+    for v in llm:
+        code = v.split(":", 1)[0].strip()
+        if code not in seen:
+            merged.append(v)
+            seen.add(code)
+    return merged
+
+
 class CriticUtility:
 
     @staticmethod
@@ -31,6 +67,7 @@ class CriticUtility:
         body: str,
         recipient_context: str,
     ) -> CritiqueResult:
+        deterministic = _deterministic_violations(subject, body)
         try:
             critic = Agent(
                 provider=LLM_PROVIDER,
@@ -44,8 +81,14 @@ class CriticUtility:
                 body=body,
                 recipient_context=recipient_context,
             ))
-            result = await critic.run(prompt)
-            return cast(CritiqueResult, result)
+            result = cast(CritiqueResult, await critic.run(prompt))
         except Exception:
             logger.exception("Critic evaluation failed — treating as unchecked")
-            return CritiqueResult(passed=False, violations=["CRITIC_ERROR: Quality reviewer was unavailable — email shipped without review"])
+            # The LLM is unavailable, but the deterministic checks still stand.
+            return CritiqueResult(
+                passed=False,
+                violations=deterministic + ["CRITIC_ERROR: Quality reviewer was unavailable — email shipped without full review"],
+            )
+
+        violations = _merge_violations(deterministic, result.violations)
+        return CritiqueResult(passed=not violations, violations=violations)

@@ -1,0 +1,4 @@
+# Per-run result artifacts are regenerated; don't commit them.
+results/*.json
+# ...except a promoted baseline, which the regression gate compares against.
+!results/baseline.json

@@ -1,0 +1,43 @@
+name: Critic evals
+
+# Gates the email critic's quality. Runs the eval harness in backend/evals on
+# every PR that touches the mail pipeline, and on demand. Fails the build if the
+# critic's catch rate / false-positive rate / per-type recall breach the floors
+# in backend/evals/thresholds.py.
+
+on:
+  pull_request:
+    paths:
+      - "backend/core/mail/**"
+      - "backend/evals/**"
+  workflow_dispatch:
+
+jobs:
+  critic-evals:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run critic evals
+        env:
+          LLM_SOURCE: deepseek
+          LLM_MODEL: deepseek-v4-flash
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}   # set in repo Settings > Secrets
+        run: python evals/run_evals.py --model deepseek-v4-flash
+
+      - name: Upload eval report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: critic-eval-summary
+          path: backend/evals/results/summary.md
